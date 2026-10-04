@@ -50,129 +50,145 @@
   --pw-other-bg:#2C3E4C;--pw-other-fg:#D6E6F2;color-scheme:dark}
 
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14.5px;line-height:1.45;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
 .wrap{max-width:1040px;margin:0 auto;padding-inline:16px;padding-block:0 64px}
 
 /* header */
-.top{display:flex;align-items:center;gap:20px;padding-block:28px 6px}
+.top{display:flex;align-items:center;gap:20px;padding-block:28px 8px;flex-wrap:wrap}
 .logo{width:104px;height:98px;flex:none;background:var(--muted);
   -webkit-mask:url("logo.png") center/contain no-repeat;mask:url("logo.png") center/contain no-repeat}
-.top h1{font-family:var(--f-display);font-weight:600;font-size:clamp(24px,4vw,30px);letter-spacing:-.01em;line-height:1.15;margin:0;text-wrap:balance}
+.top h1{font-family:var(--f-display);font-weight:600;font-size:clamp(28px,4.5vw,36px);letter-spacing:-.01em;line-height:1.15;margin:0;text-wrap:balance}
 .top h1 span{color:var(--accent)}
-.top .dept{color:var(--muted);font-size:13px;margin-top:4px}
-.top .sub{color:var(--muted);font-size:13px;display:flex;gap:8px;align-items:center;margin-top:4px;flex-wrap:wrap}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:none}
+.top .dept{color:var(--muted);font-size:15px;margin-top:4px}
+.top .sub{color:var(--muted);font-size:14px;display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
 .dot.live{background:#2E9E5B}
+.ico{width:18px;height:18px;flex:none}
+
+/* first-visit tip */
+.tip{display:flex;gap:12px;align-items:flex-start;background:var(--brand-tint);border:1px solid var(--brand);border-radius:10px;padding:12px 14px;margin-top:14px;font-size:15px}
+.tip p{margin:0;flex:1}
+.tip .x{border:0;background:transparent;font-size:22px;line-height:1;color:var(--muted);cursor:pointer;padding:0 4px}
 
 /* summary */
-.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-block:18px 16px}
-.stat{--sc:var(--accent);text-align:left;background:color-mix(in srgb,var(--sc) 8%,var(--surface));border:1px solid color-mix(in srgb,var(--sc) 25%,var(--line));border-top:4px solid var(--sc);border-radius:10px;padding:11px 14px 12px;cursor:pointer;display:flex;flex-direction:column;gap:2px}
-.stat .k{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--sc);font-weight:700}
-.stat b{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15}
-.stat .h{font-size:12px;color:var(--muted)}
-.stat[aria-pressed="true"]{box-shadow:0 0 0 2px var(--sc)}
+.summary{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-block:18px 8px}
+@media (max-width:900px){.summary{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:520px){.summary{grid-template-columns:repeat(2,1fr)}}
+.stat{--sc:var(--accent);text-align:left;background:color-mix(in srgb,var(--sc) 8%,var(--surface));border:1px solid color-mix(in srgb,var(--sc) 25%,var(--line));border-top:4px solid var(--sc);border-radius:10px;padding:12px 15px 13px;cursor:pointer;display:flex;flex-direction:column;gap:3px}
+.stat:hover{background:color-mix(in srgb,var(--sc) 14%,var(--surface))}
+.stat .k{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--sc);font-weight:700}
+.stat b{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat .h{font-size:14px;color:var(--muted)}
+.stat[aria-pressed="true"]{box-shadow:0 0 0 3px var(--sc)}
+.sumhint{font-size:13.5px;color:var(--faint);margin:0 0 10px}
+.filterbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px;padding:10px 14px;border-radius:10px;background:var(--ink);color:var(--bg);font-size:15px}
+.filterbar button{margin-left:auto;border:1px solid currentColor;background:transparent;color:inherit;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:14px}
 
 /* toolbar */
-.toolbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-block:10px;border-bottom:1px solid var(--line)}
-.search{flex:1 1 220px;min-width:0;position:relative}
-.search input{width:100%;padding:8px 10px 8px 32px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface)}
-.search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted)}
-.seg{display:flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden;background:var(--surface)}
-.seg button{border:0;background:transparent;padding:7px 12px;font-size:13px;color:var(--muted);cursor:pointer}
+.toolbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding-block:12px;border-bottom:1px solid var(--line)}
+.search{flex:1 1 240px;min-width:0;position:relative}
+.search input{width:100%;padding:11px 12px 11px 38px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);font-size:16px}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.seg{display:flex;border:1px solid var(--line-strong);border-radius:10px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:10px 16px;font-size:15px;color:var(--muted);cursor:pointer}
 .seg button+button{border-left:1px solid var(--line)}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
-.sel{padding:7px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);font-size:13px}
+.sel{padding:10px 12px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);font-size:15px}
 
 /* sections */
-.section{--sc:#5E6B7A;margin-top:20px;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--sc);border-radius:10px;overflow:hidden}
-.band{background:color-mix(in srgb,var(--sc) 9%,var(--surface));border-bottom:1px solid color-mix(in srgb,var(--sc) 22%,var(--line));padding:11px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
-.band .t{display:flex;align-items:center;gap:10px;color:color-mix(in srgb,var(--sc) 82%,var(--ink));font-weight:700;font-size:15px;letter-spacing:.04em;text-transform:uppercase}
-.band .code{display:inline-flex;align-items:center;gap:6px;background:var(--sc);color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;letter-spacing:.06em;white-space:nowrap}
+.section{--sc:#5E6B7A;margin-top:22px;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--sc);border-radius:12px;overflow:hidden}
+.band{background:color-mix(in srgb,var(--sc) 9%,var(--surface));border-bottom:1px solid color-mix(in srgb,var(--sc) 22%,var(--line));padding:13px 18px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.band .t{display:flex;align-items:center;gap:12px;color:color-mix(in srgb,var(--sc) 82%,var(--ink));font-weight:700;font-size:17px;letter-spacing:.04em;text-transform:uppercase}
+.band .code{display:inline-flex;align-items:center;gap:7px;background:var(--sc);color:#fff;font-size:13px;font-weight:700;padding:4px 9px;border-radius:6px;letter-spacing:.06em;white-space:nowrap}
 .band .code .fi{width:1.45em;line-height:1.05em;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.55)}
-.band .code.pipe{background:transparent;color:var(--sc);border:1.5px dashed var(--sc);padding:2px 7px}
+.band .code.pipe{background:transparent;color:var(--sc);border:1.5px dashed var(--sc);padding:3px 8px}
 .band .code.pipe .fi{box-shadow:0 0 0 1px var(--line-strong)}
-.band .code .tag{font-weight:600;font-size:9.5px;letter-spacing:.1em;opacity:.85}
-.band .n{font-size:12.5px;color:var(--muted)}
+.band .code .tag{font-weight:600;font-size:11px;letter-spacing:.1em;opacity:.85}
+.band .n{font-size:14.5px;color:var(--muted);white-space:nowrap}
 .band .n b{color:var(--ink);font-variant-numeric:tabular-nums}
 .list{}
 
-.card{padding:14px 16px 16px;border-top:1px solid var(--line)}
+.card{padding:18px 18px 16px;border-top:1px solid var(--line)}
 .card:first-child{border-top:0}
 .card.paused,.card.done{background:var(--paused-bg)}
 .card.paused .pn,.card.done .pn{color:var(--muted)}
 .ch{display:flex;gap:12px;align-items:flex-start}
-.num{font-family:var(--f-mono);color:var(--faint);font-size:12px;width:22px;flex:none;padding-top:4px;font-variant-numeric:tabular-nums}
+.num{color:var(--faint);font-size:14px;width:26px;flex:none;padding-top:5px;font-variant-numeric:tabular-nums}
 .nm{flex:1;min-width:0}
-.pn{font-size:16.5px;font-weight:600;line-height:1.3}
-.pm{color:var(--muted);font-size:13px;margin-top:2px}
-.tags{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center;flex:none;max-width:45%}
-.pill{display:inline-block;padding:3px 9px;border-radius:5px;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
-.pw{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.pn{font-size:20px;font-weight:600;line-height:1.3}
+.pm{color:var(--muted);font-size:15px;margin-top:3px}
+.tags{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center;flex:none;max-width:48%}
+.pill{display:inline-block;padding:4px 10px;border-radius:6px;font-size:13px;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+.pw{font-size:13.5px;color:var(--muted);white-space:nowrap}
 .pw .pill{text-transform:none;letter-spacing:0}
-.body{padding-left:34px;margin-top:8px}
-ul{margin:0;padding-left:18px}
-li{margin:3px 0}
+.body{padding-left:38px;margin-top:10px}
+ul{margin:0;padding-left:20px}
+li{margin:5px 0}
 li.req{color:var(--req)}
 u{text-decoration-thickness:1px;text-underline-offset:3px}
-.tl{margin-top:10px;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
-.nl{margin-top:10px;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.none{color:var(--faint);font-size:13.5px}
-.foot{display:flex;gap:14px;align-items:center;margin-top:10px;padding-left:34px;font-size:12px;color:var(--faint);flex-wrap:wrap}
-.foot a{color:var(--accent)}
-.lnk{border:0;background:transparent;color:var(--accent);cursor:pointer;padding:0;font-size:12px}
+.tl{margin-top:14px;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.nl{margin-top:14px;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.none{color:var(--faint);font-size:15px}
+.foot{display:flex;gap:8px;align-items:center;margin-top:14px;padding-left:38px;flex-wrap:wrap}
+.foot .when{font-size:13.5px;color:var(--faint);margin-right:auto}
+.act{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:9px;padding:8px 13px;font-size:14.5px;cursor:pointer;white-space:nowrap}
+.act:hover{border-color:var(--accent);color:var(--accent)}
+.act.main{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.act.main:hover{filter:brightness(1.1);color:var(--accent-ink)}
+.act.warn{color:var(--req);border-color:var(--req)}
+.lnk{border:0;background:transparent;color:var(--accent);cursor:pointer;padding:0;font-size:14.5px}
 .lnk:hover{text-decoration:underline}
-.cbtn{margin-left:auto;order:9;width:42px;height:42px;flex:none;border-radius:50%;border:1.5px solid var(--accent);background:var(--brand-tint);color:var(--accent);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
-.cbtn:hover{background:var(--accent);color:var(--accent-ink)}
-.lnk.warn{color:var(--req)}
 
-.addbtn{display:block;width:100%;text-align:left;border:0;border-top:1px dashed var(--line-strong);background:transparent;color:var(--muted);padding:10px 16px;cursor:pointer;font-size:13px}
+.addbtn{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;border-top:1px dashed var(--line-strong);background:transparent;color:var(--muted);padding:14px 18px;cursor:pointer;font-size:15px}
 .addbtn:hover{color:var(--accent);background:var(--brand-tint)}
 
 /* editor */
-.edit{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-top:4px}
-.edit label{display:flex;flex-direction:column;gap:4px;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);min-width:0}
+.edit{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;margin-top:4px}
+.edit label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-width:0}
 .edit .full{grid-column:1/-1}
-.edit input,.edit select,.edit textarea{width:100%;padding:8px 10px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);font-size:14px;letter-spacing:0;text-transform:none;color:var(--ink)}
-.edit textarea{min-height:92px;resize:vertical;line-height:1.45}
-.edit .hint{text-transform:none;letter-spacing:0;color:var(--faint);font-size:11.5px}
-.actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.btn{border:1px solid var(--line-strong);background:var(--surface);border-radius:7px;padding:7px 14px;cursor:pointer;font-size:13.5px}
+.edit input,.edit select,.edit textarea{width:100%;padding:10px 12px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);font-size:16px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--ink)}
+.edit textarea{min-height:110px;resize:vertical;line-height:1.5}
+.edit .hint{text-transform:none;letter-spacing:0;font-weight:400;color:var(--faint);font-size:13.5px}
+.actions{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--line-strong);background:var(--surface);border-radius:9px;padding:9px 16px;cursor:pointer;font-size:15px}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.warn{color:var(--req);border-color:var(--req)}
 .actions .sp{flex:1}
 
-.empty{padding:40px 16px;text-align:center;color:var(--muted)}
-.note{color:var(--muted);font-size:12.5px;margin-top:28px}
+.empty{padding:44px 16px;text-align:center;color:var(--muted);font-size:16px}
+.note{color:var(--muted);font-size:14px;margin-top:28px}
 
 @media (max-width:560px){
   .ch{flex-wrap:wrap}
   .tags{max-width:none;justify-content:flex-start;padding-left:34px;width:100%}
   .body,.foot{padding-left:0}
+  .foot .when{flex-basis:100%}
   .edit{grid-template-columns:1fr}
   .section{border-radius:8px}
 }
 /* sign-in */
-.who{margin-left:auto;display:flex;gap:10px;align-items:center;font-size:12.5px;color:var(--muted);flex-wrap:wrap;justify-content:flex-end}
-.unlock{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.unlock input{padding:6px 9px;border:1px solid var(--line-strong);border-radius:7px;background:var(--surface);font-size:13px;width:140px}
-.unlock .err{flex-basis:100%;text-align:right;color:var(--req);font-size:12px}
-.stsel{appearance:none;-webkit-appearance:none;border:0;cursor:pointer;font:inherit;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;padding:3px 22px 3px 9px;border-radius:5px;
+.who{margin-left:auto;display:flex;gap:10px;align-items:center;font-size:15px;color:var(--muted);flex-wrap:wrap;justify-content:flex-end}
+.unlock{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.unlock input{padding:9px 11px;border:1px solid var(--line-strong);border-radius:9px;background:var(--surface);font-size:15px;width:160px}
+.editing{display:inline-flex;align-items:center;gap:7px;background:#E6F4EC;color:#1D6B3D;border-radius:999px;padding:6px 12px;font-size:14.5px}
+.unlock .err{flex-basis:100%;text-align:right;color:var(--req);font-size:14px}
+.stsel{appearance:none;-webkit-appearance:none;border:0;cursor:pointer;font:inherit;font-size:13px;letter-spacing:.05em;text-transform:uppercase;padding:5px 26px 5px 10px;border-radius:6px;
   background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);background-position:calc(100% - 11px) 50%,calc(100% - 7px) 50%;background-size:4px 4px;background-repeat:no-repeat}
-.cm{margin-top:10px;display:grid;gap:8px;max-width:640px}
-.cm input,.cm textarea{width:100%;padding:8px 10px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);font-size:14px;color:var(--ink)}
+.cm{margin-top:12px;display:grid;gap:10px;max-width:680px;background:var(--brand-tint);border:1px solid var(--brand);border-radius:10px;padding:14px}
+.cm input,.cm textarea{width:100%;padding:10px 12px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);font-size:16px;color:var(--ink)}
 .cm textarea{min-height:80px;resize:vertical}
 .cm .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.cm .hint{color:var(--faint);font-size:12px}
+.cm .hint{color:var(--muted);font-size:14px}
 .hist{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-top:20px;overflow:hidden}
-.hist .hh{padding:11px 16px;background:var(--brand-tint);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.hist .hh{padding:13px 18px;background:var(--brand-tint);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:15px;color:var(--muted)}
 .hist .hh b{color:var(--ink)}
-.he{padding:12px 16px;border-top:1px solid var(--line);font-size:13.5px}
-.he .when{color:var(--muted);font-size:12.5px}
+.he{padding:14px 18px;border-top:1px solid var(--line);font-size:15.5px}
+.he .when{color:var(--muted);font-size:14px}
 .he .who{font-weight:600}
-.he .kind{display:inline-block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:1px 7px;border-radius:4px;background:var(--line);color:var(--muted);margin-left:6px}
+.he .kind{display:inline-block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:1px 7px;border-radius:4px;background:var(--line);color:var(--muted);margin-left:6px}
 .he .kind.comment{background:var(--brand);color:#2F4A5C}
 .he ul{margin-top:6px}
 .he .from{color:var(--muted);text-decoration:line-through}
@@ -183,7 +199,7 @@ u{text-decoration-thickness:1px;text-underline-offset:3px}
 .gate p{color:var(--muted);margin:0 0 18px}
 .tools{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:28px}
 .tools .note{margin:0;flex:1}
-.tools[hidden],.lnk[hidden]{display:none}
+.tools[hidden],.lnk[hidden],.tip[hidden]{display:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -200,7 +216,9 @@ u{text-decoration-thickness:1px;text-underline-offset:3px}
     <div class="who" id="who"></div>
   </header>
 
+  <div class="tip" id="tip" hidden><p><b>How this works:</b> anyone can add a dated update to a project with the blue <b>Add update</b> button. To change status, edit or archive projects, click <b>Unlock to edit</b> at the top and enter the password.</p><button class="x" id="tip-x" aria-label="Hide this tip">×</button></div>
   <div class="summary" id="summary"></div>
+  <p class="sumhint">Click a box to show only those projects.</p>
 
   <div class="toolbar">
     <div class="search">
@@ -212,10 +230,11 @@ u{text-decoration-thickness:1px;text-underline-offset:3px}
       <button id="v-archive" aria-pressed="false">Archive</button>
       <button id="v-history" aria-pressed="false">History</button>
     </div>
-    <select id="sort" class="sel" aria-label="Order"><option value="recent">Recently edited first</option><option value="custom">Custom order</option></select>
+    <select id="sort" class="sel" aria-label="Order"><option value="recent">Sort: recently updated</option><option value="custom">Sort: custom order</option></select>
     <select id="country" class="sel" aria-label="Country"><option value="">All countries</option></select>
   </div>
 
+  <div id="filterbar"></div>
   <main id="main"><div class="empty">Loading projects…</div></main>
   <div class="tools" id="tools" hidden>
     <p class="note">Anyone with the link can view this log and add updates. Other changes need the edit password. Archived projects are kept, never deleted.</p>
@@ -240,6 +259,15 @@ var S={projects:[],sections:[],view:"log",q:"",country:"",filter:null,editing:nu
 var col=null,secCol=null;
 var main=document.getElementById("main");
 
+var ICON={
+  pencil:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  edit:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>',
+  clock:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  box:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M10 13h4"/></svg>',
+  lock:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  unlock:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>',
+  plus:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
+};
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function tc(n){return n.toLowerCase().replace(/(^|[\s&])([a-z])/g,function(m,p,c){return p+c.toUpperCase()})}
 function title(n){if(/ PIPELINE$/.test(n))return tc(n.replace(/ PIPELINE$/,""))+" Properties – Pipeline";if(/^EXHIBITIONS/.test(n))return tc(n);return tc(n)+" Properties"}
@@ -313,16 +341,16 @@ function cardView(p,n){
     '<div class="tags">'+(S.canEdit&&!p.archived?stSel(p):pill(p.status))+pwPill(p.pending)+'</div></div>'+
     '<div class="body">'+(dt||'<div class="none">No details yet.</div>')+(S.commenting===p.id?commentForm(p):"")+(tk?'<div class="tl">Tasks:</div>'+tk:"")+
       (nt?'<div class="nl">Notes:</div>'+nt:"")+'</div>'+
-    '<div class="foot">'+(p.updatedAt?'<span>Updated '+fmtDate(p.updatedAt)+(p.updatedBy?' by '+esc(p.updatedBy):"")+'</span>':"")+
-      (S.commenting===p.id||p.archived?"":'<button class="cbtn" data-act="comment" aria-label="Add an update" title="Add an update"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>')+
-      '<button class="lnk" data-act="history">History</button>'+
-      (S.canEdit?'<button class="lnk" data-act="edit">Edit</button>'+
-        (p.archived?'<button class="lnk" data-act="restore">Restore to log</button>':
-          (arch?'<button class="lnk warn" data-act="archive-yes">Move to archive?</button><button class="lnk" data-act="archive-no">Keep</button>':'<button class="lnk" data-act="archive">Archive</button>')):"")+
+    '<div class="foot">'+(p.updatedAt?'<span class="when">Last updated '+fmtDate(p.updatedAt)+(p.updatedBy?' by '+esc(p.updatedBy):"")+'</span>':'<span class="when"></span>')+
+      '<button class="act" data-act="history">'+ICON.clock+'History</button>'+
+      (S.canEdit?'<button class="act" data-act="edit">'+ICON.edit+'Edit</button>'+
+        (p.archived?'<button class="act" data-act="restore">'+ICON.box+'Restore to log</button>':
+          (arch?'<button class="act warn" data-act="archive-yes">Yes, move to archive</button><button class="act" data-act="archive-no">Keep</button>':'<button class="act" data-act="archive">'+ICON.box+'Archive</button>')):"")+
+      (S.commenting===p.id||p.archived?"":'<button class="act main" data-act="comment">'+ICON.pencil+'Add update</button>')+
     '</div></article>';
 }
 function stSel(p){var k=stKey(p.status);
-  return '<select class="stsel" data-status aria-label="Status" style="background-color:var(--st-'+k+'-bg);color:var(--st-'+k+'-fg)">'+opts(STATUSES,p.status)+'</select>'}
+  return '<select class="stsel" data-status aria-label="Status" title="Change status" style="background-color:var(--st-'+k+'-bg);color:var(--st-'+k+'-fg)">'+opts(STATUSES,p.status)+'</select>'}
 function commentForm(p){
   return '<form class="cm" data-cform="'+p.id+'">'+
     '<textarea name="text" id="c-notes-'+p.id+'" placeholder="Write an update…" required></textarea>'+
@@ -344,7 +372,7 @@ function cardEdit(p){
     '<label>Notes<textarea id="f-notes-'+id+'" name="notes">'+esc(lines(p.notes).join("\n"))+'</textarea></label>'+
     '<label>Section<select id="f-section-'+id+'" name="section">'+S.sections.map(function(s){return '<option value="'+esc(s.name)+'"'+(s.name===p.section?" selected":"")+">"+esc(title(s.name))+"</option>"}).join("")+'</select></label>'+
     '<div class="actions"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-act="cancel">Cancel</button><span class="sp"></span>'+
-      (S.sort==="custom"?'<button class="btn" type="button" data-act="up" aria-label="Move up">↑ Move up</button><button class="btn" type="button" data-act="down" aria-label="Move down">↓ Move down</button>':'<span class="hint" style="color:var(--faint);font-size:12px">To reorder, switch to “Custom order”.</span>')+'</div>'+
+      (S.sort==="custom"?'<button class="btn" type="button" data-act="up" aria-label="Move up">↑ Move up</button><button class="btn" type="button" data-act="down" aria-label="Move down">↓ Move down</button>':'<span class="hint" style="color:var(--faint);font-size:12px">To reorder, switch to “Sort: custom order”.</span>')+'</div>'+
   '</form></article>';
 }
 
@@ -352,8 +380,13 @@ function cmp(a,b){
   if(S.sort==="recent"){var x=a.updatedAt||"",y=b.updatedAt||"";if(x!==y)return x<y?1:-1}
   return (a.order||0)-(b.order||0);
 }
+var FILTER_LABEL={Urgent:"Urgent projects",Ongoing:"Ongoing projects",Paused:"Paused projects",dts:"Projects pending with the Design & Technical Services Department",req:"Projects marked UPDATE REQUIRED"};
+function renderFilterbar(){
+  var parts=[];if(S.filter)parts.push(FILTER_LABEL[S.filter]||S.filter);if(S.country)parts.push(tc(S.country));if(S.q)parts.push("“"+S.q+"”");
+  document.getElementById("filterbar").innerHTML=parts.length&&S.view==="log"?'<div class="filterbar"><span>Showing only: <b>'+esc(parts.join(" · "))+'</b></span><button data-clear>Show everything</button></div>':"";
+}
 function render(){
-  renderSummary();renderCountries();
+  renderSummary();renderCountries();renderFilterbar();
   document.getElementById("sort").value=S.sort;
   document.getElementById("v-history").setAttribute("aria-pressed",S.view==="history");
   if(S.view==="history"){renderHistory();return}
@@ -374,7 +407,7 @@ function render(){
     any=true;
     html+='<section class="section" style="--sc:'+esc(sec.color)+'"><div class="band"><span class="t">'+code(sec.name)+''+esc(title(sec.name))+'</span><span class="n"><b>'+rows.length+'</b> project'+(rows.length===1?'':'s')+'</span></div><div class="list">';
     rows.forEach(function(p){var i=S.view==="log"?startN+all.indexOf(p)+1:"";html+=(S.editing===p.id?cardEdit(p):cardView(p,i))});
-    if(S.view==="log"&&S.canEdit&&!filtering)html+='<button class="addbtn" data-add="'+esc(sec.name)+'">+ Add a project to '+esc(title(sec.name))+'</button>';
+    if(S.view==="log"&&S.canEdit&&!filtering)html+='<button class="addbtn" data-add="'+esc(sec.name)+'">'+ICON.plus+'Add a project to '+esc(title(sec.name))+'</button>';
     html+='</div></section>';
   });
   if(!S.projects.length)html='<div class="empty">The log is empty.'+(S.canEdit?'<br><br><button class="btn primary" type="button" onclick="document.getElementById(\'import\').click()">Import project_log.json</button>':' Click “Unlock editing” to load the data.')+'</div>';
@@ -479,6 +512,9 @@ main.addEventListener("submit",function(e){
 document.getElementById("summary").addEventListener("click",function(e){var b=e.target.closest("[data-f]");if(!b)return;var f=b.getAttribute("data-f");S.filter=(f==="all"||S.filter===f)?null:f;if(S.view!=="log")S.view="log";render()});
 var qt;document.getElementById("q").addEventListener("input",function(e){clearTimeout(qt);qt=setTimeout(function(){S.q=e.target.value.trim().toLowerCase();render()},120)});
 document.getElementById("country").addEventListener("change",function(e){S.country=e.target.value;render()});
+document.getElementById("filterbar").addEventListener("click",function(e){if(!e.target.closest("[data-clear]"))return;S.filter=null;S.country="";S.q="";document.getElementById("q").value="";render()});
+try{if(!localStorage.getItem("dtsTipHidden"))document.getElementById("tip").hidden=false}catch(e){document.getElementById("tip").hidden=false}
+document.getElementById("tip-x").addEventListener("click",function(){document.getElementById("tip").hidden=true;try{localStorage.setItem("dtsTipHidden","1")}catch(e){}});
 document.getElementById("v-log").addEventListener("click",function(){S.view="log";render()});
 document.getElementById("v-archive").addEventListener("click",function(){S.view="archive";S.filter=null;render()});
 document.getElementById("v-history").addEventListener("click",function(){S.view="history";S.histFor=null;render()});
@@ -529,7 +565,7 @@ col.onSnapshot(function(snap){
 var EDITOR_EMAIL="editor@safir-dts-log.com";
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k)||"";localStorage.setItem(k,v)}catch(e){return ""}}
 function showLocked(err){
-  who.innerHTML='<button class="btn" id="unlock">Unlock editing</button>';
+  who.innerHTML='<button class="btn" id="unlock" style="display:inline-flex;gap:8px;align-items:center">'+ICON.lock+'Unlock to edit</button>';
   document.getElementById("unlock").addEventListener("click",function(){
     who.innerHTML='<form class="unlock" id="uf"><input id="u-name" placeholder="Your name" autocomplete="name" required value="'+esc(ls("dtsEditorName"))+'">'+
       '<input id="u-pw" type="password" placeholder="Edit password" autocomplete="current-password" required>'+
@@ -549,7 +585,7 @@ firebase.auth().onAuthStateChanged(function(u){
   if(!u){setEditor(false);showLocked();return}
   if(!ss("dtsUnlocked")){lock();return}
   S.editor=ls("dtsEditorName")||"Editor";
-  who.innerHTML='<span>Editing as '+esc(S.editor)+'</span><button class="lnk" id="lock">Lock</button>';
+  who.innerHTML='<span class="editing">'+ICON.unlock+'Editing as '+esc(S.editor)+'</span><button class="btn" id="lock" style="display:inline-flex;gap:8px;align-items:center">'+ICON.lock+'Lock</button>';
   document.getElementById("lock").addEventListener("click",function(){firebase.auth().signOut()});
   setEditor(true);
 });
