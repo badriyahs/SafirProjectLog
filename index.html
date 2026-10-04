@@ -260,6 +260,14 @@ function bullets(v){
     return '<li'+(/UPDATE REQUIRED/i.test(l)?' class="req"':"")+">"+h+"</li>";
   }).join("")+"</ul>";
 }
+// Comments are stored one per line as "Name: 4 Oct 2026 – text".
+function commentList(v){
+  var ls=lines(v);if(!ls.length)return"";
+  return "<ul>"+ls.map(function(l){
+    var m=l.match(/^([^:–]{1,60}):\s*(\d{1,2} [A-Z][a-z]{2} \d{4})\s*–\s*([\s\S]*)$/);
+    return "<li>"+(m?"<b>"+esc(m[1])+":</b> <u>"+esc(m[2])+"</u> – "+esc(m[3]):esc(l))+"</li>";
+  }).join("")+"</ul>";
+}
 function fmtDate(ts){if(!ts)return"";var d=new Date(ts);if(isNaN(d))return"";return d.getDate()+" "+MONTHS[d.getMonth()]+" "+d.getFullYear()}
 function secOf(name){return S.sections.find(function(s){return s.name===name})||{name:name,color:"#5E6B7A",order:999}}
 
@@ -303,16 +311,16 @@ function renderCountries(){
 function cardView(p,n){
   var cls=p.status==="Paused"?" paused":(p.status==="Done"?" done":"");
   var meta=[p.desc,p.loc].filter(Boolean).map(esc).join(" · ");
-  var tk=bullets(p.tasks),dt=bullets(p.details),nt=bullets(p.notes);
+  var tk=bullets(p.tasks),dt=bullets(p.details),nt=commentList(p.notes);
   var arch=S.confirmArchive===p.id;
   return '<article class="card'+cls+'" data-id="'+p.id+'">'+
     '<div class="ch"><span class="num">'+(n||"")+'</span><div class="nm"><div class="pn">'+esc(p.name||"Untitled project")+'</div>'+(meta?'<div class="pm">'+meta+'</div>':"")+'</div>'+
     '<div class="tags">'+(S.canEdit&&!p.archived?stSel(p):pill(p.status))+pwPill(p.pending)+'</div></div>'+
     '<div class="body">'+(dt||'<div class="none">No details yet.</div>')+(tk?'<div class="tl">Tasks:</div>'+tk:"")+
-      (S.commenting===p.id?commentForm(p):(nt?'<div class="nl">Comments:</div>'+nt:""))+'</div>'+
+      (nt?'<div class="nl">Comments:</div>'+nt:"")+(S.commenting===p.id?commentForm(p):"")+'</div>'+
     '<div class="foot">'+(p.updatedAt?'<span>Updated '+fmtDate(p.updatedAt)+(p.updatedBy?' by '+esc(p.updatedBy):"")+'</span>':"")+
       (/^https:\/\//.test(p.email||"")?'<a href="'+esc(p.email)+'" target="_blank" rel="noopener noreferrer">Open email ↗</a>':"")+
-      (S.commenting===p.id?"":'<button class="lnk" data-act="comment">'+(nt?"Edit comments":"Add a comment")+'</button>')+
+      (S.commenting===p.id?"":'<button class="lnk" data-act="comment">Add a comment</button>')+
       '<button class="lnk" data-act="history">History</button>'+
       (S.canEdit?'<button class="lnk" data-act="edit">Edit</button>'+
         (p.archived?'<button class="lnk" data-act="restore">Restore to log</button>':
@@ -322,11 +330,11 @@ function cardView(p,n){
 function stSel(p){var k=stKey(p.status);
   return '<select class="stsel" data-status aria-label="Status" style="background-color:var(--st-'+k+'-bg);color:var(--st-'+k+'-fg)">'+opts(STATUSES,p.status)+'</select>'}
 function commentForm(p){
-  return '<form class="cm" data-cform="'+p.id+'"><div class="nl" style="margin:0">Comments</div>'+
-    '<textarea name="notes" id="c-notes-'+p.id+'" placeholder="One comment per line">'+esc(lines(p.notes).join("\n"))+'</textarea>'+
+  return '<form class="cm" data-cform="'+p.id+'">'+
+    '<textarea name="text" id="c-notes-'+p.id+'" placeholder="Write a comment…" required></textarea>'+
     '<div class="row"><input name="who" placeholder="Your name" required maxlength="60" style="max-width:220px" value="'+esc(S.editor||ls("dtsEditorName"))+'">'+
     '<button class="btn primary" type="submit">Save comment</button><button class="btn" type="button" data-act="comment-cancel">Cancel</button></div>'+
-    '<div class="hint">Anyone can add comments. Your name is saved in the History.</div></form>'}
+    '<div class="hint">Anyone can add a comment. It’s added with your name and today’s date.'+(S.canEdit?' To change or remove comments, use Edit.':'')+'</div></form>'}
 function opts(list,cur,labels){return list.map(function(v){return '<option value="'+esc(v)+'"'+(v===cur?" selected":"")+">"+esc((labels&&labels[v])||v)+"</option>"}).join("")}
 function cardEdit(p){
   var id=p.id;
@@ -398,6 +406,7 @@ function renderHistory(){
       ' <span class="when">· '+fmtTime(h.at)+'</span></div><ul>'+
       (h.changes||[]).map(function(c){var lb=FIELDS[c.f]||c.f;
         if(c.f==="archived")return '<li>'+(c.to==="true"?"Moved to archive":"Restored to log")+'</li>';
+        if(c.f==="notes"&&h.kind==="comment"&&c.to.indexOf(c.from)===0){var add=lines(c.to.slice(c.from.length)).join(" ").replace(/^[^:]{1,60}:\s*\d{1,2} [A-Z][a-z]{2} \d{4}\s*–\s*/,"");return '<li>Added a comment: “'+esc(add)+'”</li>'}
         if(LONG[c.f])return '<li>'+esc(lb)+' changed<details><summary>See before and after</summary><div class="when">Before</div><pre>'+esc(c.from||"(empty)")+'</pre><div class="when">After</div><pre>'+esc(c.to||"(empty)")+'</pre></details></li>';
         return '<li>'+esc(lb)+': '+(c.from?'<span class="from">'+esc(c.from)+'</span> → ':"")+'<b>'+esc(c.to||"(empty)")+'</b></li>'}).join("")+'</ul></div>';
   });
@@ -459,8 +468,10 @@ main.addEventListener("change",function(e){
 main.addEventListener("submit",function(e){
   var cf=e.target.closest("[data-cform]");
   if(cf){e.preventDefault();var cid=cf.getAttribute("data-cform"),cp=S.projects.find(function(x){return x.id===cid}),cfd=new FormData(cf);
-    var nm=(cfd.get("who")||"").trim().slice(0,60);if(!nm||!cp)return;ls("dtsEditorName",nm);
-    S.commenting=null;save(cp,{notes:clean(cfd.get("notes"))},"comment",nm).catch(fail);render();return}
+    var nm=(cfd.get("who")||"").trim().replace(/[:–\n]/g," ").slice(0,60),tx=String(cfd.get("text")||"").replace(/\s+/g," ").trim();
+    if(!nm||!tx||!cp)return;ls("dtsEditorName",nm);
+    var line="• "+nm+": "+fmtDate(stamp())+" – "+tx,cur=clean(cp.notes);
+    S.commenting=null;save(cp,{notes:cur?cur+"\n"+line:line},"comment",nm).catch(fail);render();return}
   var f=e.target.closest("[data-form]");if(!f)return;e.preventDefault();
   var id=f.getAttribute("data-form"),fd=new FormData(f);
   var patch={name:(fd.get("name")||"").trim(),desc:(fd.get("desc")||"").trim(),loc:(fd.get("loc")||"").trim(),status:fd.get("status"),pending:fd.get("pending"),
@@ -498,21 +509,10 @@ function setEditor(on){S.canEdit=on;if(!on){S.editing=null;S.confirmArchive=null
 if(!FIREBASE_CONFIG||!window.firebase){sync.textContent="Not connected.";gate("Not set up yet","The Firebase settings for this log haven’t been added.");return}
 firebase.initializeApp(FIREBASE_CONFIG);
 var fs=firebase.firestore();
-// Editing locks when the tab is closed (or opened fresh), and after 30 minutes without activity.
-// Last activity is stored with a timestamp, so it still locks if the computer slept with the page open.
+// Editing stays unlocked until someone clicks Lock or closes the tab (a fresh tab always starts locked).
 firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(function(){});
-var IDLE_MS=30*60*1000,lastTouch=0;
 function ss(k,v){try{if(v===undefined)return sessionStorage.getItem(k)||"";if(v===null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v)}catch(e){return ""}}
 function lock(){ss("dtsUnlocked",null);firebase.auth().signOut()}
-function stale(){var t=+ss("dtsLastActive")||0;return Date.now()-t>IDLE_MS}
-function activity(){
-  if(!S.canEdit)return;
-  if(stale()){lock();return}
-  var now=Date.now();if(now-lastTouch>15000){lastTouch=now;ss("dtsLastActive",String(now))}
-}
-["click","keydown","input","scroll","touchstart"].forEach(function(ev){document.addEventListener(ev,activity,{passive:true,capture:true})});
-document.addEventListener("visibilitychange",function(){if(S.canEdit&&stale())lock()});
-setInterval(function(){if(S.canEdit&&stale())lock()},30000);
 col=fs.collection("projects");secCol=fs.collection("sections");var histCol=fs.collection("history");
 histCol.orderBy("at","desc").limit(500).onSnapshot(function(snap){S.history=snap.docs.map(function(d){return d.data()});if(S.view==="history")render()},function(){});
 
@@ -540,7 +540,7 @@ function showLocked(err){
     document.getElementById("u-x").addEventListener("click",function(){showLocked()});
     document.getElementById("uf").addEventListener("submit",function(e){
       e.preventDefault();var nm=document.getElementById("u-name").value.trim(),pw=document.getElementById("u-pw").value;
-      ls("dtsEditorName",nm);ss("dtsUnlocked","1");ss("dtsLastActive",String(Date.now()));
+      ls("dtsEditorName",nm);ss("dtsUnlocked","1");
       firebase.auth().signInWithEmailAndPassword(EDITOR_EMAIL,pw).catch(function(er){ss("dtsUnlocked",null);
         var c=er&&er.code;showLocked(c==="auth/too-many-requests"?"Too many tries. Wait a few minutes.":(c==="auth/invalid-login-credentials"||c==="auth/invalid-credential"||c==="auth/wrong-password")?"Wrong password.":"Couldn’t unlock: "+(c||"error"));document.getElementById("unlock").click();
       });
@@ -549,7 +549,7 @@ function showLocked(err){
 }
 firebase.auth().onAuthStateChanged(function(u){
   if(!u){setEditor(false);showLocked();return}
-  if(!ss("dtsUnlocked")||stale()){lock();return}
+  if(!ss("dtsUnlocked")){lock();return}
   S.editor=ls("dtsEditorName")||"Editor";
   who.innerHTML='<span>Editing as '+esc(S.editor)+'</span><button class="lnk" id="lock">Lock</button>';
   document.getElementById("lock").addEventListener("click",function(){firebase.auth().signOut()});
