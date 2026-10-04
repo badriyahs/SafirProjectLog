@@ -148,6 +148,9 @@ u{text-decoration-thickness:1px;text-underline-offset:3px}
 }
 /* sign-in */
 .who{margin-left:auto;display:flex;gap:10px;align-items:center;font-size:12.5px;color:var(--muted);flex-wrap:wrap;justify-content:flex-end}
+.unlock{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.unlock input{padding:6px 9px;border:1px solid var(--line-strong);border-radius:7px;background:var(--surface);font-size:13px;width:140px}
+.unlock .err{flex-basis:100%;text-align:right;color:var(--req);font-size:12px}
 .gate{max-width:420px;margin:48px auto;text-align:center;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--accent);border-radius:10px;padding:28px 22px}
 .gate h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 8px}
 .gate p{color:var(--muted);margin:0 0 18px}
@@ -186,7 +189,7 @@ u{text-decoration-thickness:1px;text-underline-offset:3px}
 
   <main id="main"><div class="empty">Loading projects…</div></main>
   <div class="tools" id="tools" hidden>
-    <p class="note">Anyone with the link can view this log. Only approved accounts can edit it. Archived projects are kept, never deleted.</p>
+    <p class="note">Anyone with the link can view this log. Editing needs the edit password. Archived projects are kept, never deleted.</p>
     <button class="lnk" id="export" hidden>Download JSON</button>
     <label class="lnk" id="import-l" hidden>Import project_log.json<input type="file" id="import" accept=".json,application/json" hidden></label>
   </div>
@@ -204,7 +207,7 @@ var PENDING=["D&TS","Hotel","Owner","Consultant / Contractor","Authority","Manag
 var PENDING_LABEL={"D&TS":"Design & Technical Services Dept"};
 var MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-var S={projects:[],sections:[],view:"log",q:"",country:"",filter:null,editing:null,confirmArchive:null,live:false,newId:null,canEdit:false};
+var S={projects:[],sections:[],view:"log",q:"",country:"",filter:null,editing:null,confirmArchive:null,live:false,newId:null,canEdit:false,editor:""};
 var col=null,secCol=null;
 var main=document.getElementById("main");
 
@@ -271,7 +274,7 @@ function cardView(p,n){
     '<div class="ch"><span class="num">'+(n||"")+'</span><div class="nm"><div class="pn">'+esc(p.name||"Untitled project")+'</div>'+(meta?'<div class="pm">'+meta+'</div>':"")+'</div>'+
     '<div class="tags">'+pill(p.status)+pwPill(p.pending)+'</div></div>'+
     '<div class="body">'+(dt||'<div class="none">No details yet.</div>')+(tk?'<div class="tl">Tasks:</div>'+tk:"")+(nt?'<div class="nl">Notes:</div>'+nt:"")+'</div>'+
-    '<div class="foot">'+(p.updatedAt?'<span>Updated '+fmtDate(p.updatedAt)+'</span>':"")+
+    '<div class="foot">'+(p.updatedAt?'<span>Updated '+fmtDate(p.updatedAt)+(p.updatedBy?' by '+esc(p.updatedBy):"")+'</span>':"")+
       (/^https:\/\//.test(p.email||"")?'<a href="'+esc(p.email)+'" target="_blank" rel="noopener noreferrer">Open email ↗</a>':"")+
       (S.canEdit?'<button class="lnk" data-act="edit">Edit</button>'+
         (p.archived?'<button class="lnk" data-act="restore">Restore to log</button>':
@@ -326,6 +329,7 @@ function render(){
 }
 
 function stamp(){return new Date().toISOString()}
+function by(){return S.editor||""}
 function clean(t){return lines(t).map(function(l){return "• "+l}).join("\n")}
 
 main.addEventListener("click",function(e){
@@ -333,7 +337,7 @@ main.addEventListener("click",function(e){
   if(add&&S.canEdit){
     var sec=add.getAttribute("data-add");
     var mx=S.projects.filter(function(p){return p.section===sec}).reduce(function(m,p){return Math.max(m,p.order||0)},0);
-    col.add({section:sec,order:mx+10,name:"New project",desc:"",loc:"",status:"Ongoing",pending:"—",details:"",tasks:"",notes:"",team:"",email:"",archived:false,updatedAt:stamp()}).then(function(ref){S.editing=ref.id;S.newId=ref.id;render()}).catch(function(){});
+    col.add({section:sec,order:mx+10,name:"New project",desc:"",loc:"",status:"Ongoing",pending:"—",details:"",tasks:"",notes:"",team:"",email:"",archived:false,updatedAt:stamp(),updatedBy:by()}).then(function(ref){S.editing=ref.id;S.newId=ref.id;render()}).catch(function(){});
     return;
   }
   var b=e.target.closest("[data-act]");if(!b)return;
@@ -344,8 +348,8 @@ main.addEventListener("click",function(e){
   else if(a==="cancel"){S.editing=null;render()}
   else if(a==="archive"){S.confirmArchive=id;render()}
   else if(a==="archive-no"){S.confirmArchive=null;render()}
-  else if(a==="archive-yes"){S.confirmArchive=null;col.doc(id).update({archived:true,updatedAt:stamp()}).catch(function(){})}
-  else if(a==="restore"){col.doc(id).update({archived:false,updatedAt:stamp()}).catch(function(){})}
+  else if(a==="archive-yes"){S.confirmArchive=null;col.doc(id).update({archived:true,updatedAt:stamp(),updatedBy:by()}).catch(function(){})}
+  else if(a==="restore"){col.doc(id).update({archived:false,updatedAt:stamp(),updatedBy:by()}).catch(function(){})}
   else if(a==="up"||a==="down"){
     var sib=S.projects.filter(function(x){return x.section===p.section&&!x.archived}).sort(function(x,y){return (x.order||0)-(y.order||0)});
     var i=sib.indexOf(p),j=a==="up"?i-1:i+1;if(j<0||j>=sib.length)return;
@@ -357,7 +361,7 @@ main.addEventListener("submit",function(e){
   var f=e.target.closest("[data-form]");if(!f)return;e.preventDefault();
   var id=f.getAttribute("data-form"),fd=new FormData(f);
   var patch={name:(fd.get("name")||"").trim(),desc:(fd.get("desc")||"").trim(),loc:(fd.get("loc")||"").trim(),status:fd.get("status"),pending:fd.get("pending"),
-    details:clean(fd.get("details")),tasks:clean(fd.get("tasks")),team:clean(fd.get("team")),notes:clean(fd.get("notes")),section:fd.get("section"),email:(fd.get("email")||"").trim(),updatedAt:stamp()};
+    details:clean(fd.get("details")),tasks:clean(fd.get("tasks")),team:clean(fd.get("team")),notes:clean(fd.get("notes")),section:fd.get("section"),email:(fd.get("email")||"").trim(),updatedAt:stamp(),updatedBy:by()};
   if(/UPDATE REQUIRED/i.test(fd.get("tasks")||"")&&lines(fd.get("tasks")).length===1)patch.tasks="UPDATE REQUIRED!";
   S.editing=null;
   col.doc(id).update(patch).catch(function(){});
@@ -370,12 +374,18 @@ document.getElementById("country").addEventListener("change",function(e){S.count
 document.getElementById("v-log").addEventListener("click",function(){S.view="log";render()});
 document.getElementById("v-archive").addEventListener("click",function(){S.view="archive";S.filter=null;render()});
 
-// Firebase project for the log. Access is limited by Firestore rules to the allow-listed Google accounts.
-var FIREBASE_CONFIG=null;
+// Firebase project for the log. Anyone can read; the Firestore rules limit writes to the shared editor account.
+var FIREBASE_CONFIG={
+  apiKey:"AIzaSyAb9dq0O9BBoHwCoF6IdIgsHMwCrmAq6CQ",
+  authDomain:"safir-project-log.firebaseapp.com",
+  projectId:"safir-project-log",
+  storageBucket:"safir-project-log.firebasestorage.app",
+  messagingSenderId:"293284465630",
+  appId:"1:293284465630:web:704862947804444a8dab4f"
+};
 
 var sync=document.getElementById("sync"),dot=document.getElementById("dot"),who=document.getElementById("who"),tools=document.getElementById("tools");
 function gate(h,p){main.innerHTML='<div class="gate"><h2>'+h+'</h2><p>'+p+'</p></div>'}
-function signIn(){var pr=new firebase.auth.GoogleAuthProvider();pr.setCustomParameters({prompt:"select_account"});firebase.auth().signInWithPopup(pr).catch(function(e){if(e&&e.code!=="auth/popup-closed-by-user")sync.textContent="Sign-in failed: "+(e.code||"error")})}
 function setEditor(on){S.canEdit=on;if(!on){S.editing=null;S.confirmArchive=null}
   document.getElementById("export").hidden=!on;document.getElementById("import-l").hidden=!on||S.projects.length>0;render()}
 
@@ -396,19 +406,32 @@ col.onSnapshot(function(snap){
   if(!S.projects.length)main.innerHTML='<div class="empty">The log is empty.'+(S.canEdit?' Use “Import project_log.json” below to load it.':"")+'</div>';
 },function(err){sync.textContent="Couldn’t sync: "+((err&&err.code)||"unavailable")});
 
-// Editors are allow-listed in the Firestore rules. Signing in writes a small check-in record;
-// if the rules accept it the account can edit, otherwise it stays view-only.
-firebase.auth().onAuthStateChanged(function(u){
-  setEditor(false);
-  if(!u){who.innerHTML='<button class="btn" id="signin">Sign in to edit</button>';document.getElementById("signin").addEventListener("click",signIn);return}
-  var nm=esc(u.displayName||u.email);
-  who.innerHTML='<span id="role">'+nm+' · checking…</span><button class="lnk" id="signout">Sign out</button>';
-  document.getElementById("signout").addEventListener("click",function(){firebase.auth().signOut()});
-  fs.collection("editors_check").doc(u.uid).set({email:u.email||"",name:u.displayName||"",at:stamp()}).then(function(){
-    document.getElementById("role").textContent=(u.displayName||u.email)+" · can edit";setEditor(true);
-  }).catch(function(){
-    document.getElementById("role").textContent=(u.email||"This account")+" · view only (not on the editors list)";
+// Editing uses one shared editor account (created in the Firebase console); the Firestore rules only accept writes from it.
+var EDITOR_EMAIL="editor@safir-dts-log.com";
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k)||"";localStorage.setItem(k,v)}catch(e){return ""}}
+function showLocked(err){
+  who.innerHTML='<button class="btn" id="unlock">Unlock editing</button>';
+  document.getElementById("unlock").addEventListener("click",function(){
+    who.innerHTML='<form class="unlock" id="uf"><input id="u-name" placeholder="Your name" autocomplete="name" required value="'+esc(ls("dtsEditorName"))+'">'+
+      '<input id="u-pw" type="password" placeholder="Edit password" autocomplete="current-password" required>'+
+      '<button class="btn primary" type="submit">Unlock</button><button class="btn" type="button" id="u-x">Cancel</button>'+(err?'<span class="err">'+esc(err)+'</span>':"")+'</form>';
+    document.getElementById(ls("dtsEditorName")?"u-pw":"u-name").focus();
+    document.getElementById("u-x").addEventListener("click",function(){showLocked()});
+    document.getElementById("uf").addEventListener("submit",function(e){
+      e.preventDefault();var nm=document.getElementById("u-name").value.trim(),pw=document.getElementById("u-pw").value;
+      ls("dtsEditorName",nm);
+      firebase.auth().signInWithEmailAndPassword(EDITOR_EMAIL,pw).catch(function(er){
+        var c=er&&er.code;showLocked(c==="auth/too-many-requests"?"Too many tries. Wait a few minutes.":"Wrong password.");document.getElementById("unlock").click();
+      });
+    });
   });
+}
+firebase.auth().onAuthStateChanged(function(u){
+  if(!u){setEditor(false);showLocked();return}
+  S.editor=ls("dtsEditorName")||"Editor";
+  who.innerHTML='<span>Editing as '+esc(S.editor)+'</span><button class="lnk" id="lock">Lock</button>';
+  document.getElementById("lock").addEventListener("click",function(){firebase.auth().signOut()});
+  setEditor(true);
 });
 
 // Download the live data in the same shape as data/project_log.json, for rebuilding the spreadsheet and print.
