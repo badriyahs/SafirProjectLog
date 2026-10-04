@@ -283,6 +283,8 @@ function code(n){
 }
 function stKey(s){return (s||"").toLowerCase()}
 function pill(s){var k=stKey(s);if(!k)return"";return '<span class="pill" style="background:var(--st-'+k+'-bg);color:var(--st-'+k+'-fg)">'+esc(s)+'</span>'}
+function pwSel(p){var v=p.pending||"—",d=v==="D&TS",k=v==="—"?"none":(d?"dts":"other");
+  return '<span class="pw">Pending with <select class="stsel" data-pending aria-label="Pending with" title="Change who it’s pending with" style="text-transform:none;letter-spacing:0;'+(k==="none"?'background-color:var(--surface);color:var(--muted);border:1px dashed var(--line-strong)':'background-color:var(--pw-'+k+'-bg);color:var(--pw-'+k+'-fg)')+'">'+opts(PENDING,v,{"D&TS":"Design & Technical Services Dept","—":"Nobody"})+'</select></span>'}
 function pwPill(p){if(!p||p==="—")return"";var d=p==="D&TS";return '<span class="pw">Pending with <span class="pill" style="background:var(--pw-'+(d?"dts":"other")+'-bg);color:var(--pw-'+(d?"dts":"other")+'-fg)">'+esc(PENDING_LABEL[p]||p)+'</span></span>'}
 function lines(v){return String(v||"").split("\n").map(function(l){return l.replace(/^\s*[•\-]\s*/,"").trim()}).filter(function(l){return l&&l!=="—"})}
 function bullets(v,field){
@@ -341,7 +343,7 @@ function cardView(p,n){
   var arch=S.confirmArchive===p.id;
   return '<article class="card'+cls+'" data-id="'+p.id+'">'+
     '<div class="ch"><span class="num">'+(n||"")+'</span><div class="nm"><div class="pn">'+esc(p.name||"Untitled project")+'</div>'+(meta?'<div class="pm">'+meta+'</div>':"")+'</div>'+
-    '<div class="tags">'+(S.canEdit&&!p.archived?stSel(p):pill(p.status))+pwPill(p.pending)+'</div></div>'+
+    '<div class="tags">'+(S.canEdit&&!p.archived?stSel(p):pill(p.status))+(S.canEdit&&!p.archived?pwSel(p):pwPill(p.pending))+'</div></div>'+
     '<div class="body">'+(dt||'<div class="none">No details yet.</div>')+(S.commenting===p.id?commentForm(p):"")+(tk?'<div class="tl">Tasks:</div>'+tk:"")+
       (nt?'<div class="nl">Notes:</div>'+nt:"")+'</div>'+
     '<div class="foot">'+(p.updatedAt?'<span class="when">Last updated '+fmtDate(p.updatedAt)+(p.updatedBy?' by '+esc(p.updatedBy):"")+'</span>':'<span class="when"></span>')+
@@ -420,7 +422,7 @@ function render(){
 }
 
 var FIELDS={name:"Name",desc:"Description",loc:"Location",status:"Status",pending:"Pending with",details:"Details",tasks:"Tasks",team:"Team",notes:"Notes",section:"Section",archived:"Archived"};
-var KINDS={edit:"Edit",comment:"Update",status:"Status",archive:"Archived",restore:"Restored",add:"New project"};
+var KINDS={edit:"Edit",comment:"Update",status:"Status",pending:"Pending with",archive:"Archived",restore:"Restored",add:"New project"};
 var LONG={details:1,tasks:1,team:1,notes:1};
 function fmtTime(ts){var d=new Date(ts);if(isNaN(d))return"";return fmtDate(ts)+", "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
 function renderHistory(){
@@ -498,6 +500,8 @@ main.addEventListener("click",function(e){
   }
 });
 main.addEventListener("change",function(e){
+  var pw=e.target.closest("[data-pending]");
+  if(pw&&S.canEdit){var pid=pw.closest("[data-id]").getAttribute("data-id"),pp=S.projects.find(function(x){return x.id===pid});if(pp)save(pp,{pending:pw.value},"pending",by()).catch(fail);return}
   var sel=e.target.closest("[data-status]");if(!sel||!S.canEdit)return;
   var id=sel.closest("[data-id]").getAttribute("data-id"),p=S.projects.find(function(x){return x.id===id});
   if(p)save(p,{status:sel.value},"status",by()).catch(fail);
