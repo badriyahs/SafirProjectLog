@@ -186,8 +186,8 @@ u{text-decoration-thickness:1px;text-underline-offset:3px}
 
   <main id="main"><div class="empty">Loading projects…</div></main>
   <div class="tools" id="tools" hidden>
-    <p class="note">Only approved, signed-in accounts can see or edit this log. Archived projects are kept, never deleted.</p>
-    <button class="lnk" id="export">Download JSON</button>
+    <p class="note">Anyone with the link can view this log. Only approved accounts can edit it. Archived projects are kept, never deleted.</p>
+    <button class="lnk" id="export" hidden>Download JSON</button>
     <label class="lnk" id="import-l" hidden>Import project_log.json<input type="file" id="import" accept=".json,application/json" hidden></label>
   </div>
 </div>
@@ -204,7 +204,7 @@ var PENDING=["D&TS","Hotel","Owner","Consultant / Contractor","Authority","Manag
 var PENDING_LABEL={"D&TS":"Design & Technical Services Dept"};
 var MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-var S={projects:[],sections:[],view:"log",q:"",country:"",filter:null,editing:null,confirmArchive:null,live:false,newId:null};
+var S={projects:[],sections:[],view:"log",q:"",country:"",filter:null,editing:null,confirmArchive:null,live:false,newId:null,canEdit:false};
 var col=null,secCol=null;
 var main=document.getElementById("main");
 
@@ -273,7 +273,7 @@ function cardView(p,n){
     '<div class="body">'+(dt||'<div class="none">No details yet.</div>')+(tk?'<div class="tl">Tasks:</div>'+tk:"")+(nt?'<div class="nl">Notes:</div>'+nt:"")+'</div>'+
     '<div class="foot">'+(p.updatedAt?'<span>Updated '+fmtDate(p.updatedAt)+'</span>':"")+
       (/^https:\/\//.test(p.email||"")?'<a href="'+esc(p.email)+'" target="_blank" rel="noopener noreferrer">Open email ↗</a>':"")+
-      (col?'<button class="lnk" data-act="edit">Edit</button>'+
+      (S.canEdit?'<button class="lnk" data-act="edit">Edit</button>'+
         (p.archived?'<button class="lnk" data-act="restore">Restore to log</button>':
           (arch?'<button class="lnk warn" data-act="archive-yes">Move to archive?</button><button class="lnk" data-act="archive-no">Keep</button>':'<button class="lnk" data-act="archive">Archive</button>')):"")+
     '</div></article>';
@@ -312,12 +312,12 @@ function render(){
     var rows=all.filter(visible);
     var startN=n;n+=all.length;
     var filtering=S.q||S.filter||S.country;
-    if(!rows.length&&(filtering||S.view==="archive"||!col))return;
+    if(!rows.length&&(filtering||S.view==="archive"||!S.canEdit))return;
     if(S.country&&S.country!==sec.name)return;
     any=true;
     html+='<section class="section" style="--sc:'+esc(sec.color)+'"><div class="band"><span class="t"><span class="code">'+esc(code(sec.name))+'</span>'+esc(title(sec.name))+'</span><span class="n"><b>'+rows.length+'</b> project'+(rows.length===1?'':'s')+'</span></div><div class="list">';
     rows.forEach(function(p){var i=S.view==="log"?startN+all.indexOf(p)+1:"";html+=(S.editing===p.id?cardEdit(p):cardView(p,i))});
-    if(S.view==="log"&&col&&!filtering)html+='<button class="addbtn" data-add="'+esc(sec.name)+'">+ Add a project to '+esc(title(sec.name))+'</button>';
+    if(S.view==="log"&&S.canEdit&&!filtering)html+='<button class="addbtn" data-add="'+esc(sec.name)+'">+ Add a project to '+esc(title(sec.name))+'</button>';
     html+='</div></section>';
   });
   if(!any)html='<div class="empty">'+(S.view==="archive"?"Nothing in the archive.":"No projects match. Clear the search or filters to see everything.")+'</div>';
@@ -330,7 +330,7 @@ function clean(t){return lines(t).map(function(l){return "• "+l}).join("\n")}
 
 main.addEventListener("click",function(e){
   var add=e.target.closest("[data-add]");
-  if(add&&col){
+  if(add&&S.canEdit){
     var sec=add.getAttribute("data-add");
     var mx=S.projects.filter(function(p){return p.section===sec}).reduce(function(m,p){return Math.max(m,p.order||0)},0);
     col.add({section:sec,order:mx+10,name:"New project",desc:"",loc:"",status:"Ongoing",pending:"—",details:"",tasks:"",notes:"",team:"",email:"",archived:false,updatedAt:stamp()}).then(function(ref){S.editing=ref.id;S.newId=ref.id;render()}).catch(function(){});
@@ -374,38 +374,41 @@ document.getElementById("v-archive").addEventListener("click",function(){S.view=
 var FIREBASE_CONFIG=null;
 
 var sync=document.getElementById("sync"),dot=document.getElementById("dot"),who=document.getElementById("who"),tools=document.getElementById("tools");
-var unsubs=[];
-function stop(){unsubs.forEach(function(u){u()});unsubs=[];col=null;secCol=null;S.projects=[];S.sections=[];S.live=false;dot.classList.remove("live")}
-function gate(h,p,btn){main.innerHTML='<div class="gate"><h2>'+h+'</h2><p>'+p+'</p>'+(btn?'<button class="btn primary" id="signin">Sign in with Google</button>':"")+'</div>';
-  var b=document.getElementById("signin");if(b)b.addEventListener("click",signIn)}
+function gate(h,p){main.innerHTML='<div class="gate"><h2>'+h+'</h2><p>'+p+'</p></div>'}
 function signIn(){var pr=new firebase.auth.GoogleAuthProvider();pr.setCustomParameters({prompt:"select_account"});firebase.auth().signInWithPopup(pr).catch(function(e){if(e&&e.code!=="auth/popup-closed-by-user")sync.textContent="Sign-in failed: "+(e.code||"error")})}
+function setEditor(on){S.canEdit=on;if(!on){S.editing=null;S.confirmArchive=null}
+  document.getElementById("export").hidden=!on;document.getElementById("import-l").hidden=!on||S.projects.length>0;render()}
 
-if(!FIREBASE_CONFIG||!window.firebase){sync.textContent="Not connected.";gate("Not set up yet","The Firebase settings for this log haven’t been added.",false);return}
+if(!FIREBASE_CONFIG||!window.firebase){sync.textContent="Not connected.";gate("Not set up yet","The Firebase settings for this log haven’t been added.");return}
 firebase.initializeApp(FIREBASE_CONFIG);
 var fs=firebase.firestore();
+col=fs.collection("projects");secCol=fs.collection("sections");
 
+// Anyone can read; the log loads straight away without signing in.
+secCol.onSnapshot(function(snap){S.sections=snap.docs.map(function(d){var x=d.data()||{};return{id:d.id,name:x.name,color:x.color||"#5E6B7A",order:typeof x.order==="number"?x.order:999}});render()},function(){});
+col.onSnapshot(function(snap){
+  S.projects=snap.docs.map(function(d){var x=d.data()||{};x.id=d.id;return x});
+  S.live=true;dot.classList.add("live");tools.hidden=false;
+  document.getElementById("import-l").hidden=!S.canEdit||S.projects.length>0;
+  var last=S.projects.reduce(function(m,p){return p.updatedAt&&p.updatedAt>m?p.updatedAt:m},"");
+  sync.textContent="Live"+(last?" · last change "+fmtDate(last):"");
+  render();
+  if(!S.projects.length)main.innerHTML='<div class="empty">The log is empty.'+(S.canEdit?' Use “Import project_log.json” below to load it.':"")+'</div>';
+},function(err){sync.textContent="Couldn’t sync: "+((err&&err.code)||"unavailable")});
+
+// Editors are allow-listed in the Firestore rules. Signing in writes a small check-in record;
+// if the rules accept it the account can edit, otherwise it stays view-only.
 firebase.auth().onAuthStateChanged(function(u){
-  stop();render();
-  if(!u){who.innerHTML="";tools.hidden=true;sync.textContent="Signed out";document.getElementById("summary").innerHTML="";
-    gate("Sign in to view the log","This log is private to the Design &amp; Technical Services Department.",true);return}
-  who.innerHTML='<span>'+esc(u.email)+'</span><button class="lnk" id="signout">Sign out</button>';
+  setEditor(false);
+  if(!u){who.innerHTML='<button class="btn" id="signin">Sign in to edit</button>';document.getElementById("signin").addEventListener("click",signIn);return}
+  var nm=esc(u.displayName||u.email);
+  who.innerHTML='<span id="role">'+nm+' · checking…</span><button class="lnk" id="signout">Sign out</button>';
   document.getElementById("signout").addEventListener("click",function(){firebase.auth().signOut()});
-  sync.textContent="Connecting to the log…";main.innerHTML='<div class="empty">Loading projects…</div>';
-  col=fs.collection("projects");secCol=fs.collection("sections");
-  var denied=function(err){
-    if(err&&err.code==="permission-denied"){stop();tools.hidden=true;sync.textContent="No access";document.getElementById("summary").innerHTML="";
-      gate("No access for this account",esc(u.email)+" isn’t on the list for this log. Sign out and use an approved account.",false)}
-    else sync.textContent="Couldn’t sync: "+((err&&err.code)||"unavailable")};
-  unsubs.push(secCol.onSnapshot(function(snap){S.sections=snap.docs.map(function(d){var x=d.data()||{};return{id:d.id,name:x.name,color:x.color||"#5E6B7A",order:typeof x.order==="number"?x.order:999}});render()},denied));
-  unsubs.push(col.onSnapshot(function(snap){
-    S.projects=snap.docs.map(function(d){var x=d.data()||{};x.id=d.id;return x});
-    S.live=true;dot.classList.add("live");tools.hidden=false;
-    document.getElementById("import-l").hidden=S.projects.length>0;
-    var last=S.projects.reduce(function(m,p){return p.updatedAt&&p.updatedAt>m?p.updatedAt:m},"");
-    sync.textContent="Live"+(last?" · last change "+fmtDate(last):"");
-    render();
-    if(!S.projects.length)main.innerHTML='<div class="empty">The log is empty. Use “Import project_log.json” below to load it.</div>';
-  },denied));
+  fs.collection("editors_check").doc(u.uid).set({email:u.email||"",name:u.displayName||"",at:stamp()}).then(function(){
+    document.getElementById("role").textContent=(u.displayName||u.email)+" · can edit";setEditor(true);
+  }).catch(function(){
+    document.getElementById("role").textContent=(u.email||"This account")+" · view only (not on the editors list)";
+  });
 });
 
 // Download the live data in the same shape as data/project_log.json, for rebuilding the spreadsheet and print.
@@ -419,7 +422,7 @@ document.getElementById("export").addEventListener("click",function(){
 });
 // One-time load of project_log.json from your computer (the data is never stored in the public repo).
 document.getElementById("import").addEventListener("change",function(e){
-  var f=e.target.files[0];if(!f||!col)return;
+  var f=e.target.files[0];if(!f||!S.canEdit)return;
   f.text().then(function(t){
     var d=JSON.parse(t);if(!Array.isArray(d.projects)||!Array.isArray(d.sections))throw new Error("Not a project log file");
     var b=fs.batch();
