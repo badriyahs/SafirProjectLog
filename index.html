@@ -124,6 +124,8 @@ u{text-decoration-thickness:1px;text-underline-offset:3px}
 .foot a{color:var(--accent)}
 .lnk{border:0;background:transparent;color:var(--accent);cursor:pointer;padding:0;font-size:12px}
 .lnk:hover{text-decoration:underline}
+.cbtn{margin-left:auto;order:9;width:42px;height:42px;flex:none;border-radius:50%;border:1.5px solid var(--accent);background:var(--brand-tint);color:var(--accent);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.cbtn:hover{background:var(--accent);color:var(--accent-ink)}
 .lnk.warn{color:var(--req)}
 
 .addbtn{display:block;width:100%;text-align:left;border:0;border-top:1px dashed var(--line-strong);background:transparent;color:var(--muted);padding:10px 16px;cursor:pointer;font-size:13px}
@@ -216,7 +218,7 @@ u{text-decoration-thickness:1px;text-underline-offset:3px}
 
   <main id="main"><div class="empty">Loading projects…</div></main>
   <div class="tools" id="tools" hidden>
-    <p class="note">Anyone with the link can view this log and add comments. Other changes need the edit password. Archived projects are kept, never deleted.</p>
+    <p class="note">Anyone with the link can view this log and add updates. Other changes need the edit password. Archived projects are kept, never deleted.</p>
     <button class="lnk" id="export" hidden>Download JSON</button>
     <label class="lnk" id="import-l" hidden>Import project_log.json<input type="file" id="import" accept=".json,application/json" hidden></label>
   </div>
@@ -255,17 +257,10 @@ function lines(v){return String(v||"").split("\n").map(function(l){return l.repl
 function bullets(v){
   var ls=lines(v);if(!ls.length)return"";
   return "<ul>"+ls.map(function(l){
-    var m=l.match(/^([^–]{3,22}?\d{4})(\s*–\s*)(.*)$/);
-    var h=m?"<u>"+esc(m[1])+"</u>"+esc(m[2])+esc(m[3]):esc(l);
+    var c=l.match(/^([^:–]{1,60}):\s*(\d{1,2} [A-Z][a-z]{2} \d{4})\s*–\s*(.*)$/);
+    var m=!c&&l.match(/^([^–]{3,22}?\d{4})(\s*–\s*)(.*)$/);
+    var h=c?"<b>"+esc(c[1])+":</b> <u>"+esc(c[2])+"</u> – "+esc(c[3]):m?"<u>"+esc(m[1])+"</u>"+esc(m[2])+esc(m[3]):esc(l);
     return '<li'+(/UPDATE REQUIRED/i.test(l)?' class="req"':"")+">"+h+"</li>";
-  }).join("")+"</ul>";
-}
-// Comments are stored one per line as "Name: 4 Oct 2026 – text".
-function commentList(v){
-  var ls=lines(v);if(!ls.length)return"";
-  return "<ul>"+ls.map(function(l){
-    var m=l.match(/^([^:–]{1,60}):\s*(\d{1,2} [A-Z][a-z]{2} \d{4})\s*–\s*([\s\S]*)$/);
-    return "<li>"+(m?"<b>"+esc(m[1])+":</b> <u>"+esc(m[2])+"</u> – "+esc(m[3]):esc(l))+"</li>";
   }).join("")+"</ul>";
 }
 function fmtDate(ts){if(!ts)return"";var d=new Date(ts);if(isNaN(d))return"";return d.getDate()+" "+MONTHS[d.getMonth()]+" "+d.getFullYear()}
@@ -311,16 +306,15 @@ function renderCountries(){
 function cardView(p,n){
   var cls=p.status==="Paused"?" paused":(p.status==="Done"?" done":"");
   var meta=[p.desc,p.loc].filter(Boolean).map(esc).join(" · ");
-  var tk=bullets(p.tasks),dt=bullets(p.details),nt=commentList(p.notes);
+  var tk=bullets(p.tasks),dt=bullets(p.details),nt=bullets(p.notes);
   var arch=S.confirmArchive===p.id;
   return '<article class="card'+cls+'" data-id="'+p.id+'">'+
     '<div class="ch"><span class="num">'+(n||"")+'</span><div class="nm"><div class="pn">'+esc(p.name||"Untitled project")+'</div>'+(meta?'<div class="pm">'+meta+'</div>':"")+'</div>'+
     '<div class="tags">'+(S.canEdit&&!p.archived?stSel(p):pill(p.status))+pwPill(p.pending)+'</div></div>'+
-    '<div class="body">'+(dt||'<div class="none">No details yet.</div>')+(tk?'<div class="tl">Tasks:</div>'+tk:"")+
-      (nt?'<div class="nl">Comments:</div>'+nt:"")+(S.commenting===p.id?commentForm(p):"")+'</div>'+
+    '<div class="body">'+(dt||'<div class="none">No details yet.</div>')+(S.commenting===p.id?commentForm(p):"")+(tk?'<div class="tl">Tasks:</div>'+tk:"")+
+      (nt?'<div class="nl">Notes:</div>'+nt:"")+'</div>'+
     '<div class="foot">'+(p.updatedAt?'<span>Updated '+fmtDate(p.updatedAt)+(p.updatedBy?' by '+esc(p.updatedBy):"")+'</span>':"")+
-      (/^https:\/\//.test(p.email||"")?'<a href="'+esc(p.email)+'" target="_blank" rel="noopener noreferrer">Open email ↗</a>':"")+
-      (S.commenting===p.id?"":'<button class="lnk" data-act="comment">Add a comment</button>')+
+      (S.commenting===p.id||p.archived?"":'<button class="cbtn" data-act="comment" aria-label="Add an update" title="Add an update"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>')+
       '<button class="lnk" data-act="history">History</button>'+
       (S.canEdit?'<button class="lnk" data-act="edit">Edit</button>'+
         (p.archived?'<button class="lnk" data-act="restore">Restore to log</button>':
@@ -331,10 +325,10 @@ function stSel(p){var k=stKey(p.status);
   return '<select class="stsel" data-status aria-label="Status" style="background-color:var(--st-'+k+'-bg);color:var(--st-'+k+'-fg)">'+opts(STATUSES,p.status)+'</select>'}
 function commentForm(p){
   return '<form class="cm" data-cform="'+p.id+'">'+
-    '<textarea name="text" id="c-notes-'+p.id+'" placeholder="Write a comment…" required></textarea>'+
+    '<textarea name="text" id="c-notes-'+p.id+'" placeholder="Write an update…" required></textarea>'+
     '<div class="row"><input name="who" placeholder="Your name" required maxlength="60" style="max-width:220px" value="'+esc(S.editor||ls("dtsEditorName"))+'">'+
-    '<button class="btn primary" type="submit">Save comment</button><button class="btn" type="button" data-act="comment-cancel">Cancel</button></div>'+
-    '<div class="hint">Anyone can add a comment. It’s added with your name and today’s date.'+(S.canEdit?' To change or remove comments, use Edit.':'')+'</div></form>'}
+    '<button class="btn primary" type="submit">Add update</button><button class="btn" type="button" data-act="comment-cancel">Cancel</button></div>'+
+    '<div class="hint">Anyone can add an update. It’s added under Details with your name and today’s date.'+(S.canEdit?' To change or remove one, use Edit.':'')+'</div></form>'}
 function opts(list,cur,labels){return list.map(function(v){return '<option value="'+esc(v)+'"'+(v===cur?" selected":"")+">"+esc((labels&&labels[v])||v)+"</option>"}).join("")}
 function cardEdit(p){
   var id=p.id;
@@ -347,9 +341,8 @@ function cardEdit(p){
     '<label class="full">Details <span class="hint">One point per line. Start with a date like “29 Sep 2026 – ” to underline it.</span><textarea id="f-details-'+id+'" name="details">'+esc(lines(p.details).join("\n"))+'</textarea></label>'+
     '<label class="full">Tasks <span class="hint">One per line. Write UPDATE REQUIRED! to flag it red.</span><textarea id="f-tasks-'+id+'" name="tasks">'+esc(lines(p.tasks).join("\n"))+'</textarea></label>'+
     '<label>Team<textarea id="f-team-'+id+'" name="team">'+esc(lines(p.team).join("\n"))+'</textarea></label>'+
-    '<label>Comments<textarea id="f-notes-'+id+'" name="notes">'+esc(lines(p.notes).join("\n"))+'</textarea></label>'+
+    '<label>Notes<textarea id="f-notes-'+id+'" name="notes">'+esc(lines(p.notes).join("\n"))+'</textarea></label>'+
     '<label>Section<select id="f-section-'+id+'" name="section">'+S.sections.map(function(s){return '<option value="'+esc(s.name)+'"'+(s.name===p.section?" selected":"")+">"+esc(title(s.name))+"</option>"}).join("")+'</select></label>'+
-    '<label>Email link<input id="f-email-'+id+'" name="email" value="'+esc(/^https:/.test(p.email||"")?p.email:"")+'" placeholder="https://…"></label>'+
     '<div class="actions"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-act="cancel">Cancel</button><span class="sp"></span>'+
       (S.sort==="custom"?'<button class="btn" type="button" data-act="up" aria-label="Move up">↑ Move up</button><button class="btn" type="button" data-act="down" aria-label="Move down">↓ Move down</button>':'<span class="hint" style="color:var(--faint);font-size:12px">To reorder, switch to “Custom order”.</span>')+'</div>'+
   '</form></article>';
@@ -390,9 +383,9 @@ function render(){
   if(S.newId){var f=document.getElementById("f-name-"+S.newId);if(f){f.focus();f.select()}S.newId=null}
 }
 
-var FIELDS={name:"Name",desc:"Description",loc:"Location",status:"Status",pending:"Pending with",details:"Details",tasks:"Tasks",team:"Team",notes:"Comments",section:"Section",email:"Email link",archived:"Archived"};
-var KINDS={edit:"Edit",comment:"Comment",status:"Status",archive:"Archived",restore:"Restored",add:"New project"};
-var LONG={details:1,tasks:1,team:1,notes:1,email:1};
+var FIELDS={name:"Name",desc:"Description",loc:"Location",status:"Status",pending:"Pending with",details:"Details",tasks:"Tasks",team:"Team",notes:"Notes",section:"Section",archived:"Archived"};
+var KINDS={edit:"Edit",comment:"Update",status:"Status",archive:"Archived",restore:"Restored",add:"New project"};
+var LONG={details:1,tasks:1,team:1,notes:1};
 function fmtTime(ts){var d=new Date(ts);if(isNaN(d))return"";return fmtDate(ts)+", "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
 function renderHistory(){
   var list=S.history.filter(function(h){return !S.histFor||h.projectId===S.histFor});
@@ -406,7 +399,7 @@ function renderHistory(){
       ' <span class="when">· '+fmtTime(h.at)+'</span></div><ul>'+
       (h.changes||[]).map(function(c){var lb=FIELDS[c.f]||c.f;
         if(c.f==="archived")return '<li>'+(c.to==="true"?"Moved to archive":"Restored to log")+'</li>';
-        if(c.f==="notes"&&h.kind==="comment"&&c.to.indexOf(c.from)===0){var add=lines(c.to.slice(c.from.length)).join(" ").replace(/^[^:]{1,60}:\s*\d{1,2} [A-Z][a-z]{2} \d{4}\s*–\s*/,"");return '<li>Added a comment: “'+esc(add)+'”</li>'}
+        if(h.kind==="comment"&&c.to.indexOf(c.from)===0){var add=lines(c.to.slice(c.from.length)).join(" ").replace(/^[^:]{1,60}:\s*\d{1,2} [A-Z][a-z]{2} \d{4}\s*–\s*/,"");return '<li>Added an update: “'+esc(add)+'”</li>'}
         if(LONG[c.f])return '<li>'+esc(lb)+' changed<details><summary>See before and after</summary><div class="when">Before</div><pre>'+esc(c.from||"(empty)")+'</pre><div class="when">After</div><pre>'+esc(c.to||"(empty)")+'</pre></details></li>';
         return '<li>'+esc(lb)+': '+(c.from?'<span class="from">'+esc(c.from)+'</span> → ':"")+'<b>'+esc(c.to||"(empty)")+'</b></li>'}).join("")+'</ul></div>';
   });
@@ -433,7 +426,7 @@ main.addEventListener("click",function(e){
     var sec=add.getAttribute("data-add");
     var mx=S.projects.filter(function(p){return p.section===sec}).reduce(function(m,p){return Math.max(m,p.order||0)},0);
     var ref=col.doc(),at=stamp(),nb=fs.batch();
-    nb.set(ref,{section:sec,order:mx+10,name:"New project",desc:"",loc:"",status:"Ongoing",pending:"—",details:"",tasks:"",notes:"",team:"",email:"",archived:false,updatedAt:at,updatedBy:by()});
+    nb.set(ref,{section:sec,order:mx+10,name:"New project",desc:"",loc:"",status:"Ongoing",pending:"—",details:"",tasks:"",notes:"",team:"",archived:false,updatedAt:at,updatedBy:by()});
     nb.set(histCol.doc(),{at:at,by:by(),projectId:ref.id,projectName:"New project",kind:"add",changes:[{f:"section",from:"",to:sec}]});
     nb.commit().then(function(){S.editing=ref.id;S.newId=ref.id;render()}).catch(fail);
     return;
@@ -470,12 +463,12 @@ main.addEventListener("submit",function(e){
   if(cf){e.preventDefault();var cid=cf.getAttribute("data-cform"),cp=S.projects.find(function(x){return x.id===cid}),cfd=new FormData(cf);
     var nm=(cfd.get("who")||"").trim().replace(/[:–\n]/g," ").slice(0,60),tx=String(cfd.get("text")||"").replace(/\s+/g," ").trim();
     if(!nm||!tx||!cp)return;ls("dtsEditorName",nm);
-    var line="• "+nm+": "+fmtDate(stamp())+" – "+tx,cur=clean(cp.notes);
-    S.commenting=null;save(cp,{notes:cur?cur+"\n"+line:line},"comment",nm).catch(fail);render();return}
+    var line="• "+nm+": "+fmtDate(stamp())+" – "+tx,cur=clean(cp.details);
+    S.commenting=null;save(cp,{details:cur?cur+"\n"+line:line},"comment",nm).catch(fail);render();return}
   var f=e.target.closest("[data-form]");if(!f)return;e.preventDefault();
   var id=f.getAttribute("data-form"),fd=new FormData(f);
   var patch={name:(fd.get("name")||"").trim(),desc:(fd.get("desc")||"").trim(),loc:(fd.get("loc")||"").trim(),status:fd.get("status"),pending:fd.get("pending"),
-    details:clean(fd.get("details")),tasks:clean(fd.get("tasks")),team:clean(fd.get("team")),notes:clean(fd.get("notes")),section:fd.get("section"),email:(fd.get("email")||"").trim()};
+    details:clean(fd.get("details")),tasks:clean(fd.get("tasks")),team:clean(fd.get("team")),notes:clean(fd.get("notes")),section:fd.get("section")};
   if(/UPDATE REQUIRED/i.test(fd.get("tasks")||"")&&lines(fd.get("tasks")).length===1)patch.tasks="UPDATE REQUIRED!";
   S.editing=null;
   var p=S.projects.find(function(x){return x.id===id});
@@ -503,7 +496,12 @@ var FIREBASE_CONFIG={
 
 var sync=document.getElementById("sync"),dot=document.getElementById("dot"),who=document.getElementById("who"),tools=document.getElementById("tools");
 function gate(h,p){main.innerHTML='<div class="gate"><h2>'+h+'</h2><p>'+p+'</p></div>'}
-function setEditor(on){S.canEdit=on;if(!on){S.editing=null;S.confirmArchive=null}
+// Email links are private to Badriyah's own files: clear any left in the public database.
+function clearEmails(){
+  var withEmail=S.projects.filter(function(p){return p.email});if(!S.canEdit||!withEmail.length)return;
+  var b=fs.batch();withEmail.forEach(function(p){b.update(col.doc(p.id),{email:""})});b.commit().catch(function(){});
+}
+function setEditor(on){S.canEdit=on;if(on)clearEmails();if(!on){S.editing=null;S.confirmArchive=null}
   document.getElementById("export").hidden=!on;document.getElementById("import-l").hidden=!on||S.projects.length>0;render()}
 
 if(!FIREBASE_CONFIG||!window.firebase){sync.textContent="Not connected.";gate("Not set up yet","The Firebase settings for this log haven’t been added.");return}
@@ -520,7 +518,7 @@ histCol.orderBy("at","desc").limit(500).onSnapshot(function(snap){S.history=snap
 secCol.onSnapshot(function(snap){S.sections=snap.docs.map(function(d){var x=d.data()||{};return{id:d.id,name:x.name,color:x.color||"#5E6B7A",order:typeof x.order==="number"?x.order:999}});render()},function(){});
 col.onSnapshot(function(snap){
   S.projects=snap.docs.map(function(d){var x=d.data()||{};x.id=d.id;return x});
-  S.live=true;dot.classList.add("live");tools.hidden=false;
+  S.live=true;dot.classList.add("live");tools.hidden=false;clearEmails();
   document.getElementById("import-l").hidden=!S.canEdit||S.projects.length>0;
   var last=S.projects.reduce(function(m,p){return p.updatedAt&&p.updatedAt>m?p.updatedAt:m},"");
   sync.textContent="Live"+(last?" · last change "+fmtDate(last):"");
@@ -558,7 +556,7 @@ firebase.auth().onAuthStateChanged(function(u){
 
 // Download the live data in the same shape as data/project_log.json, for rebuilding the spreadsheet and print.
 document.getElementById("export").addEventListener("click",function(){
-  var strip=function(o){var c={};Object.keys(o).forEach(function(k){c[k]=o[k]});return c};
+  var strip=function(o){var c={};Object.keys(o).forEach(function(k){if(k!=="email")c[k]=o[k]});return c};
   var out={version:null,updated:new Date().toISOString().slice(0,10),
     sections:S.sections.slice().sort(function(a,b){return a.order-b.order}).map(strip),
     projects:S.projects.slice().sort(function(a,b){return a.section<b.section?-1:a.section>b.section?1:(a.order||0)-(b.order||0)}).map(strip)};
@@ -576,7 +574,7 @@ document.getElementById("import").addEventListener("change",function(e){
     sync.textContent="Importing "+d.projects.length+" projects…";
     return b.commit().then(function(){sync.textContent="Imported "+d.projects.length+" projects";e.target.value=""});
   }).catch(function(err){var m="Import failed: "+(err.code||"")+" "+(err.message||"");sync.textContent=m;alert(m);e.target.value=""});
-  function strip2(x){var c={};Object.keys(x).forEach(function(k){if(k!=="id")c[k]=x[k]});return c}
+  function strip2(x){var c={};Object.keys(x).forEach(function(k){if(k!=="id"&&k!=="email")c[k]=x[k]});return c}
 });
 })();
 </script>
