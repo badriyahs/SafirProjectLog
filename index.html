@@ -323,7 +323,8 @@ function render(){
     if(S.view==="log"&&S.canEdit&&!filtering)html+='<button class="addbtn" data-add="'+esc(sec.name)+'">+ Add a project to '+esc(title(sec.name))+'</button>';
     html+='</div></section>';
   });
-  if(!any)html='<div class="empty">'+(S.view==="archive"?"Nothing in the archive.":"No projects match. Clear the search or filters to see everything.")+'</div>';
+  if(!S.projects.length)html='<div class="empty">The log is empty.'+(S.canEdit?'<br><br><button class="btn primary" type="button" onclick="document.getElementById(\'import\').click()">Import project_log.json</button>':' Click “Unlock editing” to load the data.')+'</div>';
+  else if(!any)html='<div class="empty">'+(S.view==="archive"?"Nothing in the archive.":"No projects match. Clear the search or filters to see everything.")+'</div>';
   main.innerHTML=html;
   if(S.newId){var f=document.getElementById("f-name-"+S.newId);if(f){f.focus();f.select()}S.newId=null}
 }
@@ -403,7 +404,6 @@ col.onSnapshot(function(snap){
   var last=S.projects.reduce(function(m,p){return p.updatedAt&&p.updatedAt>m?p.updatedAt:m},"");
   sync.textContent="Live"+(last?" · last change "+fmtDate(last):"");
   render();
-  if(!S.projects.length)main.innerHTML='<div class="empty">The log is empty.'+(S.canEdit?' Use “Import project_log.json” below to load it.':"")+'</div>';
 },function(err){sync.textContent="Couldn’t sync: "+((err&&err.code)||"unavailable")});
 
 // Editing uses one shared editor account (created in the Firebase console); the Firestore rules only accept writes from it.
@@ -421,7 +421,7 @@ function showLocked(err){
       e.preventDefault();var nm=document.getElementById("u-name").value.trim(),pw=document.getElementById("u-pw").value;
       ls("dtsEditorName",nm);
       firebase.auth().signInWithEmailAndPassword(EDITOR_EMAIL,pw).catch(function(er){
-        var c=er&&er.code;showLocked(c==="auth/too-many-requests"?"Too many tries. Wait a few minutes.":"Wrong password.");document.getElementById("unlock").click();
+        var c=er&&er.code;showLocked(c==="auth/too-many-requests"?"Too many tries. Wait a few minutes.":(c==="auth/invalid-login-credentials"||c==="auth/invalid-credential"||c==="auth/wrong-password")?"Wrong password.":"Couldn’t unlock: "+(c||"error"));document.getElementById("unlock").click();
       });
     });
   });
@@ -451,8 +451,9 @@ document.getElementById("import").addEventListener("change",function(e){
     var b=fs.batch();
     d.sections.forEach(function(x){var c=strip2(x);b.set(secCol.doc(x.id),c)});
     d.projects.forEach(function(x){var c=strip2(x);b.set(col.doc(x.id),c)});
-    return b.commit().then(function(){sync.textContent="Imported "+d.projects.length+" projects"});
-  }).catch(function(err){sync.textContent="Import failed: "+(err.message||err.code||"error")});
+    sync.textContent="Importing "+d.projects.length+" projects…";
+    return b.commit().then(function(){sync.textContent="Imported "+d.projects.length+" projects";e.target.value=""});
+  }).catch(function(err){var m="Import failed: "+(err.code||"")+" "+(err.message||"");sync.textContent=m;alert(m);e.target.value=""});
   function strip2(x){var c={};Object.keys(x).forEach(function(k){if(k!=="id")c[k]=x[k]});return c}
 });
 })();
