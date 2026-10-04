@@ -6,17 +6,18 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Safir DTS Project Log</title>
 <link rel="icon" href="logo.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Questrial&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css">
 <style>
-/* Layout: same family as Badriyah's CFA Tracker and Tasks sites — serif title, stat tiles with coloured top rules, country panels with a coloured left edge — carrying the Safir logo and country colours from the printed log. */
+/* Layout: same family as Badriyah's CFA Tracker and Tasks sites — large title, stat tiles with coloured top rules, country panels with a coloured left edge — carrying the Safir logo and country colours from the printed log. */
 :root{
-  --bg:#F7F5F0;
+  --bg:#FFFFFF;
   --surface:#FFFFFF;
   --ink:#24282D;
   --muted:#737476;
   --faint:#A6AAAE;
-  --line:#E3E1DB;
-  --line-strong:#CDCAC2;
+  --line:#E3E4E6;
+  --line-strong:#CDCFD2;
   --brand:#BAD8EB;
   --brand-tint:#EAF3F9;
   --accent:#1F5F99;
@@ -32,9 +33,10 @@
   --st-done-bg:#E3E6EA; --st-done-fg:#5A6270;
   --pw-dts-bg:#F5B041; --pw-dts-fg:#3D2A00;
   --pw-other-bg:#D6E6F2; --pw-other-fg:#2F4A5C;
-  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --f-display:"IBM Plex Serif",Georgia,serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  /* Brand font is ITC Avant Garde: used where it's installed; Questrial (Google) stands in everywhere else. */
+  --f-body:"ITC Avant Garde Gothic Std","ITC Avant Garde Gothic","ITC Avant Garde","Avant Garde","Questrial",system-ui,sans-serif;
+  --f-display:var(--f-body);
+  --f-mono:var(--f-body);
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#14171C;--surface:#1B1F25;--ink:#E7EAED;--muted:#9EA3A8;--faint:#6E747A;--line:#2C3339;--line-strong:#3A434B;
@@ -55,8 +57,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .wrap{max-width:1040px;margin:0 auto;padding-inline:16px;padding-block:0 64px}
 
 /* header */
-.top{display:flex;align-items:center;gap:16px;padding-block:28px 6px}
-.logo{width:58px;height:54px;flex:none;background:var(--muted);
+.top{display:flex;align-items:center;gap:20px;padding-block:28px 6px}
+.logo{width:104px;height:98px;flex:none;background:var(--muted);
   -webkit-mask:url("logo.png") center/contain no-repeat;mask:url("logo.png") center/contain no-repeat}
 .top h1{font-family:var(--f-display);font-weight:600;font-size:clamp(24px,4vw,30px);letter-spacing:-.01em;line-height:1.15;margin:0;text-wrap:balance}
 .top h1 span{color:var(--accent)}
@@ -88,7 +90,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 .section{--sc:#5E6B7A;margin-top:20px;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--sc);border-radius:10px;overflow:hidden}
 .band{background:color-mix(in srgb,var(--sc) 9%,var(--surface));border-bottom:1px solid color-mix(in srgb,var(--sc) 22%,var(--line));padding:11px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .band .t{display:flex;align-items:center;gap:10px;color:color-mix(in srgb,var(--sc) 82%,var(--ink));font-weight:700;font-size:15px;letter-spacing:.04em;text-transform:uppercase}
-.band .code{background:var(--sc);color:#fff;font-family:var(--f-mono);font-size:11px;padding:2px 8px;border-radius:5px;letter-spacing:.04em}
+.band .code{display:inline-flex;align-items:center;gap:6px;background:var(--sc);color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;letter-spacing:.06em;white-space:nowrap}
+.band .code .fi{width:1.45em;line-height:1.05em;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.55)}
+.band .code.pipe{background:transparent;color:var(--sc);border:1.5px dashed var(--sc);padding:2px 7px}
+.band .code.pipe .fi{box-shadow:0 0 0 1px var(--line-strong)}
+.band .code .tag{font-weight:600;font-size:9.5px;letter-spacing:.1em;opacity:.85}
 .band .n{font-size:12.5px;color:var(--muted)}
 .band .n b{color:var(--ink);font-variant-numeric:tabular-nums}
 .list{}
@@ -214,8 +220,13 @@ var main=document.getElementById("main");
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function tc(n){return n.toLowerCase().replace(/(^|[\s&])([a-z])/g,function(m,p,c){return p+c.toUpperCase()})}
 function title(n){if(/ PIPELINE$/.test(n))return tc(n.replace(/ PIPELINE$/,""))+" Properties – Pipeline";if(/^EXHIBITIONS/.test(n))return tc(n);return tc(n)+" Properties"}
-var CODES={"KUWAIT":"KW","SAUDI ARABIA":"KSA","EGYPT":"EG","OMAN":"OM","SYRIA":"SY","IRAQ":"IQ","LEBANON":"LB","QATAR":"QA","EXHIBITIONS & BOOTHS":"EXH","KUWAIT PIPELINE":"KW","EGYPT PIPELINE":"EG"};
-function code(n){return CODES[n]||n.slice(0,3)}
+var CODES={"KUWAIT":"KW","SAUDI ARABIA":"KSA","EGYPT":"EG","OMAN":"OM","SYRIA":"SY","IRAQ":"IQ","LEBANON":"LB","QATAR":"QA","EXHIBITIONS & BOOTHS":"EXH"};
+var FLAGS={"KUWAIT":"kw","SAUDI ARABIA":"sa","EGYPT":"eg","OMAN":"om","SYRIA":"sy","IRAQ":"iq","LEBANON":"lb","QATAR":"qa"};
+function code(n){
+  var pipe=/ PIPELINE$/.test(n),base=n.replace(/ PIPELINE$/,"");
+  var f=FLAGS[base]?'<span class="fi fi-'+FLAGS[base]+'" aria-hidden="true"></span>':"";
+  return '<span class="code'+(pipe?" pipe":"")+'">'+f+esc(CODES[base]||base.slice(0,3))+(pipe?'<span class="tag">PIPELINE</span>':"")+'</span>';
+}
 function stKey(s){return (s||"").toLowerCase()}
 function pill(s){var k=stKey(s);if(!k)return"";return '<span class="pill" style="background:var(--st-'+k+'-bg);color:var(--st-'+k+'-fg)">'+esc(s)+'</span>'}
 function pwPill(p){if(!p||p==="—")return"";var d=p==="D&TS";return '<span class="pw">Pending with <span class="pill" style="background:var(--pw-'+(d?"dts":"other")+'-bg);color:var(--pw-'+(d?"dts":"other")+'-fg)">'+esc(PENDING_LABEL[p]||p)+'</span></span>'}
@@ -318,7 +329,7 @@ function render(){
     if(!rows.length&&(filtering||S.view==="archive"||!S.canEdit))return;
     if(S.country&&S.country!==sec.name)return;
     any=true;
-    html+='<section class="section" style="--sc:'+esc(sec.color)+'"><div class="band"><span class="t"><span class="code">'+esc(code(sec.name))+'</span>'+esc(title(sec.name))+'</span><span class="n"><b>'+rows.length+'</b> project'+(rows.length===1?'':'s')+'</span></div><div class="list">';
+    html+='<section class="section" style="--sc:'+esc(sec.color)+'"><div class="band"><span class="t">'+code(sec.name)+''+esc(title(sec.name))+'</span><span class="n"><b>'+rows.length+'</b> project'+(rows.length===1?'':'s')+'</span></div><div class="list">';
     rows.forEach(function(p){var i=S.view==="log"?startN+all.indexOf(p)+1:"";html+=(S.editing===p.id?cardEdit(p):cardView(p,i))});
     if(S.view==="log"&&S.canEdit&&!filtering)html+='<button class="addbtn" data-add="'+esc(sec.name)+'">+ Add a project to '+esc(title(sec.name))+'</button>';
     html+='</div></section>';
@@ -393,6 +404,11 @@ function setEditor(on){S.canEdit=on;if(!on){S.editing=null;S.confirmArchive=null
 if(!FIREBASE_CONFIG||!window.firebase){sync.textContent="Not connected.";gate("Not set up yet","The Firebase settings for this log haven’t been added.");return}
 firebase.initializeApp(FIREBASE_CONFIG);
 var fs=firebase.firestore();
+// Editing locks itself when the browser tab is closed, or after 30 minutes without activity.
+firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(function(){});
+var IDLE_MS=30*60*1000,idleT=null;
+function idleReset(){clearTimeout(idleT);if(S.canEdit)idleT=setTimeout(function(){firebase.auth().signOut()},IDLE_MS)}
+["click","keydown","input","scroll","touchstart"].forEach(function(ev){document.addEventListener(ev,idleReset,{passive:true})});
 col=fs.collection("projects");secCol=fs.collection("sections");
 
 // Anyone can read; the log loads straight away without signing in.
@@ -429,9 +445,9 @@ function showLocked(err){
 firebase.auth().onAuthStateChanged(function(u){
   if(!u){setEditor(false);showLocked();return}
   S.editor=ls("dtsEditorName")||"Editor";
-  who.innerHTML='<span>Editing as '+esc(S.editor)+'</span><button class="lnk" id="lock">Lock</button>';
+  who.innerHTML='<span>Editing as '+esc(S.editor)+' · locks after 30 min idle</span><button class="lnk" id="lock">Lock</button>';
   document.getElementById("lock").addEventListener("click",function(){firebase.auth().signOut()});
-  setEditor(true);
+  setEditor(true);idleReset();
 });
 
 // Download the live data in the same shape as data/project_log.json, for rebuilding the spreadsheet and print.
