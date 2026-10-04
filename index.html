@@ -157,6 +157,25 @@ u{text-decoration-thickness:1px;text-underline-offset:3px}
 .unlock{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .unlock input{padding:6px 9px;border:1px solid var(--line-strong);border-radius:7px;background:var(--surface);font-size:13px;width:140px}
 .unlock .err{flex-basis:100%;text-align:right;color:var(--req);font-size:12px}
+.stsel{appearance:none;-webkit-appearance:none;border:0;cursor:pointer;font:inherit;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;padding:3px 22px 3px 9px;border-radius:5px;
+  background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);background-position:calc(100% - 11px) 50%,calc(100% - 7px) 50%;background-size:4px 4px;background-repeat:no-repeat}
+.cm{margin-top:10px;display:grid;gap:8px;max-width:640px}
+.cm input,.cm textarea{width:100%;padding:8px 10px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);font-size:14px;color:var(--ink)}
+.cm textarea{min-height:80px;resize:vertical}
+.cm .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cm .hint{color:var(--faint);font-size:12px}
+.hist{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-top:20px;overflow:hidden}
+.hist .hh{padding:11px 16px;background:var(--brand-tint);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.hist .hh b{color:var(--ink)}
+.he{padding:12px 16px;border-top:1px solid var(--line);font-size:13.5px}
+.he .when{color:var(--muted);font-size:12.5px}
+.he .who{font-weight:600}
+.he .kind{display:inline-block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:1px 7px;border-radius:4px;background:var(--line);color:var(--muted);margin-left:6px}
+.he .kind.comment{background:var(--brand);color:#2F4A5C}
+.he ul{margin-top:6px}
+.he .from{color:var(--muted);text-decoration:line-through}
+.he details{margin-top:2px}.he summary{cursor:pointer;color:var(--accent)}
+.he pre{white-space:pre-wrap;font:inherit;margin:4px 0;padding:6px 8px;background:var(--bg);border:1px solid var(--line);border-radius:6px}
 .gate{max-width:420px;margin:48px auto;text-align:center;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--accent);border-radius:10px;padding:28px 22px}
 .gate h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 8px}
 .gate p{color:var(--muted);margin:0 0 18px}
@@ -189,13 +208,15 @@ u{text-decoration-thickness:1px;text-underline-offset:3px}
     <div class="seg" role="group" aria-label="View">
       <button id="v-log" aria-pressed="true">Log</button>
       <button id="v-archive" aria-pressed="false">Archive</button>
+      <button id="v-history" aria-pressed="false">History</button>
     </div>
+    <select id="sort" class="sel" aria-label="Order"><option value="recent">Recently edited first</option><option value="custom">Custom order</option></select>
     <select id="country" class="sel" aria-label="Country"><option value="">All countries</option></select>
   </div>
 
   <main id="main"><div class="empty">Loading projects…</div></main>
   <div class="tools" id="tools" hidden>
-    <p class="note">Anyone with the link can view this log. Editing needs the edit password. Archived projects are kept, never deleted.</p>
+    <p class="note">Anyone with the link can view this log and add comments. Other changes need the edit password. Archived projects are kept, never deleted.</p>
     <button class="lnk" id="export" hidden>Download JSON</button>
     <label class="lnk" id="import-l" hidden>Import project_log.json<input type="file" id="import" accept=".json,application/json" hidden></label>
   </div>
@@ -213,7 +234,7 @@ var PENDING=["D&TS","Hotel","Owner","Consultant / Contractor","Authority","Manag
 var PENDING_LABEL={"D&TS":"Design & Technical Services Dept"};
 var MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-var S={projects:[],sections:[],view:"log",q:"",country:"",filter:null,editing:null,confirmArchive:null,live:false,newId:null,canEdit:false,editor:""};
+var S={projects:[],sections:[],view:"log",q:"",country:"",filter:null,editing:null,confirmArchive:null,live:false,newId:null,canEdit:false,editor:"",sort:ls("dtsSort")||"recent",history:[],histFor:null,commenting:null};
 var col=null,secCol=null;
 var main=document.getElementById("main");
 
@@ -245,7 +266,7 @@ function secOf(name){return S.sections.find(function(s){return s.name===name})||
 function visible(p){
   if(S.view==="log"&&p.archived)return false;
   if(S.view==="archive"&&!p.archived)return false;
-  if(S.country&&p.section!==S.country)return false;
+  if(S.country&&base(p.section)!==S.country)return false;
   if(S.filter){
     if(S.filter==="dts"&&p.pending!=="D&TS")return false;
     if(S.filter==="req"&&!/UPDATE REQUIRED/i.test(p.tasks||""))return false;
@@ -271,9 +292,12 @@ function renderSummary(){
     return '<button class="stat" style="--sc:'+it[3]+'" data-f="'+esc(it[0])+'" aria-pressed="'+on+'"><span class="k">'+esc(it[1])+'</span><b>'+it[2]+'</b><span class="h">'+esc(it[4])+'</span></button>';
   }).join("");
 }
+function base(n){return String(n||"").replace(/ PIPELINE$/,"")}
+// One entry per country; choosing it shows that country's properties and its pipeline together.
 function renderCountries(){
-  var sel=document.getElementById("country"),cur=S.country;
-  sel.innerHTML='<option value="">All countries</option>'+S.sections.map(function(s){return '<option value="'+esc(s.name)+'"'+(s.name===cur?" selected":"")+">"+esc(title(s.name))+"</option>"}).join("");
+  var sel=document.getElementById("country"),cur=S.country,seen={},list=[];
+  S.sections.slice().sort(function(a,b){return a.order-b.order}).forEach(function(s){var b=base(s.name);if(!seen[b]){seen[b]=1;list.push(b)}});
+  sel.innerHTML='<option value="">All countries</option>'+list.map(function(b){return '<option value="'+esc(b)+'"'+(b===cur?" selected":"")+">"+esc(tc(b))+"</option>"}).join("");
 }
 
 function cardView(p,n){
@@ -283,15 +307,26 @@ function cardView(p,n){
   var arch=S.confirmArchive===p.id;
   return '<article class="card'+cls+'" data-id="'+p.id+'">'+
     '<div class="ch"><span class="num">'+(n||"")+'</span><div class="nm"><div class="pn">'+esc(p.name||"Untitled project")+'</div>'+(meta?'<div class="pm">'+meta+'</div>':"")+'</div>'+
-    '<div class="tags">'+pill(p.status)+pwPill(p.pending)+'</div></div>'+
-    '<div class="body">'+(dt||'<div class="none">No details yet.</div>')+(tk?'<div class="tl">Tasks:</div>'+tk:"")+(nt?'<div class="nl">Notes:</div>'+nt:"")+'</div>'+
+    '<div class="tags">'+(S.canEdit&&!p.archived?stSel(p):pill(p.status))+pwPill(p.pending)+'</div></div>'+
+    '<div class="body">'+(dt||'<div class="none">No details yet.</div>')+(tk?'<div class="tl">Tasks:</div>'+tk:"")+
+      (S.commenting===p.id?commentForm(p):(nt?'<div class="nl">Comments:</div>'+nt:""))+'</div>'+
     '<div class="foot">'+(p.updatedAt?'<span>Updated '+fmtDate(p.updatedAt)+(p.updatedBy?' by '+esc(p.updatedBy):"")+'</span>':"")+
       (/^https:\/\//.test(p.email||"")?'<a href="'+esc(p.email)+'" target="_blank" rel="noopener noreferrer">Open email ↗</a>':"")+
+      (S.commenting===p.id?"":'<button class="lnk" data-act="comment">'+(nt?"Edit comments":"Add a comment")+'</button>')+
+      '<button class="lnk" data-act="history">History</button>'+
       (S.canEdit?'<button class="lnk" data-act="edit">Edit</button>'+
         (p.archived?'<button class="lnk" data-act="restore">Restore to log</button>':
           (arch?'<button class="lnk warn" data-act="archive-yes">Move to archive?</button><button class="lnk" data-act="archive-no">Keep</button>':'<button class="lnk" data-act="archive">Archive</button>')):"")+
     '</div></article>';
 }
+function stSel(p){var k=stKey(p.status);
+  return '<select class="stsel" data-status aria-label="Status" style="background-color:var(--st-'+k+'-bg);color:var(--st-'+k+'-fg)">'+opts(STATUSES,p.status)+'</select>'}
+function commentForm(p){
+  return '<form class="cm" data-cform="'+p.id+'"><div class="nl" style="margin:0">Comments</div>'+
+    '<textarea name="notes" id="c-notes-'+p.id+'" placeholder="One comment per line">'+esc(lines(p.notes).join("\n"))+'</textarea>'+
+    '<div class="row"><input name="who" placeholder="Your name" required maxlength="60" style="max-width:220px" value="'+esc(S.editor||ls("dtsEditorName"))+'">'+
+    '<button class="btn primary" type="submit">Save comment</button><button class="btn" type="button" data-act="comment-cancel">Cancel</button></div>'+
+    '<div class="hint">Anyone can add comments. Your name is saved in the History.</div></form>'}
 function opts(list,cur,labels){return list.map(function(v){return '<option value="'+esc(v)+'"'+(v===cur?" selected":"")+">"+esc((labels&&labels[v])||v)+"</option>"}).join("")}
 function cardEdit(p){
   var id=p.id;
@@ -304,16 +339,23 @@ function cardEdit(p){
     '<label class="full">Details <span class="hint">One point per line. Start with a date like “29 Sep 2026 – ” to underline it.</span><textarea id="f-details-'+id+'" name="details">'+esc(lines(p.details).join("\n"))+'</textarea></label>'+
     '<label class="full">Tasks <span class="hint">One per line. Write UPDATE REQUIRED! to flag it red.</span><textarea id="f-tasks-'+id+'" name="tasks">'+esc(lines(p.tasks).join("\n"))+'</textarea></label>'+
     '<label>Team<textarea id="f-team-'+id+'" name="team">'+esc(lines(p.team).join("\n"))+'</textarea></label>'+
-    '<label>Notes<textarea id="f-notes-'+id+'" name="notes">'+esc(lines(p.notes).join("\n"))+'</textarea></label>'+
+    '<label>Comments<textarea id="f-notes-'+id+'" name="notes">'+esc(lines(p.notes).join("\n"))+'</textarea></label>'+
     '<label>Section<select id="f-section-'+id+'" name="section">'+S.sections.map(function(s){return '<option value="'+esc(s.name)+'"'+(s.name===p.section?" selected":"")+">"+esc(title(s.name))+"</option>"}).join("")+'</select></label>'+
     '<label>Email link<input id="f-email-'+id+'" name="email" value="'+esc(/^https:/.test(p.email||"")?p.email:"")+'" placeholder="https://…"></label>'+
     '<div class="actions"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-act="cancel">Cancel</button><span class="sp"></span>'+
-      '<button class="btn" type="button" data-act="up" aria-label="Move up">↑ Move up</button><button class="btn" type="button" data-act="down" aria-label="Move down">↓ Move down</button></div>'+
+      (S.sort==="custom"?'<button class="btn" type="button" data-act="up" aria-label="Move up">↑ Move up</button><button class="btn" type="button" data-act="down" aria-label="Move down">↓ Move down</button>':'<span class="hint" style="color:var(--faint);font-size:12px">To reorder, switch to “Custom order”.</span>')+'</div>'+
   '</form></article>';
 }
 
+function cmp(a,b){
+  if(S.sort==="recent"){var x=a.updatedAt||"",y=b.updatedAt||"";if(x!==y)return x<y?1:-1}
+  return (a.order||0)-(b.order||0);
+}
 function render(){
   renderSummary();renderCountries();
+  document.getElementById("sort").value=S.sort;
+  document.getElementById("v-history").setAttribute("aria-pressed",S.view==="history");
+  if(S.view==="history"){renderHistory();return}
   document.getElementById("v-log").setAttribute("aria-pressed",S.view==="log");
   document.getElementById("v-archive").setAttribute("aria-pressed",S.view==="archive");
   if(!S.live&&!S.projects.length){return}
@@ -322,12 +364,12 @@ function render(){
   S.projects.forEach(function(p){if(!known[p.section]){known[p.section]=1;secs.push(secOf(p.section))}});
   var n=0,html="",any=false;
   secs.forEach(function(sec){
-    var all=S.projects.filter(function(p){return p.section===sec.name&&(S.view==="archive"?p.archived:!p.archived)}).sort(function(a,b){return (a.order||0)-(b.order||0)});
+    var all=S.projects.filter(function(p){return p.section===sec.name&&(S.view==="archive"?p.archived:!p.archived)}).sort(cmp);
     var rows=all.filter(visible);
     var startN=n;n+=all.length;
     var filtering=S.q||S.filter||S.country;
     if(!rows.length&&(filtering||S.view==="archive"||!S.canEdit))return;
-    if(S.country&&S.country!==sec.name)return;
+    if(S.country&&S.country!==base(sec.name))return;
     any=true;
     html+='<section class="section" style="--sc:'+esc(sec.color)+'"><div class="band"><span class="t">'+code(sec.name)+''+esc(title(sec.name))+'</span><span class="n"><b>'+rows.length+'</b> project'+(rows.length===1?'':'s')+'</span></div><div class="list">';
     rows.forEach(function(p){var i=S.view==="log"?startN+all.indexOf(p)+1:"";html+=(S.editing===p.id?cardEdit(p):cardView(p,i))});
@@ -340,18 +382,55 @@ function render(){
   if(S.newId){var f=document.getElementById("f-name-"+S.newId);if(f){f.focus();f.select()}S.newId=null}
 }
 
+var FIELDS={name:"Name",desc:"Description",loc:"Location",status:"Status",pending:"Pending with",details:"Details",tasks:"Tasks",team:"Team",notes:"Comments",section:"Section",email:"Email link",archived:"Archived"};
+var KINDS={edit:"Edit",comment:"Comment",status:"Status",archive:"Archived",restore:"Restored",add:"New project"};
+var LONG={details:1,tasks:1,team:1,notes:1,email:1};
+function fmtTime(ts){var d=new Date(ts);if(isNaN(d))return"";return fmtDate(ts)+", "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
+function renderHistory(){
+  var list=S.history.filter(function(h){return !S.histFor||h.projectId===S.histFor});
+  var pr=S.histFor&&S.projects.find(function(x){return x.id===S.histFor});
+  var html='<div class="hist"><div class="hh"><span>'+(S.histFor?'History for <b>'+esc(pr?pr.name:"this project")+'</b>':'<b>All changes</b>, newest first')+'</span>'+
+    (S.histFor?'<button class="lnk" data-hall>Show all history</button>':'<span>'+list.length+' change'+(list.length===1?"":"s")+'</span>')+'</div>';
+  if(!list.length)html+='<div class="empty">No changes recorded yet. Edits and comments will appear here.</div>';
+  list.forEach(function(h){
+    html+='<div class="he"><div><span class="who">'+esc(h.by||"Someone")+'</span><span class="kind'+(h.kind==="comment"?" comment":"")+'">'+esc(KINDS[h.kind]||h.kind)+'</span>'+
+      (S.histFor?"":' · <button class="lnk" data-hfor="'+esc(h.projectId)+'">'+esc(h.projectName||"Project")+'</button>')+
+      ' <span class="when">· '+fmtTime(h.at)+'</span></div><ul>'+
+      (h.changes||[]).map(function(c){var lb=FIELDS[c.f]||c.f;
+        if(c.f==="archived")return '<li>'+(c.to==="true"?"Moved to archive":"Restored to log")+'</li>';
+        if(LONG[c.f])return '<li>'+esc(lb)+' changed<details><summary>See before and after</summary><div class="when">Before</div><pre>'+esc(c.from||"(empty)")+'</pre><div class="when">After</div><pre>'+esc(c.to||"(empty)")+'</pre></details></li>';
+        return '<li>'+esc(lb)+': '+(c.from?'<span class="from">'+esc(c.from)+'</span> → ':"")+'<b>'+esc(c.to||"(empty)")+'</b></li>'}).join("")+'</ul></div>';
+  });
+  main.innerHTML=html+'</div>';
+}
 function stamp(){return new Date().toISOString()}
 function by(){return S.editor||""}
 function clean(t){return lines(t).map(function(l){return "• "+l}).join("\n")}
+function str(v){return v==null?"":String(v)}
+function fail(err){var m="Couldn’t save: "+((err&&err.code)||"error")+(err&&err.code==="permission-denied"?" (editing may have locked. Unlock and try again.)":"");sync.textContent=m;alert(m)}
+// Every change is saved together with a History entry recording who changed what.
+function save(p,patch,kind,name){
+  var ch=[];Object.keys(FIELDS).forEach(function(k){if(k in patch&&str(patch[k])!==str(p[k]))ch.push({f:k,from:str(p[k]).slice(0,4000),to:str(patch[k]).slice(0,4000)})});
+  if(!ch.length)return Promise.resolve();
+  patch.updatedAt=stamp();patch.updatedBy=name;
+  var b=fs.batch();b.update(col.doc(p.id),patch);
+  b.set(histCol.doc(),{at:patch.updatedAt,by:name,projectId:p.id,projectName:p.name||"",kind:kind,changes:ch});
+  return b.commit();
+}
 
 main.addEventListener("click",function(e){
   var add=e.target.closest("[data-add]");
   if(add&&S.canEdit){
     var sec=add.getAttribute("data-add");
     var mx=S.projects.filter(function(p){return p.section===sec}).reduce(function(m,p){return Math.max(m,p.order||0)},0);
-    col.add({section:sec,order:mx+10,name:"New project",desc:"",loc:"",status:"Ongoing",pending:"—",details:"",tasks:"",notes:"",team:"",email:"",archived:false,updatedAt:stamp(),updatedBy:by()}).then(function(ref){S.editing=ref.id;S.newId=ref.id;render()}).catch(function(){});
+    var ref=col.doc(),at=stamp(),nb=fs.batch();
+    nb.set(ref,{section:sec,order:mx+10,name:"New project",desc:"",loc:"",status:"Ongoing",pending:"—",details:"",tasks:"",notes:"",team:"",email:"",archived:false,updatedAt:at,updatedBy:by()});
+    nb.set(histCol.doc(),{at:at,by:by(),projectId:ref.id,projectName:"New project",kind:"add",changes:[{f:"section",from:"",to:sec}]});
+    nb.commit().then(function(){S.editing=ref.id;S.newId=ref.id;render()}).catch(fail);
     return;
   }
+  var hf=e.target.closest("[data-hfor]");if(hf){S.histFor=hf.getAttribute("data-hfor");render();window.scrollTo(0,0);return}
+  if(e.target.closest("[data-hall]")){S.histFor=null;render();return}
   var b=e.target.closest("[data-act]");if(!b)return;
   var card=b.closest("[data-id]");var id=card&&card.getAttribute("data-id");
   var p=S.projects.find(function(x){return x.id===id});if(!p)return;
@@ -360,8 +439,11 @@ main.addEventListener("click",function(e){
   else if(a==="cancel"){S.editing=null;render()}
   else if(a==="archive"){S.confirmArchive=id;render()}
   else if(a==="archive-no"){S.confirmArchive=null;render()}
-  else if(a==="archive-yes"){S.confirmArchive=null;col.doc(id).update({archived:true,updatedAt:stamp(),updatedBy:by()}).catch(function(){})}
-  else if(a==="restore"){col.doc(id).update({archived:false,updatedAt:stamp(),updatedBy:by()}).catch(function(){})}
+  else if(a==="archive-yes"){S.confirmArchive=null;save(p,{archived:true},"archive",by()).catch(fail)}
+  else if(a==="restore"){save(p,{archived:false},"restore",by()).catch(fail)}
+  else if(a==="comment"){S.commenting=id;render();var c=document.getElementById("c-notes-"+id);if(c)c.focus()}
+  else if(a==="comment-cancel"){S.commenting=null;render()}
+  else if(a==="history"){S.view="history";S.histFor=id;render();window.scrollTo(0,0)}
   else if(a==="up"||a==="down"){
     var sib=S.projects.filter(function(x){return x.section===p.section&&!x.archived}).sort(function(x,y){return (x.order||0)-(y.order||0)});
     var i=sib.indexOf(p),j=a==="up"?i-1:i+1;if(j<0||j>=sib.length)return;
@@ -369,22 +451,34 @@ main.addEventListener("click",function(e){
     col.doc(p.id).update({order:oo}).catch(function(){});col.doc(o.id).update({order:po}).catch(function(){});
   }
 });
+main.addEventListener("change",function(e){
+  var sel=e.target.closest("[data-status]");if(!sel||!S.canEdit)return;
+  var id=sel.closest("[data-id]").getAttribute("data-id"),p=S.projects.find(function(x){return x.id===id});
+  if(p)save(p,{status:sel.value},"status",by()).catch(fail);
+});
 main.addEventListener("submit",function(e){
+  var cf=e.target.closest("[data-cform]");
+  if(cf){e.preventDefault();var cid=cf.getAttribute("data-cform"),cp=S.projects.find(function(x){return x.id===cid}),cfd=new FormData(cf);
+    var nm=(cfd.get("who")||"").trim().slice(0,60);if(!nm||!cp)return;ls("dtsEditorName",nm);
+    S.commenting=null;save(cp,{notes:clean(cfd.get("notes"))},"comment",nm).catch(fail);render();return}
   var f=e.target.closest("[data-form]");if(!f)return;e.preventDefault();
   var id=f.getAttribute("data-form"),fd=new FormData(f);
   var patch={name:(fd.get("name")||"").trim(),desc:(fd.get("desc")||"").trim(),loc:(fd.get("loc")||"").trim(),status:fd.get("status"),pending:fd.get("pending"),
-    details:clean(fd.get("details")),tasks:clean(fd.get("tasks")),team:clean(fd.get("team")),notes:clean(fd.get("notes")),section:fd.get("section"),email:(fd.get("email")||"").trim(),updatedAt:stamp(),updatedBy:by()};
+    details:clean(fd.get("details")),tasks:clean(fd.get("tasks")),team:clean(fd.get("team")),notes:clean(fd.get("notes")),section:fd.get("section"),email:(fd.get("email")||"").trim()};
   if(/UPDATE REQUIRED/i.test(fd.get("tasks")||"")&&lines(fd.get("tasks")).length===1)patch.tasks="UPDATE REQUIRED!";
   S.editing=null;
-  col.doc(id).update(patch).catch(function(){});
+  var p=S.projects.find(function(x){return x.id===id});
+  if(p)save(p,patch,"edit",by()).catch(fail);
   render();
 });
 
-document.getElementById("summary").addEventListener("click",function(e){var b=e.target.closest("[data-f]");if(!b)return;var f=b.getAttribute("data-f");S.filter=(f==="all"||S.filter===f)?null:f;if(S.view==="archive")S.view="log";render()});
+document.getElementById("summary").addEventListener("click",function(e){var b=e.target.closest("[data-f]");if(!b)return;var f=b.getAttribute("data-f");S.filter=(f==="all"||S.filter===f)?null:f;if(S.view!=="log")S.view="log";render()});
 var qt;document.getElementById("q").addEventListener("input",function(e){clearTimeout(qt);qt=setTimeout(function(){S.q=e.target.value.trim().toLowerCase();render()},120)});
 document.getElementById("country").addEventListener("change",function(e){S.country=e.target.value;render()});
 document.getElementById("v-log").addEventListener("click",function(){S.view="log";render()});
 document.getElementById("v-archive").addEventListener("click",function(){S.view="archive";S.filter=null;render()});
+document.getElementById("v-history").addEventListener("click",function(){S.view="history";S.histFor=null;render()});
+document.getElementById("sort").addEventListener("change",function(e){S.sort=e.target.value;ls("dtsSort",S.sort);render()});
 
 // Firebase project for the log. Anyone can read; the Firestore rules limit writes to the shared editor account.
 var FIREBASE_CONFIG={
@@ -404,12 +498,23 @@ function setEditor(on){S.canEdit=on;if(!on){S.editing=null;S.confirmArchive=null
 if(!FIREBASE_CONFIG||!window.firebase){sync.textContent="Not connected.";gate("Not set up yet","The Firebase settings for this log haven’t been added.");return}
 firebase.initializeApp(FIREBASE_CONFIG);
 var fs=firebase.firestore();
-// Editing locks itself when the browser tab is closed, or after 30 minutes without activity.
+// Editing locks when the tab is closed (or opened fresh), and after 30 minutes without activity.
+// Last activity is stored with a timestamp, so it still locks if the computer slept with the page open.
 firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(function(){});
-var IDLE_MS=30*60*1000,idleT=null;
-function idleReset(){clearTimeout(idleT);if(S.canEdit)idleT=setTimeout(function(){firebase.auth().signOut()},IDLE_MS)}
-["click","keydown","input","scroll","touchstart"].forEach(function(ev){document.addEventListener(ev,idleReset,{passive:true})});
-col=fs.collection("projects");secCol=fs.collection("sections");
+var IDLE_MS=30*60*1000,lastTouch=0;
+function ss(k,v){try{if(v===undefined)return sessionStorage.getItem(k)||"";if(v===null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v)}catch(e){return ""}}
+function lock(){ss("dtsUnlocked",null);firebase.auth().signOut()}
+function stale(){var t=+ss("dtsLastActive")||0;return Date.now()-t>IDLE_MS}
+function activity(){
+  if(!S.canEdit)return;
+  if(stale()){lock();return}
+  var now=Date.now();if(now-lastTouch>15000){lastTouch=now;ss("dtsLastActive",String(now))}
+}
+["click","keydown","input","scroll","touchstart"].forEach(function(ev){document.addEventListener(ev,activity,{passive:true,capture:true})});
+document.addEventListener("visibilitychange",function(){if(S.canEdit&&stale())lock()});
+setInterval(function(){if(S.canEdit&&stale())lock()},30000);
+col=fs.collection("projects");secCol=fs.collection("sections");var histCol=fs.collection("history");
+histCol.orderBy("at","desc").limit(500).onSnapshot(function(snap){S.history=snap.docs.map(function(d){return d.data()});if(S.view==="history")render()},function(){});
 
 // Anyone can read; the log loads straight away without signing in.
 secCol.onSnapshot(function(snap){S.sections=snap.docs.map(function(d){var x=d.data()||{};return{id:d.id,name:x.name,color:x.color||"#5E6B7A",order:typeof x.order==="number"?x.order:999}});render()},function(){});
@@ -435,8 +540,8 @@ function showLocked(err){
     document.getElementById("u-x").addEventListener("click",function(){showLocked()});
     document.getElementById("uf").addEventListener("submit",function(e){
       e.preventDefault();var nm=document.getElementById("u-name").value.trim(),pw=document.getElementById("u-pw").value;
-      ls("dtsEditorName",nm);
-      firebase.auth().signInWithEmailAndPassword(EDITOR_EMAIL,pw).catch(function(er){
+      ls("dtsEditorName",nm);ss("dtsUnlocked","1");ss("dtsLastActive",String(Date.now()));
+      firebase.auth().signInWithEmailAndPassword(EDITOR_EMAIL,pw).catch(function(er){ss("dtsUnlocked",null);
         var c=er&&er.code;showLocked(c==="auth/too-many-requests"?"Too many tries. Wait a few minutes.":(c==="auth/invalid-login-credentials"||c==="auth/invalid-credential"||c==="auth/wrong-password")?"Wrong password.":"Couldn’t unlock: "+(c||"error"));document.getElementById("unlock").click();
       });
     });
@@ -444,10 +549,11 @@ function showLocked(err){
 }
 firebase.auth().onAuthStateChanged(function(u){
   if(!u){setEditor(false);showLocked();return}
+  if(!ss("dtsUnlocked")||stale()){lock();return}
   S.editor=ls("dtsEditorName")||"Editor";
   who.innerHTML='<span>Editing as '+esc(S.editor)+' · locks after 30 min idle</span><button class="lnk" id="lock">Lock</button>';
   document.getElementById("lock").addEventListener("click",function(){firebase.auth().signOut()});
-  setEditor(true);idleReset();
+  setEditor(true);
 });
 
 // Download the live data in the same shape as data/project_log.json, for rebuilding the spreadsheet and print.
