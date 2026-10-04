@@ -551,7 +551,7 @@ firebase.auth().onAuthStateChanged(function(u){
   if(!u){setEditor(false);showLocked();return}
   if(!ss("dtsUnlocked")||stale()){lock();return}
   S.editor=ls("dtsEditorName")||"Editor";
-  who.innerHTML='<span>Editing as '+esc(S.editor)+' · locks after 30 min idle</span><button class="lnk" id="lock">Lock</button>';
+  who.innerHTML='<span>Editing as '+esc(S.editor)+'</span><button class="lnk" id="lock">Lock</button>';
   document.getElementById("lock").addEventListener("click",function(){firebase.auth().signOut()});
   setEditor(true);
 });
