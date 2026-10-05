@@ -257,7 +257,6 @@ u{text-decoration-thickness:1px;text-underline-offset:3px}
     </div>
     <button id="openall" class="sel" type="button" style="cursor:pointer">Open all</button>
     <select id="sort" class="sel" aria-label="Order"><option value="recent">Sort: recently updated</option><option value="custom">Sort: custom order</option></select>
-    <select id="country" class="sel" aria-label="Country"><option value="">All countries</option></select>
   </div>
 
   <div id="filterbar"></div>
@@ -352,12 +351,6 @@ function renderSummary(){
   }).join("");
 }
 function base(n){return String(n||"").replace(/ PIPELINE$/,"")}
-// One entry per country; choosing it shows that country's properties and its pipeline together.
-function renderCountries(){
-  var sel=document.getElementById("country"),cur=S.country,seen={},list=[];
-  S.sections.slice().sort(function(a,b){return a.order-b.order}).forEach(function(s){var b=base(s.name);if(!seen[b]){seen[b]=1;list.push(b)}});
-  sel.innerHTML='<option value="">All countries</option>'+list.map(function(b){return '<option value="'+esc(b)+'"'+(b===cur?" selected":"")+">"+esc(tc(b))+"</option>"}).join("");
-}
 
 var CHEV='<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
 var SIGNED=/^([^:–]{1,60}):\s*(\d{1,2} [A-Z][a-z]{2} \d{4})\s*–\s*(.*)$/;
@@ -437,7 +430,7 @@ function renderFilterbar(){
   document.getElementById("filterbar").innerHTML=parts.length&&S.view==="log"?'<div class="filterbar"><span>Showing only: <b>'+esc(parts.join(" · "))+'</b></span><button data-clear>Show everything</button></div>':"";
 }
 function render(){
-  renderSummary();renderCountries();renderFilterbar();renderJump();
+  renderSummary();renderFilterbar();renderJump();
   document.getElementById("openall").textContent=S.allOpen?"Close all":"Open all";
   document.getElementById("sort").value=S.sort;
   document.getElementById("v-history").setAttribute("aria-pressed",S.view==="history");
@@ -556,7 +549,7 @@ document.getElementById("jump").addEventListener("click",function(e){
   var b=e.target.closest("[data-jump]");if(!b)return;var c=b.getAttribute("data-jump");
   S.filter=null;S.country="";S.q="";document.getElementById("q").value="";render();
   var t=S.sections.slice().sort(function(a,b){return a.order-b.order}).find(function(sc){return base(sc.name)===c});
-  var el=t&&document.getElementById("sec-"+slug(t.name));if(el)el.scrollIntoView({behavior:"smooth",block:"start"});
+  var el=t&&document.getElementById("sec-"+slug(t.name));if(el){var tb=document.querySelector(".toolbar").offsetHeight;window.scrollTo(0,el.getBoundingClientRect().top+window.scrollY-tb-12)}
 });
 main.addEventListener("change",function(e){
   var tk=e.target.closest("[data-tick]");
@@ -590,7 +583,6 @@ main.addEventListener("submit",function(e){
 
 document.getElementById("summary").addEventListener("click",function(e){var b=e.target.closest("[data-f]");if(!b)return;var f=b.getAttribute("data-f");S.filter=(f==="all"||S.filter===f)?null:f;if(S.view!=="log")S.view="log";render()});
 var qt;document.getElementById("q").addEventListener("input",function(e){clearTimeout(qt);qt=setTimeout(function(){S.q=e.target.value.trim().toLowerCase();render()},120)});
-document.getElementById("country").addEventListener("change",function(e){S.country=e.target.value;render()});
 document.getElementById("filterbar").addEventListener("click",function(e){if(!e.target.closest("[data-clear]"))return;S.filter=null;S.country="";S.q="";document.getElementById("q").value="";render()});
 try{if(!localStorage.getItem("dtsTipHidden"))document.getElementById("tip").hidden=false}catch(e){document.getElementById("tip").hidden=false}
 document.getElementById("tip-x").addEventListener("click",function(){document.getElementById("tip").hidden=true;try{localStorage.setItem("dtsTipHidden","1")}catch(e){}});
