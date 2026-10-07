@@ -231,7 +231,7 @@ u{text-decoration-thickness:1px;text-underline-offset:3px}
 .gate p{color:var(--muted);margin:0 0 18px}
 .tools{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:28px}
 .tools .note{margin:0;flex:1}
-.tools[hidden],.lnk[hidden],.tip[hidden]{display:none}
+.tools[hidden],.lnk[hidden],.tip[hidden],#apply-l[hidden]{display:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -272,6 +272,7 @@ u{text-decoration-thickness:1px;text-underline-offset:3px}
   <div class="tools" id="tools" hidden>
     <p class="note">Anyone with the link can view this log and add updates. Other changes need the edit password. Archived projects are kept, never deleted.</p>
     <button class="lnk" id="export" hidden>Download JSON</button>
+    <label class="btn primary" id="apply-l" hidden style="cursor:pointer">Apply changes file…<input type="file" id="apply" accept=".json,application/json" hidden></label>
     <label class="lnk" id="import-l" hidden>Import project_log.json<input type="file" id="import" accept=".json,application/json" hidden></label>
   </div>
 </div>
@@ -657,7 +658,7 @@ function clearEmails(){
   var b=fs.batch();withEmail.forEach(function(p){b.update(col.doc(p.id),{email:""})});b.commit().catch(function(){});
 }
 function setEditor(on){S.canEdit=on;if(on)clearEmails();if(!on){S.editing=null;S.confirmArchive=null}
-  document.getElementById("export").hidden=!on;document.getElementById("import-l").hidden=!on||S.projects.length>0;render()}
+  document.getElementById("export").hidden=!on;document.getElementById("apply-l").hidden=!on;document.getElementById("import-l").hidden=!on||S.projects.length>0;render()}
 
 if(!FIREBASE_CONFIG||!window.firebase){sync.textContent="Not connected.";gate("Not set up yet","The Firebase settings for this log haven’t been added.");return}
 firebase.initializeApp(FIREBASE_CONFIG);
@@ -721,6 +722,28 @@ document.getElementById("export").addEventListener("click",function(){
     projects:S.projects.slice().sort(function(a,b){return a.section<b.section?-1:a.section>b.section?1:(a.order||0)-(b.order||0)}).map(strip)};
   var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,2)],{type:"application/json"}));
   a.download="project_log_live_"+out.updated+".json";a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
+});
+// Apply a prepared changes file (e.g. updates gathered from email): sets fields and adds tasks/details lines,
+// each saved with a History entry. Format: {"title":"…","projects":[{"id":"p0401","set":{…},"addTasks":[…],"addDetails":[…]}]}
+document.getElementById("apply").addEventListener("change",function(e){
+  var f=e.target.files[0];e.target.value="";if(!f||!S.canEdit)return;
+  f.text().then(function(t){
+    var d=JSON.parse(t),list=Array.isArray(d.projects)?d.projects:[];if(!list.length)throw new Error("No changes in this file");
+    var plan=[],skip=[];
+    list.forEach(function(c){
+      var p=S.projects.find(function(x){return x.id===c.id});if(!p){skip.push(c.id);return}
+      var patch={},set=c.set||{};Object.keys(set).forEach(function(k){if(k in FIELDS&&k!=="email")patch[k]=set[k]});
+      ["tasks","details"].forEach(function(fl){var add=c[fl==="tasks"?"addTasks":"addDetails"];if(!Array.isArray(add)||!add.length)return;
+        var cur=lines(p[fl]).filter(function(l){return !/^UPDATE REQUIRED!?$/i.test(l)});add.forEach(function(l){l=String(l).trim();if(l&&cur.indexOf(l)<0)cur.push(l)});
+        patch[fl]=cur.map(function(l){return "• "+l}).join("\n")});
+      var desc=Object.keys(patch).map(function(k){return k==="tasks"?"+"+(c.addTasks||[]).length+" tasks":k==="details"?"+"+(c.addDetails||[]).length+" updates":k==="archived"?(patch[k]?"archive":"restore to log"):FIELDS[k]+" → "+patch[k]}).join(", ");
+      plan.push({p:p,patch:patch,desc:desc});
+    });
+    if(!confirm((d.title||"Apply changes")+"\n\n"+plan.map(function(x){return "• "+x.p.name+": "+x.desc}).join("\n")+(skip.length?"\n\nNot found: "+skip.join(", "):"")+"\n\nApply these changes?"))return;
+    sync.textContent="Applying changes…";
+    return plan.reduce(function(pr,x){return pr.then(function(){return save(x.p,x.patch,"edit",by())})},Promise.resolve())
+      .then(function(){sync.textContent="Applied changes to "+plan.length+" project"+(plan.length===1?"":"s");plan.forEach(function(x){S.open[x.p.id]=true});render()});
+  }).catch(fail);
 });
 // One-time load of project_log.json from your computer (the data is never stored in the public repo).
 document.getElementById("import").addEventListener("change",function(e){
