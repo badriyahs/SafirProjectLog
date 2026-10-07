@@ -709,7 +709,8 @@ firebase.auth().onAuthStateChanged(function(u){
   if(!u){S.isAdmin=false;setEditor(false);showLocked();return}
   if(!ss("dtsUnlocked")){lock();return}
   S.editor=ls("dtsEditorName")||"Editor";S.isAdmin=u.email===ADMIN_EMAIL;
-  who.innerHTML='<span class="editing'+(S.isAdmin?" admin":"")+'">'+ICON.unlock+(S.isAdmin?'Admin: ':'Editing as ')+esc(S.editor)+'</span><button class="btn" id="lock" style="display:inline-flex;gap:8px;align-items:center">'+ICON.lock+'Lock</button>';
+  who.innerHTML='<span class="editing'+(S.isAdmin?" admin":"")+'">'+ICON.unlock+(S.isAdmin?'Admin: ':'Editing as ')+esc(S.editor)+'</span><button class="btn primary" id="applytop" type="button" style="display:inline-flex;gap:8px;align-items:center">'+ICON.plus+'Apply changes file</button><button class="btn" id="lock" style="display:inline-flex;gap:8px;align-items:center">'+ICON.lock+'Lock</button>';
+  document.getElementById("applytop").addEventListener("click",function(){document.getElementById("apply").click()});
   document.getElementById("lock").addEventListener("click",function(){firebase.auth().signOut()});
   setEditor(true);
 });
