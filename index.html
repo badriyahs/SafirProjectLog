@@ -82,6 +82,14 @@ button,input,select,textarea{font:inherit;color:inherit}
 .jump .fi{width:1.4em;line-height:1em;border-radius:2px;box-shadow:0 0 0 1px var(--line)}
 .jump b{color:var(--muted);font-weight:600}
 .section{scroll-margin-top:96px}
+/* timeline */
+.tlbtn{display:inline-flex;align-items:center;gap:6px;margin-top:8px;border:0;background:transparent;color:var(--accent);cursor:pointer;font-size:16px;padding:2px 0}
+.tlbtn:hover{text-decoration:underline}
+.timeline{margin-top:8px;padding:10px 14px;border-left:3px solid var(--brand);background:var(--brand-tint);border-radius:0 8px 8px 0}
+.timeline li.off{color:var(--muted)}
+.pin{margin-left:8px;border:1px solid var(--line-strong);background:var(--surface);border-radius:6px;font-size:13px;padding:1px 7px;cursor:pointer;color:var(--muted);vertical-align:1px}
+.pin.on{border-color:var(--accent);color:var(--accent)}
+.pinmark{font-size:.85em;margin-right:4px}
 /* tick-off tasks */
 ul.tasks{padding-left:0;list-style:none}
 ul.tasks li{margin:7px 0}
@@ -280,7 +288,7 @@ var PENDING=["D&TS","Hotel","Owner","Consultant / Contractor","Authority","Manag
 var PENDING_LABEL={"D&TS":"Design & Technical Services Dept"};
 var MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-var S={projects:[],sections:[],view:"log",q:"",country:"",filter:null,editing:null,confirmArchive:null,live:false,newId:null,canEdit:false,editor:"",isAdmin:false,open:{},allOpen:false,sort:ls("dtsSort")||"recent",history:[],histFor:null,commenting:null};
+var S={projects:[],sections:[],view:"log",q:"",country:"",filter:null,editing:null,confirmArchive:null,live:false,newId:null,canEdit:false,editor:"",isAdmin:false,open:{},allOpen:false,tl:{},sort:ls("dtsSort")||"recent",history:[],histFor:null,commenting:null};
 var col=null,secCol=null;
 var main=document.getElementById("main");
 
@@ -356,7 +364,40 @@ var CHEV='<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor
 var SIGNED=/^([^:–]{1,60}):\s*(\d{1,2} [A-Z][a-z]{2} \d{4})\s*–\s*(.*)$/;
 function isOpen(p){return S.allOpen||!!S.open[p.id]||S.commenting===p.id||!!S.q}
 // The newest signed update if there is one, otherwise the first line of Details.
-function latest(p){var ls=lines(p.details);for(var i=ls.length-1;i>=0;i--){if(SIGNED.test(ls[i]))return ls[i]}return ls[0]||""}
+function latest(p){var it=detailItems(p).filter(function(x){return x.d!==null}).sort(function(a,b){return b.d-a.d||b.i-a.i});return it.length?it[0].l:(lines(p.details)[0]||"")}
+// Details = summary lines (no date, always shown) + dated updates. The log shows the newest 3
+// dated updates plus any pinned ones; everything else stays in the full timeline.
+var MONTHS_IDX={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+var SHOW_LATEST=3;
+function lineDate(l){
+  var m=l.replace(/^[^:–]{1,60}:\s*(?=\d{0,2}\s*[A-Z][a-z]{2} \d{4})/,"").match(/^(\d{1,2} )?([A-Z][a-z]{2}) (\d{4})\b/);
+  if(!m||MONTHS_IDX[m[2]]===undefined)return null;
+  return new Date(+m[3],MONTHS_IDX[m[2]],m[1]?+m[1]:1).getTime();
+}
+function detailItems(p){
+  var ls=lines(p.details),pins=Array.isArray(p.pins)?p.pins:[];
+  var items=ls.map(function(l,i){return{l:l,i:i,d:lineDate(l),pin:pins.indexOf(l)>-1}});
+  var dated=items.filter(function(x){return x.d!==null}).slice().sort(function(a,b){return b.d-a.d||b.i-a.i});
+  var top={};dated.slice(0,SHOW_LATEST).forEach(function(x){top[x.i]=1});
+  items.forEach(function(x){x.show=x.d===null||!!top[x.i]||x.pin});
+  return items;
+}
+function lineHtml(l){return bullets(l).replace(/^<ul>|<\/ul>$/g,"").replace(/^<li[^>]*>|<\/li>$/g,"")}
+function detailsView(p){
+  var items=detailItems(p);if(!items.length)return"";
+  var del=function(x){return S.isAdmin?'<button class="lx" data-delline="details:'+x.i+'" title="Delete this line" aria-label="Delete this line">✕ Delete</button>':""};
+  var html="<ul>"+items.filter(function(x){return x.show}).map(function(x){
+    return '<li'+(/UPDATE REQUIRED/i.test(x.l)?' class="req"':"")+'>'+(x.pin&&x.d!==null?'<span class="pinmark" title="Pinned">📌</span>':"")+lineHtml(x.l)+del(x)+'</li>'}).join("")+"</ul>";
+  var dated=items.filter(function(x){return x.d!==null}),hidden=dated.filter(function(x){return !x.show}).length;
+  if(dated.length>(dated.length-hidden)||(S.canEdit&&dated.length)){
+    var op=!!S.tl[p.id];
+    html+='<button class="tlbtn" data-tl aria-expanded="'+op+'">'+(op?"▾ Hide full timeline":"▸ Show full timeline ("+dated.length+")")+'</button>';
+    if(op)html+='<div class="timeline"><ul>'+dated.slice().sort(function(a,b){return a.d-b.d||a.i-b.i}).map(function(x){
+      return '<li class="'+(x.show?"":"off")+'">'+lineHtml(x.l)+
+        (S.canEdit?'<button class="pin'+(x.pin?" on":"")+'" data-pin="'+x.i+'" title="'+(x.pin?"Unpin: let it drop out of the log when older":"Pin: always show this in the log")+'">'+(x.pin?"📌 Pinned":"📌 Pin")+'</button>':"")+del(x)+'</li>'}).join("")+'</ul></div>';
+  }
+  return html;
+}
 function taskList(p){
   var ls=lines(p.tasks);if(!ls.length)return"";
   if(!S.canEdit||p.archived)return bullets(p.tasks);
@@ -376,7 +417,7 @@ function cardView(p,n){
   var cls=p.status==="Paused"?" paused":(p.status==="Done"?" done":"");
   var meta=[p.desc,p.loc].filter(Boolean).map(esc).join(" · ");
   var op=isOpen(p);
-  var tk=taskList(p),dt=bullets(p.details,"details"),nt=bullets(p.notes,"notes");
+  var tk=taskList(p),dt=detailsView(p),nt=bullets(p.notes,"notes");
   var arch=S.confirmArchive===p.id,lt=latest(p);
   var head='<div class="ch tog" role="button" tabindex="0" aria-expanded="'+op+'" data-toggle><span class="num">'+(n||"")+'</span>'+CHEV+'<div class="nm"><div class="pn">'+esc(p.name||"Untitled project")+'</div>'+(meta?'<div class="pm">'+meta+'</div>':"")+
       (!op&&lt?'<div class="prev">'+bullets(lt).replace(/^<ul><li[^>]*>|<\/li><\/ul>$/g,"")+'</div>':"")+'</div>'+
@@ -510,6 +551,13 @@ main.addEventListener("click",function(e){
     nb.commit().then(function(){S.editing=ref.id;S.newId=ref.id;render()}).catch(fail);
     return;
   }
+  var tlb=e.target.closest("[data-tl]");
+  if(tlb){var tid2=tlb.closest("[data-id]").getAttribute("data-id");S.tl[tid2]=!S.tl[tid2];render();return}
+  var pb=e.target.closest("[data-pin]");
+  if(pb&&S.canEdit){var pid3=pb.closest("[data-id]").getAttribute("data-id"),p3=S.projects.find(function(x){return x.id===pid3});if(!p3)return;
+    var l3=lines(p3.details)[+pb.getAttribute("data-pin")],pins=(Array.isArray(p3.pins)?p3.pins:[]).filter(function(x){return lines(p3.details).indexOf(x)>-1});
+    pins=pins.indexOf(l3)>-1?pins.filter(function(x){return x!==l3}):pins.concat([l3]);
+    col.doc(pid3).update({pins:pins}).catch(fail);return}
   var tg=e.target.closest("[data-toggle]");
   if(tg&&!e.target.closest("select,button,a,input,label")){var tid=tg.closest("[data-id]").getAttribute("data-id");
     if(isOpen({id:tid})&&!S.open[tid]&&S.allOpen){S.allOpen=false;S.open={}}else{S.open[tid]=!S.open[tid]}render();return}
