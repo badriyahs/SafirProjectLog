@@ -737,7 +737,11 @@ document.getElementById("apply").addEventListener("change",function(e){
       ["tasks","details"].forEach(function(fl){var add=c[fl==="tasks"?"addTasks":"addDetails"];if(!Array.isArray(add)||!add.length)return;
         var cur=lines(p[fl]).filter(function(l){return !/^UPDATE REQUIRED!?$/i.test(l)});add.forEach(function(l){l=String(l).trim();if(l&&cur.indexOf(l)<0)cur.push(l)});
         patch[fl]=cur.map(function(l){return "• "+l}).join("\n")});
-      var desc=Object.keys(patch).map(function(k){return k==="tasks"?"+"+(c.addTasks||[]).length+" tasks":k==="details"?"+"+(c.addDetails||[]).length+" updates":k==="archived"?(patch[k]?"archive":"restore to log"):FIELDS[k]+" → "+patch[k]}).join(", ");
+      var desc=Object.keys(patch).map(function(k){
+        if((k==="tasks"||k==="details")&&!(k in set))return "+"+(c[k==="tasks"?"addTasks":"addDetails"]||[]).length+(k==="tasks"?" tasks":" updates");
+        if(k==="archived")return patch[k]?"archive":"restore to log";
+        if(LONG[k])return FIELDS[k]+" rewritten ("+lines(patch[k]).length+" lines)";
+        return FIELDS[k]+" → "+patch[k]}).join(", ");
       plan.push({p:p,patch:patch,desc:desc});
     });
     if(!confirm((d.title||"Apply changes")+"\n\n"+plan.map(function(x){return "• "+x.p.name+": "+x.desc}).join("\n")+(skip.length?"\n\nNot found: "+skip.join(", "):"")+"\n\nApply these changes?"))return;
