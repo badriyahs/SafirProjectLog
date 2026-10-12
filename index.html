@@ -1259,12 +1259,13 @@ function renderNow(){
 }
 
 // ---------- The public overview: Country · Project · Status · Last update · Details ↗ ----------
-// Pre-system projects stay off it until Badriyah confirms them (public "confirmed" date on the project) or they have news from 8 Oct 2026 on.
+// Every live project is listed (her request, 12 Oct 2026). A pre-system project shows only its name, country and status: its "Last update"
+// stays empty until Badriyah confirms it (public "confirmed" date on the project) or it has news from 8 Oct 2026 on.
 var STATUS_RANK={Urgent:0,Ongoing:1,Prospective:2,Paused:3,Done:4};
 function hasNews(p){return detailItems(p).some(function(x){return x.d!==null&&x.d>=START_TS})}
-function onOverview(p){return !p.archived&&(!!p.confirmed||hasNews(p))}
+function onOverview(p){return !p.archived}
 function lastUpdate(p){
-  var it=detailItems(p).filter(function(x){return x.d!==null}).sort(function(a,b){return b.d-a.d||b.i-a.i})[0];if(!it)return null;
+  var it=detailItems(p).filter(function(x){return x.d!==null&&(p.confirmed||x.d>=START_TS)}).sort(function(a,b){return b.d-a.d||b.i-a.i})[0];if(!it)return null;
   var m=it.l.match(/^(?:[^:–]{1,60}:\s*)?(\d{1,2} [A-Z][a-z]{2} \d{4})\s*–\s*(.*)$/);
   return m?{date:m[1],text:m[2]}:{date:fmtDate(it.d),text:it.l}}
 function renderSimple(){
