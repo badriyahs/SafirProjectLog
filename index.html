@@ -382,6 +382,21 @@ ol.routine li.ok>label{color:var(--muted);text-decoration:line-through}
 .toast[hidden]{display:none}
 .toast button{border:1px solid currentColor;background:transparent;color:inherit;border-radius:8px;padding:4px 10px;cursor:pointer}
 .toolbar[hidden]{display:none}
+/* the public overview: one plain list */
+.plist{margin-top:22px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.prow{display:grid;grid-template-columns:150px minmax(180px,1.2fr) 120px minmax(240px,2.2fr) 96px;gap:8px 16px;padding:14px 18px;border-top:1px solid var(--line);align-items:center}
+.prow:first-child{border-top:0}
+.prow.head{padding-block:10px;background:var(--brand-tint);font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.prow .pc{display:flex;gap:8px;align-items:center;color:var(--muted)}
+.prow .pc .fi{width:1.4em;line-height:1em;border-radius:2px;box-shadow:0 0 0 1px var(--line);flex:none}
+.prow .pc small{display:block;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.prow .pp{font-weight:600;font-size:19px;line-height:1.3}
+.prow .pu{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .pu b{font-weight:600;color:var(--muted);margin-right:4px}
+.prow .pd{justify-self:end;color:var(--accent);text-decoration:none;white-space:nowrap;font-size:16px}
+.prow .pd:hover{text-decoration:underline}
+.prow.paused,.prow.done{background:var(--paused-bg)}
+@media (max-width:760px){.prow{grid-template-columns:1fr auto;gap:4px 12px}.prow.head{display:none}.prow .pp{grid-column:1/-1;order:-1}.prow .pu{grid-column:1/-1;white-space:normal}.prow .pd{grid-column:1/-1;justify-self:start}}
 /* project status (topics) with file previews */
 :root{--amber-bg:#FDEBD0;--amber-fg:#7A4B00}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--amber-bg:#3D2E12;--amber-fg:#F5C77A}}
@@ -865,7 +880,7 @@ function cardView(p,n){
   var head='<div class="ch tog" role="button" tabindex="0" aria-expanded="'+op+'" data-toggle><span class="num">'+(n||"")+'</span>'+CHEV+'<div class="nm"><div class="pn">'+esc(p.name||"Untitled project")+
       (me&&!pv.confirmed?'<span class="tag pre">Pre-system</span>':"")+'</div>'+(meta?'<div class="pm">'+meta+'</div>':"")+
       (!op&&lt?'<div class="prev">'+bullets(lt).replace(/^<ul><li[^>]*>|<\/li><\/ul>$/g,"")+'</div>':"")+'</div>'+
-    '<div class="tags">'+(S.canEdit&&!p.archived?stSel(p):pill(p.status))+(S.canEdit&&!p.archived?pwSel(p):pwPill(p.pending))+'</div></div>';
+    '<div class="tags">'+(S.canEdit&&!p.archived?stSel(p):pill(p.status))+'</div></div>';
   if(!op)return '<article class="card closed'+cls+'" data-id="'+p.id+'">'+head+'</article>';
   var dt=detailsView(p),tk=me?taskList(p):"",nt=me?bullets(pv.notes):"";
   return '<article class="card open'+cls+'" data-id="'+p.id+'">'+head+
@@ -893,10 +908,10 @@ function cardEdit(p){
     '<label>Description<input name="desc" value="'+esc(p.desc)+'"></label>'+
     '<label>Location<input name="loc" value="'+esc(p.loc)+'" placeholder="City, Country"></label>'+
     '<label>Status<select name="status">'+opts(STATUSES,p.status)+'</select></label>'+
-    '<label>Pending with<select name="pending">'+opts(PENDING,p.pending||"—",{"D&TS":"Design & Technical Services Dept"})+'</select></label>'+
     '<label class="full">Details <span class="hint">One point per line. Start with a date like “29 Sep 2026 – ” to underline it.</span><textarea name="details">'+esc(lines(p.details).join("\n"))+'</textarea></label>'+
     '<label'+(me?"":' class="full"')+'>Team<textarea name="team">'+esc(lines(p.team).join("\n"))+'</textarea></label>'+
     (me?'<label>Notes <span class="hint">Private: only on your dashboard.</span><textarea name="notes">'+esc(lines((S.priv[id]||{}).notes).join("\n"))+'</textarea></label>':"")+
+    (S.isAdmin?'<label class="full">Details sheet link <span class="hint">The project’s tab in the Google workbook; “Details ↗” on the overview opens it.</span><input name="sheetUrl" value="'+esc(p.sheetUrl||"")+'" placeholder="https://docs.google.com/spreadsheets/d/…#gid=…"></label>':"")+
     '<label>Section<select name="section">'+S.sections.map(function(s){return '<option value="'+esc(s.name)+'"'+(s.name===p.section?" selected":"")+">"+esc(title(s.name))+"</option>"}).join("")+'</select></label>'+
     '<div class="actions"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-act="cancel">Cancel</button><span class="sp"></span>'+
       (S.sort==="custom"?'<button class="btn" type="button" data-act="up" aria-label="Move up">↑ Move up</button><button class="btn" type="button" data-act="down" aria-label="Move down">↓ Move down</button>':'<span class="hint" style="color:var(--faint);font-size:12px">To reorder, switch to “Sort: custom order”.</span>')+'</div>'+
@@ -1096,7 +1111,7 @@ function renderReview(){
     if(S.editing===p.id){html+=cardEdit(p);return}
     var pv=S.priv[p.id]||{},tk=openActs(p),meta=[p.desc,p.loc].filter(Boolean).map(esc).join(" · ");
     html+='<div class="rv" data-id="'+esc(p.id)+'"><div class="rvh"><div class="nm"><div class="pn">'+esc(p.name)+(pv.confirmed?'<span class="tag pub">Confirmed '+esc(fmtDue(pv.confirmed))+'</span>':'<span class="tag pre">Pre-system</span>')+'</div>'+
-      '<div class="pm">'+esc(title(p.section))+(meta?" · "+meta:"")+'</div></div><div class="tags">'+stSel(p)+pwSel(p)+'</div></div>'+
+      '<div class="pm">'+esc(title(p.section))+(meta?" · "+meta:"")+'</div></div><div class="tags">'+stSel(p)+'</div></div>'+
       '<div class="body" style="padding-left:0"><div class="nl">Details:</div>'+(detailsView(p,true)||'<div class="none">No details.</div>')+
       '<div class="tl">Tasks:</div>'+(tk.length?'<ul class="acts">'+tk.map(function(a){return actRow(p,a,"card")}).join("")+'</ul>':'<div class="none">No open tasks.</div>')+
       (S.taskForm&&S.taskForm.pid===p.id&&!S.taskForm.aid?taskForm(p,null,{}):'<button class="tlbtn" data-aadd>+ Add a task</button>')+
@@ -1171,7 +1186,7 @@ function renderPrep(){
   var d=prepData(p),meta=[p.desc,p.loc].filter(Boolean).map(esc).join(" · ");
   var html='<div class="sheet" role="dialog" aria-modal="true" aria-label="Meeting prep"><div class="sh"><div class="logo" role="img" aria-label="Safir Hotels &amp; Resorts"></div><div><div class="kick">Meeting prep · '+esc(fmtDue(today()))+'</div><h2>'+esc(p.name)+'</h2>'+(meta?'<div class="pm">'+meta+'</div>':"")+'</div>'+
     '<div class="btns noprint"><button class="btn primary" type="button" data-pprint>Print</button><button class="btn" type="button" data-pcopy>Copy as text</button><button class="btn" type="button" data-px>Close</button></div></div>'+
-    '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">'+pill(p.status)+pwPill(p.pending)+'</div>';
+    '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">'+pill(p.status)+'</div>';
   if(d.last)html+='<p class="pm" style="margin-top:12px">Last meeting: '+esc(fmtDue(d.last.date,true))+' – '+esc(d.last.title||"")+'</p>';
   html+='<div class="tl">Open tasks</div>';
   html+=d.open.length?'<table><thead><tr><th>Due</th><th>Who</th><th>Task</th></tr></thead><tbody>'+d.open.map(function(a){var st=dueState(a);
@@ -1191,13 +1206,14 @@ function prepText(p){
   return out.join("\n")}
 
 // ---------- Page frame ----------
+function isSimple(){return S.mode==="overview"&&!S.canEdit}
 function renderFrame(){
   var me=S.mode==="me";
   document.title=me?"My Dashboard – Safir DTS":"Safir DTS Project Log";
   document.getElementById("h1").innerHTML=me?'My <span>Dashboard</span>':'Safir <span>Project Log</span>';
   document.getElementById("dept").textContent=me?"Design and Technical Services Department · private, only you can open it":"Design and Technical Services Department";
   document.getElementById("modelink").innerHTML=me?'<a href="#">← Overview</a>':(S.isAdmin?'<a href="#me">My dashboard →</a>':"");
-  var tip=document.getElementById("tip");if(me)tip.hidden=true;else{try{tip.hidden=!!localStorage.getItem("dtsTipHidden")}catch(e){tip.hidden=false}}
+  var tip=document.getElementById("tip");if(me||isSimple())tip.hidden=true;else{try{tip.hidden=!!localStorage.getItem("dtsTipHidden")}catch(e){tip.hidden=false}}
   document.getElementById("seg").innerHTML=VIEWS[S.mode].map(function(v){
     var badge="";if(v[0]==="followups"){var n=fuGroups(true).over.length;if(n)badge='<span class="badge" title="'+n+' overdue">'+n+'</span>'}
     if(v[0]==="review"){var c=preCounts();if(c.projects)badge='<span class="badge" style="background:#7E57C2" title="projects to confirm">'+c.projects+'</span>'}
@@ -1205,7 +1221,7 @@ function renderFrame(){
   var lv=S.view==="log"||S.view==="archive"||S.view==="projects";
   document.getElementById("openall").hidden=!lv;document.getElementById("sort").hidden=!lv;
   document.getElementById("openall").textContent=S.allOpen?"Close all":"Open all";document.getElementById("sort").value=S.sort;
-  document.getElementById("toolnote").textContent=me?"Your dashboard: only your admin password opens it, and the database rules keep it private. Archived projects and removed tasks are kept, never deleted.":
+  document.getElementById("toolnote").textContent=isSimple()?"Click Details for a project’s full status, risks and issues, meetings and files.":me?"Your dashboard: only your admin password opens it, and the database rules keep it private. Archived projects and removed tasks are kept, never deleted.":
     "Anyone with the link can view this log and add updates. Other changes need the edit password. Archived projects are kept, never deleted.";
   document.getElementById("export").hidden=!S.canEdit;document.getElementById("apply-l").hidden=!S.isAdmin;
   document.getElementById("import-l").hidden=!S.canEdit||S.projects.length>0;
@@ -1228,6 +1244,7 @@ function renderNow(){
   if(gate){document.getElementById("summary").innerHTML="";document.getElementById("sumhint").textContent="";document.getElementById("jump").innerHTML="";document.getElementById("filterbar").innerHTML="";
     main.innerHTML='<div class="gate"><h2>Badriyah’s dashboard</h2><p>'+(S.canEdit?"This page opens only with Badriyah’s own password. The team password edits the overview.":"This page is private. Unlock with your own password at the top right.")+'</p><a class="btn" href="#">Go to the overview</a></div>';
     renderPrep();return}
+  if(isSimple()){document.getElementById("toolbar").hidden=true;["summary","jump","filterbar"].forEach(function(id){document.getElementById(id).innerHTML=""});document.getElementById("sumhint").textContent="";renderPrep();renderSimple();return}
   renderSummary();renderFilterbar();renderJump();renderPrep();
   if(S.mode==="me")renderOwners();
   var v=S.view;
@@ -1239,11 +1256,34 @@ function renderNow(){
   else renderLog();
 }
 
+// ---------- The public overview: Country · Project · Status · Last update · Details ↗ ----------
+// Pre-system projects stay off it until Badriyah confirms them (public "confirmed" date on the project) or they have news from 8 Oct 2026 on.
+var STATUS_RANK={Urgent:0,Ongoing:1,Prospective:2,Paused:3,Done:4};
+function hasNews(p){return detailItems(p).some(function(x){return x.d!==null&&x.d>=START_TS})}
+function onOverview(p){return !p.archived&&(!!p.confirmed||hasNews(p))}
+function lastUpdate(p){
+  var it=detailItems(p).filter(function(x){return x.d!==null}).sort(function(a,b){return b.d-a.d||b.i-a.i})[0];if(!it)return null;
+  var m=it.l.match(/^(?:[^:–]{1,60}:\s*)?(\d{1,2} [A-Z][a-z]{2} \d{4})\s*–\s*(.*)$/);
+  return m?{date:m[1],text:m[2]}:{date:fmtDate(it.d),text:it.l}}
+function renderSimple(){
+  var so=secOrder(),list=S.projects.filter(onOverview).sort(function(a,b){
+    var x=STATUS_RANK[a.status]!=null?STATUS_RANK[a.status]:9,y=STATUS_RANK[b.status]!=null?STATUS_RANK[b.status]:9;if(x!==y)return x-y;
+    var sx=so.indexOf(a.section),sy=so.indexOf(b.section);if(sx!==sy)return sx-sy;return (a.name||"").localeCompare(b.name||"")});
+  if(!S.live&&!S.projects.length)return;
+  if(!list.length){main.innerHTML='<div class="empty">No projects to show yet.</div>';return}
+  main.innerHTML='<div class="plist"><div class="prow head"><span>Country</span><span>Project</span><span>Status</span><span>Last update</span><span></span></div>'+list.map(function(p){
+    var b=base(p.section),pipe=/ PIPELINE$/.test(p.section),f=FLAGS[b]?'<span class="fi fi-'+FLAGS[b]+'" aria-hidden="true"></span>':"",u=lastUpdate(p);
+    return '<div class="prow'+(p.status==="Paused"?" paused":p.status==="Done"?" done":"")+'"><span class="pc">'+f+'<span>'+esc(tc(b))+(pipe?'<small>Pipeline</small>':"")+'</span></span>'+
+      '<span class="pp">'+esc(p.name||"Untitled project")+'</span><span>'+pill(p.status)+'</span>'+
+      '<span class="pu" title="'+esc(u?u.date+" – "+u.text:"")+'">'+(u?'<b>'+esc(u.date)+'</b> '+esc(u.text):'<span class="none">–</span>')+'</span>'+
+      (p.sheetUrl?'<a class="pd" href="'+esc(p.sheetUrl)+'" target="_blank" rel="noopener">Details ↗</a>':'<span></span>')+'</div>'}).join("")+'</div>';
+}
+
 // ---------- Saving ----------
 // Project fields are public: every change gets a History entry. Old Tasks text and Notes are moved off the public record without copying them into History.
 function projectOps(b,p,patch,kind,name,note){
   var ch=[];Object.keys(FIELDS).forEach(function(k){if(k in patch&&str(patch[k])!==str(p[k]))ch.push({f:k,from:str(p[k]).slice(0,4000),to:str(patch[k]).slice(0,4000)})});
-  var quiet=["tasks","notes","pins"].some(function(k){return k in patch&&str(patch[k])!==str(p[k])});
+  var quiet=["tasks","notes","pins","confirmed","sheetUrl"].some(function(k){return k in patch&&str(patch[k])!==str(p[k])});
   if(!ch.length&&!quiet&&kind!=="task")return false;
   patch.updatedAt=stamp();patch.updatedBy=name;
   b.update(col.doc(p.id),patch);
@@ -1282,7 +1322,7 @@ function reopenAct(p,aid){
 }
 function confirmProject(p){
   var b=fs.batch(),t=today(),list=openActs(p).filter(function(a){return a.pre}).map(function(a){var c=cleanTask(a,p.id);c.pre=false;c.confirmed=t;c.confirmedBy=by();return c});
-  var patch=taskOps(b,p,list,null);if(patch)projectOps(b,p,patch,"edit",by());
+  var patch=taskOps(b,p,list,null)||{};patch.confirmed=t;projectOps(b,p,patch,"edit",by());
   b.set(privCol.doc(p.id),{confirmed:t,confirmedBy:by()},{merge:true});
   plog(b,p,"projconfirm","Confirmed the project"+(list.length?" and "+list.length+" task"+(list.length===1?"":"s"):""));
   return b.commit().then(function(){toast("Confirmed: "+p.name+".")}).catch(fail);
@@ -1490,8 +1530,9 @@ main.addEventListener("submit",function(e){
     S.commenting=null;S.open[cid]=true;save(cp,{details:cur?cur+"\n"+line:line},"comment",nm).catch(fail);render();return}
   var f=t.closest("[data-form]");if(!f)return;e.preventDefault();
   var id=f.getAttribute("data-form"),fd=new FormData(f);
-  var patch={name:(fd.get("name")||"").trim(),desc:(fd.get("desc")||"").trim(),loc:(fd.get("loc")||"").trim(),status:fd.get("status"),pending:fd.get("pending"),
+  var patch={name:(fd.get("name")||"").trim(),desc:(fd.get("desc")||"").trim(),loc:(fd.get("loc")||"").trim(),status:fd.get("status"),
     details:clean(fd.get("details")),team:clean(fd.get("team")),section:fd.get("section")};
+  if(fd.has("sheetUrl"))patch.sheetUrl=String(fd.get("sheetUrl")||"").trim();
   S.editing=null;S.open[id]=true;
   var p=projById(id);if(!p){render();return}
   var b=fs.batch(),changed=projectOps(b,p,patch,"edit",by());
@@ -1615,7 +1656,7 @@ document.getElementById("apply").addEventListener("change",function(e){
     list.forEach(function(c){
       var p=projById(c.id);if(!p){skip.push(c.id);return}
       var set=c.set||{},patch={},desc=[],tasks=[],pv=Object.assign({},c.private||{});
-      Object.keys(FIELDS).forEach(function(k){if(k in set&&str(set[k])!==str(p[k]))patch[k]=k==="archived"?!!set[k]:set[k]});
+      Object.keys(FIELDS).concat(["sheetUrl","confirmed"]).forEach(function(k){if(k in set&&str(set[k])!==str(p[k]))patch[k]=k==="archived"?!!set[k]:set[k]});
       if("notes" in set&&!("notes" in pv))pv.notes=set.notes;
       if("notes" in pv&&str(p.notes))patch.notes="";
       var dl=null,addD=nl(c.addDetails);
@@ -1637,6 +1678,7 @@ document.getElementById("apply").addEventListener("change",function(e){
       if((legacy.length&&tasks.length)||(replaceOld&&str(p.tasks)))patch.tasks="";
       if(dl)patch.details=bulletText(dl.join("\n"));
       if(nA)desc.push("+"+nA+" task"+(nA===1?"":"s"));if(nD)desc.push(nD+" task"+(nD===1?"":"s")+" ticked off");
+      if("sheetUrl" in patch)desc.push("Details link set");if("confirmed" in patch)desc.push("confirmed");
       Object.keys(set).forEach(function(k){if(!(k in patch)||!FIELDS[k]||k==="details"&&addD.length)return;
         if(k==="archived")desc.push(patch[k]?"archive":"restore to log");
         else if(LONG[k])desc.push((FIELDS[k]||k)+" rewritten ("+lines(patch[k]).length+" lines)");
