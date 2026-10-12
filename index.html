@@ -1068,7 +1068,7 @@ function renderFrame(){
   document.getElementById("openall").textContent=S.allOpen?"Close all":"Open all";document.getElementById("sort").value=S.sort;
   document.getElementById("toolnote").textContent=me?"Your dashboard: only your admin password opens it, and the database rules keep it private. Archived projects and removed tasks are kept, never deleted.":
     "Anyone with the link can view this log and add updates. Other changes need the edit password. Archived projects are kept, never deleted.";
-  document.getElementById("export").hidden=!S.canEdit;document.getElementById("apply-l").hidden=!(me&&S.isAdmin);
+  document.getElementById("export").hidden=!S.canEdit;document.getElementById("apply-l").hidden=!S.isAdmin;
   document.getElementById("import-l").hidden=!S.canEdit||S.projects.length>0;
 }
 // Live updates re-draw the page; keep whatever someone is typing in an open form (and where the cursor was).
@@ -1413,7 +1413,10 @@ firebase.auth().onAuthStateChanged(function(u){
   if(!u){setEditor(false);showLocked();return}
   if(!ss("dtsUnlocked")){lock();return}
   S.editor=ls("dtsEditorName")||"Editor";var adm=u.email===ADMIN_EMAIL;
-  who.innerHTML='<span class="editing'+(adm?" admin":"")+'">'+ICON.unlock+(adm?'Admin: ':'Editing as ')+esc(S.editor)+'</span><button class="btn" id="lock" style="display:inline-flex;gap:8px;align-items:center">'+ICON.lock+'Lock</button>';
+  who.innerHTML='<span class="editing'+(adm?" admin":"")+'">'+ICON.unlock+(adm?'Admin: ':'Editing as ')+esc(S.editor)+'</span>'+
+    (adm?'<button class="btn primary" id="applytop" type="button" style="display:inline-flex;gap:8px;align-items:center">'+ICON.plus+'Apply changes file</button>':"")+
+    '<button class="btn" id="lock" style="display:inline-flex;gap:8px;align-items:center">'+ICON.lock+'Lock</button>';
+  if(adm)document.getElementById("applytop").addEventListener("click",function(){document.getElementById("apply").click()});
   document.getElementById("lock").addEventListener("click",function(){firebase.auth().signOut()});
   setEditor(true,adm);
 });
