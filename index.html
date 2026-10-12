@@ -1268,7 +1268,9 @@ var STATUS_RANK={Urgent:0,Ongoing:1,Prospective:2,Paused:3,Done:4};
 function hasNews(p){return detailItems(p).some(function(x){return x.d!==null&&x.d>=START_TS})}
 function onOverview(p){return !p.archived}
 function lastUpdate(p){
-  var it=detailItems(p).filter(function(x){return x.d!==null&&(p.confirmed||x.d>=START_TS)}).sort(function(a,b){return b.d-a.d||b.i-a.i})[0];if(!it)return null;
+  // On the same date, a news line beats a ticked-off task ("Name: date – Done: …").
+  var tick=function(x){return /–\s*Done:/.test(x.l)?1:0};
+  var it=detailItems(p).filter(function(x){return x.d!==null&&(p.confirmed||x.d>=START_TS)}).sort(function(a,b){return b.d-a.d||tick(a)-tick(b)||b.i-a.i})[0];if(!it)return null;
   var m=it.l.match(/^(?:[^:–]{1,60}:\s*)?(\d{1,2} [A-Z][a-z]{2} \d{4})\s*–\s*(.*)$/);
   return m?{date:m[1],text:m[2]}:{date:fmtDate(it.d),text:it.l}}
 function renderSimple(){
