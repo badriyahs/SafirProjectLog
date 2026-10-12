@@ -387,6 +387,11 @@ ol.routine li.ok>label{color:var(--muted);text-decoration:line-through}
 body.simple .wrap{max-width:1280px}
 .prow{display:grid;grid-template-columns:128px minmax(170px,1fr) 112px minmax(320px,3fr) 76px;gap:8px 18px;padding:14px 18px;border-top:1px solid var(--line);align-items:center}
 .prow:first-child{border-top:0}
+body.one .chev,body.one .num{display:none}
+body.one .card .ch.tog{cursor:default}
+body.one .card>.body{padding-left:0}
+.onelink{margin:22px 0 -8px;text-align:right;font-size:16px}
+.onelink a{color:var(--accent)}
 .prow.head{padding-block:10px;background:var(--brand-tint);font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .prow .pc{display:flex;gap:8px;align-items:center;color:var(--muted)}
 .prow .pc .fi{width:1.4em;line-height:1em;border-radius:2px;box-shadow:0 0 0 1px var(--line);flex:none}
@@ -514,7 +519,10 @@ var SYSTEM_START="2026-10-08";
 var TITLES={"Lidia":"Arch. Lidia","Lidia Janakievska":"Arch. Lidia","Ruba Yousef":"Arch. Ruba","Ali Kamal":"Eng. Ali","Aly Gomaa":"Eng. Aly Gomaa","Wael Habib":"Mr. Wael","Wissam El. Injbar":"Mr. Wissam","Wissam":"Mr. Wissam"};
 var SELF=["Badriyah","Badriyah Alsalem"];
 var VIEWS={overview:[["log","Log"],["archive","Archive"],["history","History"]],
-  me:[["today","Today"],["followups","Follow-ups"],["review","Pre-system"],["meetings","Meetings"],["projects","Projects"],["mylog","Log"]]};
+  me:[["today","Today"],["followups","Follow-ups"],["review","Pre-system"],["meetings","Meetings"],["projects","Projects"],["mylog","Log"]],
+  one:[["one","Project"]]};
+// One-project pages: …/#dahab (or …/#p=<project id>) shows just that project, open, read-only, no login (her request, 12 Oct 2026).
+var ONE_PAGE={dahab:"p0302"};
 
 var S={mode:modeOf(),view:"",q:"",country:"",filter:"active",editing:null,confirmArchive:null,live:false,newId:null,canEdit:false,editor:"",isAdmin:false,
   open:{},allOpen:false,tl:{},sort:ls("dtsSort")||"recent",history:[],histFor:null,commenting:null,
@@ -523,7 +531,8 @@ var S={mode:modeOf(),view:"",q:"",country:"",filter:"active",editing:null,confir
 S.view=VIEWS[S.mode][0][0];
 var col=null,secCol=null,histCol=null,minCol=null,taskCol=null,meetCol=null,privCol=null,plogCol=null,topicCol=null,fileCol=null,subs=[];
 var main=document.getElementById("main");
-function modeOf(){return location.hash==="#me"?"me":"overview"}
+function oneId(){var h=decodeURIComponent(location.hash.slice(1)).toLowerCase();return ONE_PAGE[h]||(/^p=([\w-]+)$/.exec(h)||[])[1]||""}
+function modeOf(){return location.hash==="#me"?"me":oneId()?"one":"overview"}
 
 var ICON={
   pencil:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
@@ -876,7 +885,7 @@ function renderJump(){
     var f=FLAGS[b]?'<span class="fi fi-'+FLAGS[b]+'" aria-hidden="true"></span>':"";
     return '<button type="button" data-jump="'+esc(b)+'">'+f+esc(tc(b))+' <b>'+n+'</b></button>'}).join("");
 }
-function isOpen(p){return S.allOpen||!!S.open[p.id]||S.commenting===p.id||!!S.q}
+function isOpen(p){return S.mode==="one"||S.allOpen||!!S.open[p.id]||S.commenting===p.id||!!S.q}
 function cardView(p,n){
   var me=S.mode==="me",cls=p.status==="Paused"?" paused":(p.status==="Done"?" done":"");
   var meta=[p.desc,p.loc].filter(Boolean).map(esc).join(" · ");
@@ -892,11 +901,11 @@ function cardView(p,n){
       (me?'<div class="tl">Tasks:</div>'+(tk||'<div class="none">No tasks.</div>'):"")+(nt?'<div class="nl">Notes (private):</div>'+nt:"")+'</div>'+
     '<div class="foot">'+(p.updatedAt?'<span class="when">Last updated '+fmtDate(p.updatedAt)+(p.updatedBy?' by '+esc(p.updatedBy):"")+'</span>':'<span class="when"></span>')+
       (me?'<button class="act" data-act="prep">'+ICON.list+'Meeting prep</button>':"")+
-      '<button class="act" data-act="history">'+ICON.clock+'History</button>'+
+      (S.mode==="one"?"":'<button class="act" data-act="history">'+ICON.clock+'History</button>')+
       (S.canEdit?'<button class="act" data-act="edit">'+ICON.edit+'Edit</button>'+
         (p.archived?'<button class="act" data-act="restore">'+ICON.box+'Restore to log</button>':
           (arch?'<button class="act warn" data-act="archive-yes">Yes, move to archive</button><button class="act" data-act="archive-no">Keep</button>':'<button class="act" data-act="archive">'+ICON.box+'Archive</button>')):"")+
-      (S.commenting===p.id||p.archived?"":'<button class="act main" data-act="comment">'+ICON.pencil+'Add update</button>')+
+      (S.commenting===p.id||p.archived||(S.mode==="one"&&!S.canEdit)?"":'<button class="act main" data-act="comment">'+ICON.pencil+'Add update</button>')+
     '</div></article>';
 }
 function commentForm(p){
@@ -1229,6 +1238,16 @@ function renderFrame(){
     "Anyone with the link can view this log and add updates. Other changes need the edit password. Archived projects are kept, never deleted.";
   document.getElementById("export").hidden=!S.canEdit;document.getElementById("apply-l").hidden=!S.isAdmin;
   document.getElementById("import-l").hidden=!S.canEdit||S.projects.length>0;
+  if(S.mode==="one"){var op=oneProject();document.title=(op?op.name:"Project")+" – Safir DTS";
+    document.getElementById("h1").innerHTML=op?nameHtml(op.name):'Safir <span>Project</span>';
+    document.getElementById("modelink").innerHTML="";tip.hidden=true;document.getElementById("toolnote").textContent="Live from the Design & Technical Services Department’s project log."}
+}
+function nameHtml(n){var m=/^(Safir)\s+(.+)$/.exec(n||"");return m?m[1]+' <span>'+esc(m[2])+'</span>':esc(n)}
+function oneProject(){var id=oneId();return S.projects.find(function(p){return p.id===id})||null}
+function renderOne(){
+  var p=oneProject();
+  if(!p){if(S.live||S.projects.length)main.innerHTML='<div class="empty">This project isn’t in the log.</div>';return}
+  main.innerHTML=(p.sheetUrl?'<p class="onelink"><a href="'+esc(p.sheetUrl)+'" target="_blank" rel="noopener">Action tracker, issues and risks ↗</a></p>':"")+cardView(p);
 }
 // Live updates re-draw the page; keep whatever someone is typing in an open form (and where the cursor was).
 function formKey(f){return ["data-aform","data-mform","data-form","data-cform","data-qform"].map(function(k){return f.hasAttribute(k)?k+"="+f.getAttribute(k)+"|"+(f.getAttribute("data-pid")||"")+"|"+(f.getAttribute("data-aid")||"")+"|"+(f.getAttribute("data-mid")||""):""}).join("")+((f.closest("[data-qk]")||{getAttribute:function(){return""}}).getAttribute("data-qk")||"")}
@@ -1244,11 +1263,12 @@ function render(){
 function renderNow(){
   renderFrame();
   var gate=S.mode==="me"&&!S.isAdmin;
-  document.body.classList.toggle("simple",isSimple());
+  document.body.classList.toggle("simple",isSimple());document.body.classList.toggle("one",S.mode==="one");
   document.getElementById("toolbar").hidden=gate;
   if(gate){document.getElementById("summary").innerHTML="";document.getElementById("sumhint").textContent="";document.getElementById("jump").innerHTML="";document.getElementById("filterbar").innerHTML="";
     main.innerHTML='<div class="gate"><h2>Badriyah’s dashboard</h2><p>'+(S.canEdit?"This page opens only with Badriyah’s own password. The team password edits the overview.":"This page is private. Unlock with your own password at the top right.")+'</p><a class="btn" href="#">Go to the overview</a></div>';
     renderPrep();return}
+  if(S.mode==="one"){document.getElementById("toolbar").hidden=true;["summary","jump","filterbar"].forEach(function(id){document.getElementById(id).innerHTML=""});document.getElementById("sumhint").textContent="";renderPrep();renderOne();return}
   if(isSimple()){document.getElementById("toolbar").hidden=true;["summary","jump","filterbar"].forEach(function(id){document.getElementById(id).innerHTML=""});document.getElementById("sumhint").textContent="";renderPrep();renderSimple();return}
   renderSummary();renderFilterbar();renderJump();renderPrep();
   if(S.mode==="me")renderOwners();
@@ -1346,7 +1366,7 @@ function hideQ(k){var h=hiddenQs();if(h.indexOf(k)<0)h.push(k);ls("dtsQhide-"+to
 
 // ---------- Events ----------
 document.getElementById("seg").addEventListener("click",function(e){var b=e.target.closest("[data-view]");if(!b)return;S.view=b.getAttribute("data-view");S.histFor=null;S.editing=null;render();window.scrollTo(0,0)});
-window.addEventListener("hashchange",function(){var m=modeOf();if(m===S.mode)return;S.mode=m;S.view=VIEWS[m][0][0];S.editing=null;S.taskForm=null;S.histFor=null;S.filter=m==="me"?"all":"active";if(!S.canEdit)showLocked();render();window.scrollTo(0,0)});
+window.addEventListener("hashchange",function(){var m=modeOf();if(m===S.mode){if(m==="one")render();return}S.mode=m;S.view=VIEWS[m][0][0];S.editing=null;S.taskForm=null;S.histFor=null;S.filter=m==="me"?"all":"active";if(!S.canEdit)showLocked();render();window.scrollTo(0,0)});
 document.getElementById("summary").addEventListener("click",function(e){
   var mf=e.target.closest("[data-mef]");
   if(mf){var k=mf.getAttribute("data-mef");if(k==="review")S.view="review";else{S.view="followups";S.person="";ls("dtsPerson","")}render();
@@ -1598,6 +1618,7 @@ function setEditor(on,admin){S.canEdit=on;S.isAdmin=!!(on&&admin);
 // Editing: the team password (shared editor account) or Badriyah's own admin password. The dashboard opens only with hers.
 var EDITOR_EMAIL="editor@safir-dts-log.com",ADMIN_EMAIL="admin@safir-dts-log.com";
 function showLocked(err){
+  if(S.mode==="one"){who.innerHTML="";return}
   who.innerHTML='<button class="btn" id="unlock" style="display:inline-flex;gap:8px;align-items:center">'+ICON.lock+(S.mode==="me"?"Unlock":"Unlock to edit")+'</button>';
   document.getElementById("unlock").addEventListener("click",function(){
     who.innerHTML='<form class="unlock" id="uf"><input id="u-name" placeholder="Your name" autocomplete="name" required value="'+esc(ls("dtsEditorName"))+'">'+
