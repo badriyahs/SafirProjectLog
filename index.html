@@ -522,7 +522,7 @@ function projById(id){return S.projects.find(function(x){return x.id===id})}
 function projName(id){var p=projById(id);return p?(p.name||"Untitled project"):"(project not found)"}
 function stamp(){return new Date().toISOString()}
 function by(){return S.editor||""}
-function fail(err){var m="Couldn’t save: "+((err&&err.code)||(err&&err.message)||"error")+(err&&err.code==="permission-denied"?" (editing may have locked. Unlock and try again.)":"");sync.textContent=m;alert(m)}
+function fail(err){var m="Couldn’t save: "+((err&&err.code)||"error")+(err&&err.message&&err.message!==err.code?" – "+err.message:"")+(err&&err.code==="permission-denied"?" (editing may have locked. Unlock and try again.)":"");sync.textContent=m.slice(0,300);alert(m)}
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k)||"";localStorage.setItem(k,v)}catch(e){return ""}}
 function ss(k,v){try{if(v===undefined)return sessionStorage.getItem(k)||"";if(v===null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v)}catch(e){return ""}}
 var toastT;
@@ -582,7 +582,7 @@ function fullView(m){
     if(Array.isArray(b.items))html+=labelled(b.items.join("\n"));
     if(Array.isArray(b.sub))b.sub.forEach(function(s){html+='<h5>'+esc(s.h||"")+'</h5>'+labelled((s.items||[]).join("\n"))});
     if(b.table)html+='<table>'+(b.table.head?'<thead><tr>'+b.table.head.map(function(h){return '<th>'+esc(h)+'</th>'}).join("")+'</tr></thead>':"")+'<tbody>'+
-      (b.table.rows||[]).map(function(r){return '<tr>'+r.map(function(c){return '<td>'+esc(c)+'</td>'}).join("")+'</tr>'}).join("")+'</tbody></table>';
+      (b.table.rows||[]).map(function(r){return '<tr>'+(Array.isArray(r)?r:r.c||[]).map(function(c){return '<td>'+esc(c)+'</td>'}).join("")+'</tr>'}).join("")+'</tbody></table>';
   });
   if(!Array.isArray(m.full)||!m.full.length){if(lines(m.openPoints).length)html+='<h4>Open points</h4>'+labelled(m.openPoints)}
   return html;
@@ -1493,7 +1493,8 @@ document.getElementById("apply").addEventListener("change",function(e){
     if(mplan.length){var mb=fs.batch();mplan.forEach(function(m){var isNew=!S.meetings.some(function(x){return x.id===m.id}),data={};
       ["date","title","place"].forEach(function(k){if(k in m)data[k]=str(m[k])});
       ["attendees","summary","decisions","openPoints","files","internal"].forEach(function(k){if(k in m)data[k]=asText(m[k])});
-      if(Array.isArray(m.full))data.full=m.full;data.projects=nl(m.projects);data.published=m.published!==false;data.updatedAt=stamp();data.updatedBy=by();if(isNew){data.createdAt=data.updatedAt;data.createdBy=by()}
+      // Firestore can't store a list directly inside a list, so each table row is kept as {"c":[cells]}.
+      if(Array.isArray(m.full))data.full=m.full.map(function(b){if(!b||!b.table)return b;var t={rows:(b.table.rows||[]).map(function(r){return Array.isArray(r)?{c:r.map(str)}:r})};if(b.table.head)t.head=b.table.head.map(str);return Object.assign({},b,{table:t})});data.projects=nl(m.projects);data.published=m.published!==false;data.updatedAt=stamp();data.updatedBy=by();if(isNew){data.createdAt=data.updatedAt;data.createdBy=by()}
       meetingOps(mb,m.id,data,isNew)});mp=mb.commit()}
     return mp.then(function(){return plan.reduce(function(pr,x){return pr.then(function(){
       var b=fs.batch();projectOps(b,x.p,x.patch,"edit",by());
