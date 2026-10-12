@@ -394,7 +394,9 @@ ol.routine li.ok>label{color:var(--muted);text-decoration:line-through}
 .prow .pu{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .prow .pu b{font-weight:600;color:var(--muted);margin-right:4px}
 .prow .pd{justify-self:end;color:var(--accent);text-decoration:none;white-space:nowrap;font-size:16px}
-.prow .pd:hover{text-decoration:underline}
+a.prow{color:inherit;text-decoration:none}
+a.prow:hover{background:var(--brand-tint)}
+a.prow:hover .pd{text-decoration:underline}
 .prow.paused,.prow.done{background:var(--paused-bg)}
 @media (max-width:760px){.prow{grid-template-columns:1fr auto;gap:4px 12px}.prow.head{display:none}.prow .pp{grid-column:1/-1;order:-1}.prow .pu{grid-column:1/-1;white-space:normal}.prow .pd{grid-column:1/-1;justify-self:start}}
 /* project status (topics) with file previews */
@@ -1221,7 +1223,7 @@ function renderFrame(){
   var lv=S.view==="log"||S.view==="archive"||S.view==="projects";
   document.getElementById("openall").hidden=!lv;document.getElementById("sort").hidden=!lv;
   document.getElementById("openall").textContent=S.allOpen?"Close all":"Open all";document.getElementById("sort").value=S.sort;
-  document.getElementById("toolnote").textContent=isSimple()?"Click Details for a project’s full status, risks and issues, meetings and files.":me?"Your dashboard: only your admin password opens it, and the database rules keep it private. Archived projects and removed tasks are kept, never deleted.":
+  document.getElementById("toolnote").textContent=isSimple()?(S.projects.some(function(p){return p.sheetUrl&&onOverview(p)})?"Click a project for its full status, risks and issues, meetings and files.":""):me?"Your dashboard: only your admin password opens it, and the database rules keep it private. Archived projects and removed tasks are kept, never deleted.":
     "Anyone with the link can view this log and add updates. Other changes need the edit password. Archived projects are kept, never deleted.";
   document.getElementById("export").hidden=!S.canEdit;document.getElementById("apply-l").hidden=!S.isAdmin;
   document.getElementById("import-l").hidden=!S.canEdit||S.projects.length>0;
@@ -1273,10 +1275,11 @@ function renderSimple(){
   if(!list.length){main.innerHTML='<div class="empty">No projects to show yet.</div>';return}
   main.innerHTML='<div class="plist"><div class="prow head"><span>Country</span><span>Project</span><span>Status</span><span>Last update</span><span></span></div>'+list.map(function(p){
     var b=base(p.section),pipe=/ PIPELINE$/.test(p.section),f=FLAGS[b]?'<span class="fi fi-'+FLAGS[b]+'" aria-hidden="true"></span>':"",u=lastUpdate(p);
-    return '<div class="prow'+(p.status==="Paused"?" paused":p.status==="Done"?" done":"")+'"><span class="pc">'+f+'<span>'+esc(tc(b))+(pipe?'<small>Pipeline</small>':"")+'</span></span>'+
+    var tag=p.sheetUrl?'a href="'+esc(p.sheetUrl)+'" target="_blank" rel="noopener"':'div';
+    return '<'+tag+' class="prow'+(p.sheetUrl?" link":"")+(p.status==="Paused"?" paused":p.status==="Done"?" done":"")+'"><span class="pc">'+f+'<span>'+esc(tc(b))+(pipe?'<small>Pipeline</small>':"")+'</span></span>'+
       '<span class="pp">'+esc(p.name||"Untitled project")+'</span><span>'+pill(p.status)+'</span>'+
       '<span class="pu" title="'+esc(u?u.date+" – "+u.text:"")+'">'+(u?'<b>'+esc(u.date)+'</b> '+esc(u.text):'<span class="none">–</span>')+'</span>'+
-      (p.sheetUrl?'<a class="pd" href="'+esc(p.sheetUrl)+'" target="_blank" rel="noopener">Details ↗</a>':'<span></span>')+'</div>'}).join("")+'</div>';
+      (p.sheetUrl?'<span class="pd">Details ↗</span>':'<span></span>')+'</'+(p.sheetUrl?"a":"div")+'>'}).join("")+'</div>';
 }
 
 // ---------- Saving ----------
