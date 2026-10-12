@@ -401,7 +401,15 @@ ol.routine li.ok>label{color:var(--muted);text-decoration:line-through}
 .fchip{margin-top:6px;display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line-strong);border-radius:999px;padding:3px 11px;font-size:14px;background:var(--surface);cursor:pointer;color:var(--accent)}
 .fchip:hover{border-color:var(--accent)}
 .trow .tact{grid-column:1/-1;display:flex;gap:10px}
-@media (max-width:700px){.trow{grid-template-columns:1fr auto}.trow.head{display:none}.trow .tn,.trow .tw{grid-column:1/-1}}
+.irow{display:grid;grid-template-columns:minmax(170px,1.3fr) 70px minmax(200px,1.8fr) minmax(110px,.9fr) 92px 82px;gap:6px 12px;padding:10px 14px;border-top:1px solid var(--line);align-items:start}
+.irow.head{padding-block:6px;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.irow .tt{font-weight:700}
+.irow .tw,.irow .td{color:var(--muted)}
+.prio{display:inline-block;min-width:26px;text-align:center;padding:2px 7px;border-radius:6px;font-weight:700;font-size:14px;background:var(--line);color:var(--muted)}
+.prio.H{background:var(--req-tint);color:var(--req)}
+.prio.M{background:var(--amber-bg);color:var(--amber-fg)}
+.topics .sub{padding:8px 14px;border-top:1px solid var(--line-strong);background:var(--brand-tint);font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+@media (max-width:700px){.trow,.irow{grid-template-columns:1fr auto}.trow.head,.irow.head{display:none}.trow .tn,.trow .tw,.irow .tn,.irow .tw,.irow .td{grid-column:1/-1}}
 .fpop{position:absolute;z-index:35;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.2);padding:8px;display:grid;grid-template-columns:repeat(4,112px);gap:6px;max-width:calc(100vw - 24px)}
 .fpop[hidden]{display:none}
 .fpop button{border:0;padding:0;background:none;cursor:pointer;text-align:left;font-size:12.5px;color:var(--muted)}
@@ -639,7 +647,7 @@ function minutesView(p){
 // ---------- Project status: a few topic lines per project, with file previews (public; Badriyah edits on her dashboard) ----------
 // topics: {projectId, order, title, status, next, who, updatedAt, removed}
 // files:  {projectId, topicId, code, title, kind:"image"|"pdf", preview:"data:image/jpeg;base64,…", driveUrl, item} – previews are made on her Mac
-function topicsFor(p){return S.topics.filter(function(t){return t.projectId===p.id&&!t.removed}).sort(function(a,b){return (a.order||0)-(b.order||0)})}
+function topicsFor(p,kind){return S.topics.filter(function(t){return t.projectId===p.id&&!t.removed&&(kind==="issue"?t.kind==="issue":kind?t.kind!=="issue":true)}).sort(function(a,b){return (a.order||0)-(b.order||0)})}
 function statusClass(s){s=String(s||"");return /^open/i.test(s)?"red":/^(due|waiting|overdue)/i.test(s)?"amber":/^in progress/i.test(s)?"blue":/^(done|received|closed)/i.test(s)?"green":""}
 var STATUS_SUGGEST=["Open","In progress","Waiting","Due ","Done"];
 function filesFor(pid,tid){var fs0=S.files[pid]||[];return fs0.filter(function(f){return !tid||f.topicId===tid}).sort(function(a,b){return a.code<b.code?-1:1})}
@@ -650,9 +658,9 @@ function loadFiles(pid){
 function fileLabel(list){var im=list.filter(function(f){return f.kind!=="pdf"}).length,pd=list.length-im;
   return [im?im+(im===1?" image":" images"):"",pd?pd+" PDF"+(pd===1?"":"s"):""].filter(Boolean).join(" · ")}
 function topicsView(p){
-  var ts=topicsFor(p),me=S.mode==="me"&&S.isAdmin;if(!ts.length&&!me)return"";
-  if(ts.length)loadFiles(p.id);
-  var last=ts.reduce(function(m,t){return t.updatedAt&&t.updatedAt>m?t.updatedAt:m},"");
+  var all=topicsFor(p),ts=topicsFor(p,"status"),is=topicsFor(p,"issue"),me=S.mode==="me"&&S.isAdmin;if(!all.length&&!me)return"";
+  if(all.length)loadFiles(p.id);
+  var last=all.reduce(function(m,t){return t.updatedAt&&t.updatedAt>m?t.updatedAt:m},"");
   var tf=S.topicForm;
   var html='<div class="topics"><div class="th"><span><b>Status</b></span>'+(last?'<span>Updated '+esc(fmtDate(last))+'</span>':"")+'</div>'+
     (ts.length?'<div class="trow head"><span>Topic</span><span>Status</span><span>Next step</span><span>Who</span></div>':"");
@@ -663,11 +671,36 @@ function topicsView(p){
       '<div><span class="tst '+statusClass(t.status)+'">'+esc(t.status||"–")+'</span></div><div class="tn">'+esc(t.next||"")+'</div><div class="tw">'+esc(t.who||"")+'</div>'+
       (me?'<div class="tact"><button class="plink" type="button" data-tedit="'+esc(t.id)+'">Edit</button></div>':"")+'</div>';
   });
-  if(me)html+=tf&&tf.pid===p.id&&!tf.tid?topicForm(p,null):'<div class="trow"><div class="tact"><button class="tlbtn" type="button" data-tadd>+ Add a status line</button></div></div>';
+  if(me)html+=tf&&tf.pid===p.id&&!tf.tid&&tf.kind!=="issue"?topicForm(p,null):'<div class="trow"><div class="tact"><button class="tlbtn" type="button" data-tadd>+ Add a status line</button></div></div>';
+  // Risks & issues (Arch. Ruba's Issues Log, simplified): Issue · Priority · Required action · Action by · Due · Status
+  if(is.length||me){
+    html+='<div class="sub">Risks &amp; issues</div>'+(is.length?'<div class="irow head"><span>Issue</span><span>Priority</span><span>Required action</span><span>Action by</span><span>Due</span><span>Status</span></div>':"");
+    is.forEach(function(t){
+      if(tf&&tf.pid===p.id&&tf.tid===t.id){html+=topicForm(p,t);return}
+      var fl=filesFor(p.id,t.id),due=/^\d{4}-\d{2}-\d{2}$/.test(t.due||"")?fmtDue(t.due):(t.due||"Not set");
+      html+='<div class="irow" data-tid="'+esc(t.id)+'"><div class="tt">'+esc(t.title)+(t.opened?'<div class="ameta">Opened '+esc(fmtDue(t.opened)||t.opened)+'</div>':"")+
+        (fl.length?'<div><button class="fchip" type="button" data-fchip="'+esc(t.id)+'">📎 '+esc(fileLabel(fl))+'</button></div>':"")+'</div>'+
+        '<div><span class="prio '+esc(t.priority||"")+'">'+esc(t.priority||"–")+'</span></div><div class="tn">'+esc(t.next||"")+'</div><div class="tw">'+esc(t.who||"")+'</div>'+
+        '<div class="td">'+esc(due)+'</div><div><span class="tst '+(/^closed/i.test(t.status||"")?"green":/^open/i.test(t.status||"")?"red":statusClass(t.status))+'">'+esc(t.status||"Open")+'</span></div>'+
+        (me?'<div class="tact"><button class="plink" type="button" data-tedit="'+esc(t.id)+'">Edit</button></div>':"")+'</div>';
+    });
+    if(me)html+=tf&&tf.pid===p.id&&!tf.tid&&tf.kind==="issue"?topicForm(p,{kind:"issue",status:"Open",opened:today()}):'<div class="irow"><div class="tact"><button class="tlbtn" type="button" data-tadd="issue">+ Add a risk or issue</button></div></div>';
+  }
   return html+'</div>';
 }
 function topicForm(p,t){
-  t=t||{};
+  t=t||{};var iss=t.kind==="issue";
+  if(iss)return '<form class="aform" data-tform data-pid="'+esc(p.id)+'" data-tid="'+esc(t.id||"")+'" style="margin:8px 12px"><input type="hidden" name="kind" value="issue">'+
+    '<input name="title" class="w" placeholder="Issue or risk" value="'+esc(t.title||"")+'" required aria-label="Issue">'+
+    '<input name="next" class="w" placeholder="Required action" value="'+esc(t.next||"")+'" aria-label="Required action">'+
+    '<select name="priority" aria-label="Priority">'+opts(["","H","M","L"],t.priority||"",{"":"Priority: not set","H":"H – high","M":"M – medium","L":"L – low"})+'</select>'+
+    '<input name="who" placeholder="Action by" value="'+esc(t.who||"")+'" list="owners" aria-label="Action by">'+
+    '<select name="status" aria-label="Status">'+opts(["Open","Closed"],/^closed/i.test(t.status||"")?"Closed":"Open")+'</select>'+
+    '<input name="due" placeholder="Due: a date or Not set" value="'+esc(t.due||"")+'" aria-label="Due">'+
+    '<input name="opened" type="date" value="'+esc(t.opened||"")+'" aria-label="Opened">'+
+    '<input name="order" type="number" placeholder="Order" value="'+esc(t.order!=null?t.order:"")+'" aria-label="Order (1 = first)">'+
+    '<div class="lbl">Shown on the overview under Risks &amp; issues. Due can be a date (2026-10-15) or words.</div>'+
+    '<div class="row"><button class="btn primary" type="submit">'+(t.id?"Save":"Add")+'</button><button class="btn" type="button" data-tcancel>Cancel</button>'+(t.id?'<span class="sp"></span><button class="btn warn" type="button" data-tremove>Remove</button>':"")+'</div></form>';
   return '<form class="aform" data-tform data-pid="'+esc(p.id)+'" data-tid="'+esc(t.id||"")+'" style="margin:8px 12px">'+
     '<input name="title" class="w" placeholder="Topic, e.g. Restaurant terrace extension" value="'+esc(t.title||"")+'" required aria-label="Topic">'+
     '<input name="status" placeholder="Status: Open, In progress, Waiting, Due 15 Oct, Done" value="'+esc(t.status||"")+'" list="tstatus" aria-label="Status">'+
@@ -1329,7 +1362,7 @@ main.addEventListener("click",function(e){
   // file previews: click a 📎 tag to open the viewer
   var fc=t.closest("[data-fchip]");if(fc){var fpid=fc.closest("[data-id]").getAttribute("data-id");openLb(filesFor(fpid,fc.getAttribute("data-fchip")),0);return}
   // status lines (dashboard)
-  if(t.closest("[data-tadd]")&&S.isAdmin){var tp0=projOf(t);if(tp0){S.topicForm={pid:tp0.id,tid:""};render();focusIn("[data-tform] [name=title]")}return}
+  var ta=t.closest("[data-tadd]");if(ta&&S.isAdmin){var tp0=projOf(ta);if(tp0){S.topicForm={pid:tp0.id,tid:"",kind:ta.getAttribute("data-tadd")||""};render();focusIn("[data-tform] [name=title]")}return}
   var te=t.closest("[data-tedit]");if(te&&S.isAdmin){var tp1=projOf(te);if(tp1){S.topicForm={pid:tp1.id,tid:te.getAttribute("data-tedit")};render();focusIn("[data-tform] [name=status]")}return}
   if(t.closest("[data-tcancel]")){S.topicForm=null;render();return}
   var tr=t.closest("[data-tremove]");
@@ -1420,9 +1453,11 @@ main.addEventListener("submit",function(e){
   var tfm=t.closest("[data-tform]");
   if(tfm){e.preventDefault();if(!S.isAdmin)return;var tfd=new FormData(tfm),tpid=tfm.getAttribute("data-pid"),tid=tfm.getAttribute("data-tid"),tp=projById(tpid);if(!tp)return;
     var ord=parseInt(tfd.get("order"),10),cur=topicsFor(tp);
-    var td={projectId:tpid,title:String(tfd.get("title")||"").trim(),status:String(tfd.get("status")||"").trim(),next:String(tfd.get("next")||"").trim(),who:String(tfd.get("who")||"").trim(),
+    var isIss=tfd.get("kind")==="issue";if(isIss)cur=topicsFor(tp,"issue");
+    var td={projectId:tpid,kind:isIss?"issue":"status",title:String(tfd.get("title")||"").trim(),status:String(tfd.get("status")||"").trim(),next:String(tfd.get("next")||"").trim(),who:String(tfd.get("who")||"").trim(),
       order:isNaN(ord)?(tid?((S.topics.find(function(x){return x.id===tid})||{}).order||0):cur.reduce(function(m,x){return Math.max(m,x.order||0)},0)+1):ord,updatedAt:stamp(),updatedBy:by()};
-    if(!td.title)return;var tb=fs.batch(),ref=tid?topicCol.doc(tid):topicCol.doc(tpid+"-t"+Date.now().toString(36));
+    if(isIss){td.priority=String(tfd.get("priority")||"");td.due=String(tfd.get("due")||"").trim();td.opened=String(tfd.get("opened")||"")}
+    if(!td.title)return;var tb=fs.batch(),ref=tid?topicCol.doc(tid):topicCol.doc(tpid+(isIss?"-i":"-t")+Date.now().toString(36));
     tb.set(ref,td,{merge:true});plog(tb,tp,"topic",(tid?"Changed":"Added")+" the status line: "+td.title+" – "+td.status);S.topicForm=null;tb.commit().catch(fail);render();return}
   var qf=t.closest("[data-qform]");
   if(qf){e.preventDefault();var qd=qf.closest("[data-qk]"),qp=projById(qd.getAttribute("data-pid")),ow=String(new FormData(qf).get("owner")||"").trim();
@@ -1617,7 +1652,7 @@ document.getElementById("apply").addEventListener("change",function(e){
       (skip.length?"\n\nNot found: "+skip.join(", "):"")+"\n\nApply these changes?"))return;
     sync.textContent="Applying changes…";
     var mp=Promise.resolve();
-    if(tps.length){mp=mp.then(function(){var tb=fs.batch(),at=stamp();tps.forEach(function(x){var c={};["projectId","title","status","next","who"].forEach(function(k){c[k]=str(x[k])});c.order=+x.order||0;c.updatedAt=x.updatedAt||at;c.updatedBy=by();tb.set(topicCol.doc(x.id),c,{merge:true})});
+    if(tps.length){mp=mp.then(function(){var tb=fs.batch(),at=stamp();tps.forEach(function(x){var c={};["projectId","title","status","next","who","kind","priority","due","opened"].forEach(function(k){c[k]=str(x[k])});if(!c.kind)c.kind="status";c.order=+x.order||0;c.updatedAt=x.updatedAt||at;c.updatedBy=by();tb.set(topicCol.doc(x.id),c,{merge:true})});
       plog(tb,projById(tps[0].projectId),"topic","Status lines from "+(d.title||"a changes file")+": "+tps.length);return tb.commit()})}
     // Previews are up to ~150 KB each, so they go a few at a time.
     for(var fi=0;fi<fls.length;fi+=4)(function(chunk){mp=mp.then(function(){var fb=fs.batch();chunk.forEach(function(x){var c={};["projectId","topicId","code","title","kind","preview","driveUrl"].forEach(function(k){c[k]=str(x[k])});c.item=+x.item||0;c.updatedAt=stamp();fb.set(fileCol.doc(x.id),c,{merge:true})});return fb.commit()})})(fls.slice(fi,fi+4));
