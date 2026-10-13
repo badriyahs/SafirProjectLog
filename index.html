@@ -390,8 +390,11 @@ body.simple .wrap{max-width:1280px}
 body.one .chev,body.one .num{display:none}
 body.one .card .ch.tog{cursor:default}
 body.one .card>.body{padding-left:0}
-.onelink{margin:22px 0 -8px;text-align:right;font-size:16px}
+.onelink{margin:22px 0 -8px;display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;font-size:16px}
 .onelink a{color:var(--accent)}
+.onelink a.back{text-decoration:none;font-weight:600}
+.onelink a.back:hover{text-decoration:underline}
+body.one .logo{cursor:pointer}
 .prow.head{padding-block:10px;background:var(--brand-tint);font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .prow .pc{display:flex;gap:8px;align-items:center;color:var(--muted)}
 .prow .pc .fi{width:1.4em;line-height:1em;border-radius:2px;box-shadow:0 0 0 1px var(--line);flex:none}
@@ -1243,11 +1246,13 @@ function renderFrame(){
     document.getElementById("modelink").innerHTML="";tip.hidden=true;document.getElementById("toolnote").textContent="Live from the Design & Technical Services Department’s project log."}
 }
 function nameHtml(n){var m=/^(Safir)\s+(.+)$/.exec(n||"");return m?m[1]+' <span>'+esc(m[2])+'</span>':esc(n)}
+// A project with a details sheet gets its own page; its row on the overview opens it.
+function pageHref(p){var k=Object.keys(ONE_PAGE).find(function(x){return ONE_PAGE[x]===p.id});return "#"+(k||"p="+p.id)}
 function oneProject(){var id=oneId();return S.projects.find(function(p){return p.id===id})||null}
 function renderOne(){
   var p=oneProject();
   if(!p){if(S.live||S.projects.length)main.innerHTML='<div class="empty">This project isn’t in the log.</div>';return}
-  main.innerHTML=(p.sheetUrl?'<p class="onelink"><a href="'+esc(p.sheetUrl)+'" target="_blank" rel="noopener">Action tracker, issues and risks ↗</a></p>':"")+cardView(p);
+  main.innerHTML='<p class="onelink"><a href="#" class="back">← All projects</a>'+(p.sheetUrl?'<a href="'+esc(p.sheetUrl)+'" target="_blank" rel="noopener">Action tracker, issues and risks ↗</a>':"")+'</p>'+cardView(p);
 }
 // Live updates re-draw the page; keep whatever someone is typing in an open form (and where the cursor was).
 function formKey(f){return ["data-aform","data-mform","data-form","data-cform","data-qform"].map(function(k){return f.hasAttribute(k)?k+"="+f.getAttribute(k)+"|"+(f.getAttribute("data-pid")||"")+"|"+(f.getAttribute("data-aid")||"")+"|"+(f.getAttribute("data-mid")||""):""}).join("")+((f.closest("[data-qk]")||{getAttribute:function(){return""}}).getAttribute("data-qk")||"")}
@@ -1301,11 +1306,11 @@ function renderSimple(){
   if(!list.length){main.innerHTML='<div class="empty">No projects to show yet.</div>';return}
   main.innerHTML='<div class="plist"><div class="prow head"><span>Country</span><span>Project</span><span>Status</span><span>Last update</span><span></span></div>'+list.map(function(p){
     var b=base(p.section),pipe=/ PIPELINE$/.test(p.section),f=FLAGS[b]?'<span class="fi fi-'+FLAGS[b]+'" aria-hidden="true"></span>':"",u=lastUpdate(p);
-    var tag=p.sheetUrl?'a href="'+esc(p.sheetUrl)+'" target="_blank" rel="noopener"':'div';
+    var tag=p.sheetUrl?'a href="'+pageHref(p)+'"':'div';
     return '<'+tag+' class="prow'+(p.sheetUrl?" link":"")+(p.status==="Paused"?" paused":p.status==="Done"?" done":"")+'"><span class="pc">'+f+'<span>'+esc(tc(b))+(pipe?'<small>Pipeline</small>':"")+'</span></span>'+
       '<span class="pp">'+esc(p.name||"Untitled project")+'</span><span>'+pill(p.status)+'</span>'+
       '<span class="pu" title="'+esc(u?u.date+" – "+u.text:"")+'">'+(u?'<b>'+esc(u.date)+'</b><span class="pt">'+esc(u.text)+'</span>':'<span class="none">–</span>')+'</span>'+
-      (p.sheetUrl?'<span class="pd">Details ↗</span>':'<span></span>')+'</'+(p.sheetUrl?"a":"div")+'>'}).join("")+'</div>';
+      (p.sheetUrl?'<span class="pd">Details →</span>':'<span></span>')+'</'+(p.sheetUrl?"a":"div")+'>'}).join("")+'</div>';
 }
 
 // ---------- Saving ----------
@@ -1366,6 +1371,8 @@ function hideQ(k){var h=hiddenQs();if(h.indexOf(k)<0)h.push(k);ls("dtsQhide-"+to
 
 // ---------- Events ----------
 document.getElementById("seg").addEventListener("click",function(e){var b=e.target.closest("[data-view]");if(!b)return;S.view=b.getAttribute("data-view");S.histFor=null;S.editing=null;render();window.scrollTo(0,0)});
+// On a project page the logo goes back to the overview.
+document.querySelector(".logo").addEventListener("click",function(){if(S.mode==="one")location.hash=""});
 window.addEventListener("hashchange",function(){var m=modeOf();if(m===S.mode){if(m==="one")render();return}S.mode=m;S.view=VIEWS[m][0][0];S.editing=null;S.taskForm=null;S.histFor=null;S.filter=m==="me"?"all":"active";if(!S.canEdit)showLocked();render();window.scrollTo(0,0)});
 document.getElementById("summary").addEventListener("click",function(e){
   var mf=e.target.closest("[data-mef]");
