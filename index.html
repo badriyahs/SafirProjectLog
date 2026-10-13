@@ -1623,7 +1623,7 @@ var FIREBASE_CONFIG={
 // Status lines and risks live in the Google sheet "Safir DTS – Project Details" (tabs Status and Issues & Risks) and are read and
 // saved through its Apps Script web app (scripts/sheet-link/Code.gs), so the sheet and the site always match (her choice, 13 Oct 2026).
 // Empty = use the old Firestore "topics" collection.
-var SHEET_API="";
+var SHEET_API="https://script.google.com/macros/s/AKfycbwbZRcLjFQQxJBssEZ7LsvVZQCeVm8gjWIqTxdPXTdkgWDYJECvjJCn6rqM9odfegg/exec";
 var sync=document.getElementById("sync"),dot=document.getElementById("dot"),who=document.getElementById("who"),tools=document.getElementById("tools");
 if(!FIREBASE_CONFIG||!window.firebase){sync.textContent="Not connected.";main.innerHTML='<div class="gate"><h2>Not set up yet</h2><p>The Firebase settings for this log haven’t been added.</p></div>';return}
 firebase.initializeApp(FIREBASE_CONFIG);
