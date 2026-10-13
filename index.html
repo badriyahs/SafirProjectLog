@@ -438,6 +438,25 @@ a.prow:hover .pd{text-decoration:underline}
 .tld{font-weight:700;font-size:14px;color:var(--muted)}
 .tlt{font-size:16px}
 .pintro{margin:4px 0 14px;font-size:16px;color:var(--ink);max-width:75ch}
+.credit{display:block;font-size:13px;color:var(--faint);margin-top:2px}
+body.inedit [data-ed]{border-radius:4px;cursor:text;outline:1px dashed transparent;outline-offset:2px}
+body.inedit [data-ed]:hover{outline-color:var(--line-strong);background:var(--brand-tint)}
+body.inedit [data-ed]:focus{outline:2px solid var(--accent);background:var(--surface)}
+[data-ed]:empty::before{content:attr(data-ph);color:var(--faint)}
+[data-ed][data-f="intro"]{white-space:pre-line;display:block}
+.edc{border:0;background:none;padding:0;font:inherit;cursor:pointer}
+.edc:hover .tst,.edc:hover .prio,.edc:hover .pill{box-shadow:0 0 0 2px var(--accent)}
+.edmenu{position:absolute;z-index:40;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:6px;display:flex;flex-direction:column;min-width:170px}
+.edmenu button{text-align:left;padding:8px 12px;border:0;background:none;border-radius:6px;font:inherit;font-size:15px;cursor:pointer}
+.edmenu button:hover{background:var(--brand-tint)}
+#syncnote{position:fixed;inset:0;background:rgba(20,30,40,.35);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px}
+.sncard{background:var(--surface);border-radius:14px;padding:22px 24px;max-width:440px;box-shadow:0 18px 50px rgba(0,0,0,.2)}
+.sncard h3{margin:0 0 8px;font-size:19px}
+.sncard p{margin:0 0 16px;color:var(--muted)}
+.sncard .row{display:flex;gap:10px}
+.rmx{opacity:0;border:0;background:none;color:var(--faint);font-size:15px;cursor:pointer;padding:2px 6px}
+.trow:hover .rmx,.irow:hover .rmx,.rmx:focus{opacity:1}
+.rmx:hover{color:var(--req)}
 .msec{margin-top:18px;padding:8px 14px;border-radius:10px;background:var(--brand-tint);font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink)}
 .trow{display:grid;grid-template-columns:minmax(150px,1.15fr) 118px minmax(220px,2fr) minmax(120px,.9fr);gap:6px 14px;padding:10px 14px;border-top:1px solid var(--line);align-items:start}
 .trow.head{border-top:0;padding-block:6px;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--surface)}
@@ -737,8 +756,9 @@ function sheetChangeTask(p,a,fn,kind,extraPatch,pubKind){
   var t=Object.assign({},a),note=fn(t)||t.text,b=fs.batch(),meta={};
   if(extraPatch&&Object.keys(extraPatch).length)projectOps(b,p,extraPatch,pubKind||"edit",by(),pubKind==="task"?t.text:"");
   ["chased","snooze","doneLine"].forEach(function(k){if((t[k]||"")!==(a[k]||""))meta[k]=t[k]||""});
-  if(Object.keys(meta).length){var m={};m[a.sheetId]=meta;b.set(privCol.doc(p.id),{sheetMeta:m},{merge:true})}
-  plog(b,p,kind,note);var pr=b.commit();
+  if(S.isAdmin){if(Object.keys(meta).length){var m={};m[a.sheetId]=meta;b.set(privCol.doc(p.id),{sheetMeta:m},{merge:true})}plog(b,p,kind,note)}
+  else b.set(histCol.doc(),{at:stamp(),by:by(),projectId:p.id,projectName:p.name||"",kind:"taskedit",changes:[{f:"task",from:"",to:note}]});
+  var pr=b.commit();
   if(t.removed&&!a.removed){S.sheetActs=S.sheetActs.filter(function(x){return x.sheetId!==a.sheetId});render();
     return pr.then(function(){return sheetPost({action:"remove",kind:"action",id:a.sheetId,by:by()})}).catch(fail)}
   var f=sheetActFields(p,t,a);if(!Object.keys(f).length)return pr.catch(fail);
@@ -751,7 +771,7 @@ function sheetAddTask(p,t){var f=sheetActFields(p,t,null);
 function applySheet(d){if(!d||!Array.isArray(d.rows))return;
   var acts=d.rows.filter(function(o){return o.kind==="action"});if(acts.length)S.sheetActs=acts.map(sheetAct);
   S.sheet=d.rows.filter(function(o){return o.kind==="status"||o.kind==="issue"}).map(function(o){return{id:o.webId||o.id,sheetId:o.id,kind:o.kind==="issue"?"issue":"status",project:o.project,title:o.title,status:o.status,next:o.next,who:o.who,
-    priority:o.priority||"",due:o.due||"",opened:o.opened||"",order:o.order,updatedAt:o.updated||"",updatedBy:o.by||""}});render()}
+    priority:o.priority||"",type:o.type||"",due:o.due||"",opened:o.opened||"",order:o.order,updatedAt:o.updated||"",updatedBy:o.by||""}});render()}
 function sheetPost(body,p,note){
   return fetch(SHEET_API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)}).then(function(r){return r.json()}).then(function(d){
     if(!d||!d.ok)throw{code:"sheet",message:(d&&d.error)||"The Google sheet didn’t answer."};applySheet(d.data);
@@ -767,22 +787,68 @@ function sheetSave(p,tid,td,isIss){
 // Action Tracker tasks that sit under a status line or issue (the sheet's group heading has the same name).
 function topicTasks(p,title){var t=norm(title);if(!t)return[];var l=sheetActsFor(p)||[];
   return l.filter(function(a){var g=norm(a.group);return !!g&&(g===t||t.indexOf(g+" ")===0||g.indexOf(t+" ")===0)})}
-function topicTasksChip(p,t){var l=topicTasks(p,t.title);if(!l.length)return"";var op=l.filter(function(a){return !a.done}).length,on=!!(S.tOpen||{})[t.id];
-  return '<div><button class="tkchip" type="button" data-ttasks="'+esc(t.id)+'" aria-expanded="'+on+'">'+(on?"▾ ":"▸ ")+l.length+' task'+(l.length===1?"":"s")+' · '+op+' open</button></div>'}
-function topicTasksList(p,t){if(!(S.tOpen||{})[t.id])return"";var l=topicTasks(p,t.title);if(!l.length)return"";
-  var open=sortActs(l.filter(function(a){return !a.done})),done=l.filter(function(a){return a.done}),sd=!!(S.tDone||{})[t.id];
-  var row=function(a){return '<div class="tkrow'+(a.done?" done":"")+'"><span class="tkid">'+esc(a.sheetId)+'</span><span>'+esc(a.text)+'</span><span class="tkwho">'+esc(tidy(a.owner)||"TBC")+'</span><span>'+esc(a.done?"Done":dueText(a))+'</span><span><span class="tst '+statusClass(a.status)+'">'+esc(a.status||"Open")+'</span></span></div>'};
-  return '<div class="tksub">'+open.map(row).join("")+(done.length?(sd?done.map(row).join(""):"")+'<button class="tlbtn" type="button" data-tdone="'+esc(t.id)+'">'+(sd?"Hide done":"Show "+done.length+" done")+'</button>':"")+'</div>'}
+function topicTasksList(p,t){if(S.mode!=="one")return"";var l=topicTasks(p,t.title).filter(function(a){return !a.done});if(!l.length)return"";
+  return '<div class="tksub">'+sortActs(l).map(function(a){return '<div class="tkrow"><span class="tkid">'+esc(a.sheetId)+'</span><span>'+edT("act",a.sheetId,"text",a.text,"Task")+'</span><span class="tkwho">'+edT("act",a.sheetId,"owner",tidy(a.owner)||"TBC","Owner")+'</span><span>'+edT("act",a.sheetId,"due",dueText(a),"Due")+'</span><span>'+edC("act",a.sheetId,"status",'<span class="tst '+statusClass(a.status)+'">'+esc(a.status||"Open")+'</span>')+'</span></div>'}).join("")+'</div>'}
 // Project page: the undated summary lines sit under the description; the dated updates are a Timeline section, closed until clicked.
 function introView(p){var l=detailItems(p).filter(function(x){return x.d===null}).map(function(x){return x.l.replace(/^[•\-]\s*/,"")}).filter(Boolean);
+  if(isInline())return '<div class="pintro">'+edT("proj",p.id,"intro",l.join("\n"),"A short summary of the project")+'</div>';
   return l.length?'<div class="pintro">'+l.map(esc).join("<br>")+'</div>':""}
-function timelineSec(p){var items=detailItems(p).filter(function(x){return x.d!==null}).sort(function(a,b){return b.d-a.d||b.i-a.i});if(!items.length)return"";
-  var op=!!(S.tlOpen||{})[p.id];
-  var h='<button class="msec msbtn" type="button" data-tlsec="'+esc(p.id)+'" aria-expanded="'+op+'"><b>Timeline</b><span class="msub">'+items.length+' dated updates, newest first</span><span class="mchev">'+(op?"Hide ▾":"Show ▸")+'</span></button>';
-  if(!op)return h;
-  return h+'<ul class="tline">'+items.map(function(x){var t=x.l.replace(/^[•\-]\s*/,""),m=/^(.*?)\s+–\s+([\s\S]*)$/.exec(t);
-    var lab=m?m[1]:fmtDate(x.d),w=/^([^:]{1,40}):\s*(.+)$/.exec(lab);if(w)lab=w[2]+" · "+w[1].charAt(0).toUpperCase()+w[1].slice(1);
-    return '<li><div class="tld">'+esc(lab)+'</div><div class="tlt">'+esc(m?m[2]:t)+'</div></li>'}).join("")+'</ul>'}
+// ---------- Editing in place on a project page (her request, 13 Oct 2026): it looks the same; click text to change it, click a status to pick another ----------
+function isInline(){return S.canEdit&&S.mode==="one"}
+function edT(kind,id,f,val,ph){val=val==null?"":String(val);if(!isInline())return esc(val);
+  return '<span data-ed="'+kind+'" data-id="'+esc(id)+'" data-f="'+f+'" data-ph="'+esc(ph||"")+'" contenteditable="true" spellcheck="true">'+esc(val)+'</span>'}
+function edC(kind,id,f,inner){if(!isInline())return inner;return '<button type="button" class="edc" data-edc="'+kind+'" data-id="'+esc(id)+'" data-f="'+f+'" title="Change">'+inner+'</button>'}
+var ED_CHOICES={proj:{status:STATUSES},topic:{status:["Open","In progress","Pending","Due ","Sent ","Done"]},issue:{status:["Open","In Progress","On Hold","Closed"],priority:["Critical","High","Medium","Low",""]},act:{status:["Open","In Progress","On Hold","Closed"]}};
+// The first edit in a session asks once: the change goes straight to the live log and the Google sheet.
+function syncOk(then){if(ss("dtsSyncOk")){then();return}
+  var d=document.getElementById("syncnote");if(d)d.remove();d=document.createElement("div");d.id="syncnote";
+  d.innerHTML='<div class="sncard" role="dialog" aria-modal="true" aria-labelledby="sn-h"><h3 id="sn-h">Before you edit</h3><p>Your changes save straight away and are signed with your name. Status lines, risks and tasks also update the Google Sheet (Safir DTS – Project Details).</p><div class="row"><button class="btn primary" type="button" id="sn-ok">Continue</button><button class="btn" type="button" id="sn-no">Cancel</button></div></div>';
+  document.body.appendChild(d);document.getElementById("sn-ok").focus();
+  document.getElementById("sn-ok").addEventListener("click",function(){ss("dtsSyncOk","1");d.remove();then()});
+  document.getElementById("sn-no").addEventListener("click",function(){d.remove()})}
+// "2026-10-20", "20 Oct", "20 Oct 2026" → a date; anything else ("TBC", "end of month") stays as words.
+function parseDue(v){v=String(v||"").trim();if(ISO.test(v))return{iso:v,words:""};
+  var m=/^(\d{1,2})\s+([A-Za-z]{3})[a-z]*\.?(?:\s+(\d{4}))?$/.exec(v),mi=m?MONTHS.map(function(x){return x.toLowerCase()}).indexOf(m[2].toLowerCase()):-1;
+  if(m&&mi>-1){var y=m[3]?+m[3]:new Date().getFullYear(),d=new Date(y,mi,+m[1]);return{iso:d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"),words:""}}
+  return{iso:"",words:/^(tbc|–|-)?$/i.test(v)?"TBC":v}}
+function saveEd(kind,id,f,val){var p=oneProject();if(!p)return;
+  if(kind==="proj"){
+    if(f==="status"){save(p,{status:val},"status",by()).catch(fail);return}
+    if(f==="intro"){var dated=lines(p.details).filter(function(l){return lineDate(l)!==null}),intro=val.split("\n").map(function(x){return x.trim()}).filter(Boolean).map(function(x){return "• "+x});
+      save(p,{details:bulletText(intro.concat(dated).join("\n"))},"edit",by()).catch(fail);return}
+    var pt={};pt[f]=val;save(p,pt,"edit",by()).catch(fail);return}
+  if(kind==="topic"||kind==="issue"){var t=(S.sheet||S.topics).find(function(x){return x.id===id});if(!t)return;
+    var iss=kind==="issue",td={title:t.title,status:t.status,next:t.next,who:t.who};if(iss){td.type=t.type||"Issue";td.priority=t.priority;td.due=t.due;td.opened=t.opened}
+    if(f==="due"){var d=parseDue(val);val=d.iso||d.words}
+    td[f]=val;if(SHEET_API){sheetSave(p,id,td,iss);render()}return}
+  if(kind==="act"){var a=(sheetActsFor(p)||[]).find(function(x){return x.sheetId===id});if(!a)return;
+    if(f==="status"){var loc=S.sheetActs.find(function(x){return x.sheetId===id});if(loc){loc.status=val;loc.done=/^closed/i.test(val)?today():""}render();
+      sheetPost({action:"save",kind:"action",id:id,fields:{status:val},by:by()},p,null);
+      if(!S.isAdmin){var hb=fs.batch();hb.set(histCol.doc(),{at:stamp(),by:by(),projectId:p.id,projectName:p.name||"",kind:"taskedit",changes:[{f:"task",from:"",to:id+" – "+a.text+": "+val}]});hb.commit().catch(function(){})}
+      return}
+    changeTask(p,a.id,function(x){if(f==="text")x.text=val;else if(f==="owner")x.owner=/^tbc$/i.test(val)?"":val;else if(f==="due"){var d=parseDue(val);x.due=d.iso;x.dueText=d.words}return "Changed: "+x.text},"taskedit")}}
+function closeEdMenu(){var m=document.getElementById("edmenu");if(m)m.remove()}
+function openEdMenu(btn){closeEdMenu();var kind=btn.getAttribute("data-edc"),f=btn.getAttribute("data-f"),id=btn.getAttribute("data-id"),opts0=(ED_CHOICES[kind]||{})[f]||[];
+  var m=document.createElement("div");m.id="edmenu";m.className="edmenu";
+  m.innerHTML=opts0.map(function(o){return '<button type="button" data-pick="'+esc(o)+'">'+(o===""?"–":esc(o.trim()+(/ $/.test(o)?"…":"")))+'</button>'}).join("")+(kind==="topic"?'<button type="button" data-pick-own>Type your own…</button>':"");
+  document.body.appendChild(m);var r=btn.getBoundingClientRect();m.style.top=(r.bottom+window.scrollY+4)+"px";m.style.left=Math.max(8,Math.min(r.left+window.scrollX,window.scrollX+document.documentElement.clientWidth-m.offsetWidth-8))+"px";
+  m.addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var v;
+    if(b.hasAttribute("data-pick-own")){var cur=((S.sheet||[]).find(function(x){return x.id===id})||{}).status||"";v=prompt("Status",cur);if(v==null){closeEdMenu();return}v=v.trim()}
+    else{v=b.getAttribute("data-pick");if(/ $/.test(v)){var w=prompt(v.trim()+"…",v);if(w==null){closeEdMenu();return}v=w.trim()}}
+    closeEdMenu();saveEd(kind,id,f,v)})}
+document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("[data-edc]");
+  if(b&&isInline()){e.preventDefault();e.stopPropagation();syncOk(function(){openEdMenu(b)});return}
+  if(!(e.target.closest&&e.target.closest("#edmenu")))closeEdMenu()},true);
+document.addEventListener("focusin",function(e){var el=e.target.closest&&e.target.closest("[data-ed]");if(!el||!isInline())return;
+  if(!ss("dtsSyncOk")){el.blur();syncOk(function(){el.focus()});return}
+  if(!el.hasAttribute("data-orig"))el.setAttribute("data-orig",el.innerText)});
+document.addEventListener("keydown",function(e){var el=e.target.closest&&e.target.closest("[data-ed]");if(!el)return;
+  if(e.key==="Enter"&&!(e.shiftKey&&el.getAttribute("data-f")==="intro")){e.preventDefault();el.blur()}
+  if(e.key==="Escape"){el.innerText=el.getAttribute("data-orig")||"";el.blur()}});
+document.addEventListener("focusout",function(e){var el=e.target.closest&&e.target.closest("[data-ed]");if(!el)return;
+  var orig=el.getAttribute("data-orig");el.removeAttribute("data-orig");var v=el.innerText.replace(/ /g," ").trim();
+  if(orig!==null&&v!==orig.trim())saveEd(el.getAttribute("data-ed"),el.getAttribute("data-id"),el.getAttribute("data-f"),v);
+  if(S.pendingRender){S.pendingRender=false;setTimeout(render,0)}});
 function topicsFor(p,kind){return (S.sheet||S.topics).filter(function(t){return (t.projectId===p.id||(!t.projectId&&sheetMatch(t.project,p)))&&!t.removed&&(kind==="issue"?t.kind==="issue":kind?t.kind!=="issue":true)}).sort(function(a,b){return (a.order||0)-(b.order||0)})}
 function statusClass(s){s=String(s||"");return /^open/i.test(s)?"red":/^(due|waiting|pending|overdue)/i.test(s)?"amber":/^in progress/i.test(s)?"blue":/^(done|received|closed|sent)/i.test(s)?"green":""}
 var STATUS_SUGGEST=["Open","In progress","Pending","Due ","Done"];
@@ -796,18 +862,18 @@ function loadFiles(pid){
 function fileLabel(list){var im=list.filter(function(f){return f.kind!=="pdf"}).length,pd=list.length-im;
   return [im?im+(im===1?" image":" images"):"",pd?pd+" PDF"+(pd===1?"":"s"):""].filter(Boolean).join(" · ")}
 function topicsView(p){
-  var all=topicsFor(p),ts=topicsFor(p,"status"),is=topicsFor(p,"issue"),me=S.canEdit;if(!all.length&&!me)return"";
+  var all=topicsFor(p),ts=topicsFor(p,"status"),is=topicsFor(p,"issue"),me=S.canEdit,inl=isInline();if(!all.length&&!me)return"";
   if(all.length)loadFiles(p.id);
   var last=all.reduce(function(m,t){return t.updatedAt&&t.updatedAt>m?t.updatedAt:m},"");
-  var tf=S.topicForm;
+  var tf=S.topicForm,editBtn=function(t){return inl?'<div class="tact"><button class="rmx" type="button" data-tdel="'+esc(t.id)+'" title="Remove this line" aria-label="Remove this line">✕</button></div>':me?'<div class="tact"><button class="plink" type="button" data-tedit="'+esc(t.id)+'">Edit</button></div>':""};
   var html='<div class="topics"><div class="th"><span><b>Status</b><span class="msub">Where each topic stands</span></span>'+(last?'<span>Updated '+esc(fmtDate(last))+'</span>':"")+'</div>'+
     (ts.length?'<div class="trow head"><span>Topic</span><span>Status</span><span>Next step</span><span>Who</span></div>':"");
   ts.forEach(function(t){
     if(tf&&tf.pid===p.id&&tf.tid===t.id){html+=topicForm(p,t);return}
     var fl=filesFor(p.id,t.id);
-    html+='<div class="trow" data-tid="'+esc(t.id)+'"><div class="tt">'+esc(t.title)+(fl.length?'<div><button class="fchip" type="button" data-fchip="'+esc(t.id)+'" aria-label="See the files for '+esc(t.title)+'">📎 '+esc(fileLabel(fl))+'</button></div>':"")+topicTasksChip(p,t)+'</div>'+
-      '<div><span class="tst '+statusClass(tidy(t.status))+'">'+esc(tidy(t.status)||"–")+'</span></div><div class="tn">'+esc(tidy(t.next))+'</div><div class="tw">'+esc(tidy(t.who))+'</div>'+
-      (me?'<div class="tact"><button class="plink" type="button" data-tedit="'+esc(t.id)+'">Edit</button></div>':"")+'</div>'+topicTasksList(p,t);
+    html+='<div class="trow" data-tid="'+esc(t.id)+'"><div class="tt">'+edT("topic",t.id,"title",t.title,"Topic")+(fl.length?'<div><button class="fchip" type="button" data-fchip="'+esc(t.id)+'" aria-label="See the files for '+esc(t.title)+'">📎 '+esc(fileLabel(fl))+'</button></div>':"")+'</div>'+
+      '<div>'+edC("topic",t.id,"status",'<span class="tst '+statusClass(tidy(t.status))+'">'+esc(tidy(t.status)||"–")+'</span>')+'</div><div class="tn">'+edT("topic",t.id,"next",tidy(t.next),"Next step")+'</div><div class="tw">'+edT("topic",t.id,"who",tidy(t.who),"Who")+'</div>'+
+      editBtn(t)+'</div>'+topicTasksList(p,t);
   });
   if(me)html+=tf&&tf.pid===p.id&&!tf.tid&&tf.kind!=="issue"?topicForm(p,null):'<div class="trow"><div class="tact"><button class="tlbtn" type="button" data-tadd>+ Add a status line</button></div></div>';
   // Risks & issues (the sheet's Issues & Risks tab, 13 Oct 2026 layout): Issue · Priority · Next action · Owner · Due · Status
@@ -816,11 +882,11 @@ function topicsView(p){
     is.forEach(function(t){
       if(tf&&tf.pid===p.id&&tf.tid===t.id){html+=topicForm(p,t);return}
       var fl=filesFor(p.id,t.id),due=/^\d{4}-\d{2}-\d{2}$/.test(t.due||"")?fmtDue(t.due):tidy(t.due||"TBC");
-      html+='<div class="irow" data-tid="'+esc(t.id)+'"><div class="tt">'+esc(t.title)+(t.opened?'<div class="ameta">Opened '+esc(fmtDue(t.opened)||t.opened)+'</div>':"")+topicTasksChip(p,t)+
+      html+='<div class="irow" data-tid="'+esc(t.id)+'"><div class="tt">'+edT("issue",t.id,"title",t.title,"Issue")+(!inl&&t.opened?'<div class="ameta">Opened '+esc(fmtDue(t.opened)||t.opened)+'</div>':"")+
         (fl.length?'<div><button class="fchip" type="button" data-fchip="'+esc(t.id)+'">📎 '+esc(fileLabel(fl))+'</button></div>':"")+'</div>'+
-        '<div><span class="prio '+esc(prioWord(t.priority).charAt(0))+'">'+esc(prioWord(t.priority)||"–")+'</span></div><div class="tn">'+esc(tidy(t.next))+'</div><div class="tw">'+esc(tidy(t.who))+'</div>'+
-        '<div class="td">'+esc(due)+'</div><div><span class="tst '+(/^closed/i.test(t.status||"")?"green":/^open/i.test(t.status||"")?"red":statusClass(t.status))+'">'+esc(tidy(t.status)||"Open")+'</span></div>'+
-        (me?'<div class="tact"><button class="plink" type="button" data-tedit="'+esc(t.id)+'">Edit</button></div>':"")+'</div>'+topicTasksList(p,t);
+        '<div>'+edC("issue",t.id,"priority",'<span class="prio '+esc(prioWord(t.priority).charAt(0))+'">'+esc(prioWord(t.priority)||"–")+'</span>')+'</div><div class="tn">'+edT("issue",t.id,"next",tidy(t.next),"Next action")+'</div><div class="tw">'+edT("issue",t.id,"who",tidy(t.who),"Owner")+'</div>'+
+        '<div class="td">'+edT("issue",t.id,"due",due,"Due")+'</div><div>'+edC("issue",t.id,"status",'<span class="tst '+(/^closed/i.test(t.status||"")?"green":/^open/i.test(t.status||"")?"red":statusClass(t.status))+'">'+esc(tidy(t.status)||"Open")+'</span>')+'</div>'+
+        editBtn(t)+'</div>'+topicTasksList(p,t);
     });
     if(me)html+=tf&&tf.pid===p.id&&!tf.tid&&tf.kind==="issue"?topicForm(p,{kind:"issue",status:"Open",opened:today()}):'<div class="irow"><div class="tact"><button class="tlbtn" type="button" data-tadd="issue">+ Add a risk or issue</button></div></div>';
   }
@@ -1005,7 +1071,7 @@ function renderJump(){
 function isOpen(p){return S.mode==="one"||S.allOpen||!!S.open[p.id]||S.commenting===p.id||!!S.q}
 function cardView(p,n){
   var me=S.mode==="me",cls=p.status==="Paused"?" paused":(p.status==="Done"?" done":"");
-  var meta=[p.desc,p.loc].filter(Boolean).map(esc).join(" · ");
+  var meta=isInline()&&S.mode==="one"?edT("proj",p.id,"desc",p.desc,"Description")+" · "+edT("proj",p.id,"loc",p.loc,"City, Country"):[p.desc,p.loc].filter(Boolean).map(esc).join(" · ");
   var op=isOpen(p),lt=latest(p),arch=S.confirmArchive===p.id,pv=S.priv[p.id]||{};
   var head='<div class="ch tog" role="button" tabindex="0" aria-expanded="'+op+'" data-toggle><span class="num">'+(n||"")+'</span>'+CHEV+'<div class="nm"><div class="pn">'+esc(p.name||"Untitled project")+
       (me&&!pv.confirmed?'<span class="tag pre">Pre-system</span>':"")+'</div>'+(meta?'<div class="pm">'+meta+'</div>':"")+
@@ -1014,12 +1080,12 @@ function cardView(p,n){
   if(!op)return '<article class="card closed'+cls+'" data-id="'+p.id+'">'+head+'</article>';
   var dt=detailsView(p),tk=me?taskList(p):"",nt=me?bullets(pv.notes):"",one=S.mode==="one";
   return '<article class="card open'+cls+'" data-id="'+p.id+'">'+head+
-    '<div class="body">'+(one?introView(p)+topicsView(p)+timelineSec(p):topicsView(p)+(dt||'<div class="none">No details yet.</div>'))+(S.commenting===p.id?commentForm(p):"")+minutesView(p)+
+    '<div class="body">'+(one?introView(p)+topicsView(p):topicsView(p)+(dt||'<div class="none">No details yet.</div>'))+(S.commenting===p.id?commentForm(p):"")+minutesView(p)+
       (me?'<div class="tl">Tasks:</div>'+(tk||'<div class="none">No tasks.</div>'):"")+(nt?'<div class="nl">Notes (private):</div>'+nt:"")+'</div>'+
     '<div class="foot">'+(p.updatedAt?'<span class="when">Last updated '+fmtDate(p.updatedAt)+(p.updatedBy?' by '+esc(p.updatedBy):"")+'</span>':'<span class="when"></span>')+
       (me?'<button class="act" data-act="prep">'+ICON.list+'Meeting prep</button>':"")+
       (S.mode==="one"?"":'<button class="act" data-act="history">'+ICON.clock+'History</button>')+
-      (S.canEdit?'<button class="act" data-act="edit">'+ICON.edit+'Edit</button>'+
+      (S.canEdit&&S.mode!=="one"?'<button class="act" data-act="edit">'+ICON.edit+'Edit</button>'+
         (p.archived?'<button class="act" data-act="restore">'+ICON.box+'Restore to log</button>':
           (arch?'<button class="act warn" data-act="archive-yes">Yes, move to archive</button><button class="act" data-act="archive-no">Keep</button>':'<button class="act" data-act="archive">'+ICON.box+'Archive</button>')):"")+
       (S.commenting===p.id||p.archived||(S.mode==="one"&&!S.canEdit)?"":'<button class="act main" data-act="comment">'+ICON.pencil+'Add update</button>')+
@@ -1342,7 +1408,7 @@ function renderFrame(){
   var me=S.mode==="me";
   document.title=me?"My Dashboard – Safir DTS":"Safir DTS Project Log";
   document.getElementById("h1").innerHTML=me?'My <span>Dashboard</span>':'Safir <span>Project Log</span>';
-  document.getElementById("dept").textContent=me?"Design and Technical Services Department · private, only you can open it":"Design and Technical Services Department";
+  document.getElementById("dept").innerHTML=me?"Design and Technical Services Department · private, only you can open it":'Design and Technical Services Department<span class="credit">Made and edited by Badriyah Alsalem, Architect</span>';
   document.getElementById("modelink").innerHTML=me?'<a href="#">← Overview</a>':(S.isAdmin?'<a href="#me">My dashboard →</a>':"");
   var tip=document.getElementById("tip");if(me||isSimple())tip.hidden=true;else{try{tip.hidden=!!localStorage.getItem("dtsTipHidden")}catch(e){tip.hidden=false}}
   document.getElementById("seg").innerHTML=VIEWS[S.mode].map(function(v){
@@ -1357,7 +1423,7 @@ function renderFrame(){
   document.getElementById("export").hidden=!S.canEdit;document.getElementById("apply-l").hidden=!S.isAdmin;
   document.getElementById("import-l").hidden=!S.canEdit||S.projects.length>0;
   if(S.mode==="one"){var op=oneProject();document.title=(op?op.name:"Project")+" – Safir DTS";
-    document.getElementById("h1").innerHTML=op?nameHtml(op.name)+pill(op.status):'Safir <span>Project</span>';
+    document.getElementById("h1").innerHTML=op?nameHtml(op.name)+edC("proj",op.id,"status",pill(op.status)):'Safir <span>Project</span>';
     document.getElementById("modelink").innerHTML="";tip.hidden=true;document.getElementById("toolnote").textContent="Live from the Design & Technical Services Department’s project log."}
 }
 function nameHtml(n){var m=/^(Safir)\s+(.+)$/.exec(n||"");return m?m[1]+' <span>'+esc(m[2])+'</span>':esc(n)}
@@ -1372,6 +1438,7 @@ function renderOne(){
 // Live updates re-draw the page; keep whatever someone is typing in an open form (and where the cursor was).
 function formKey(f){return ["data-aform","data-mform","data-form","data-cform","data-qform"].map(function(k){return f.hasAttribute(k)?k+"="+f.getAttribute(k)+"|"+(f.getAttribute("data-pid")||"")+"|"+(f.getAttribute("data-aid")||"")+"|"+(f.getAttribute("data-mid")||""):""}).join("")+((f.closest("[data-qk]")||{getAttribute:function(){return""}}).getAttribute("data-qk")||"")}
 function render(){
+  var ae=document.activeElement;if(ae&&ae.hasAttribute&&ae.hasAttribute("data-ed")){S.pendingRender=true;return}
   var saved=[],act=document.activeElement,af=act&&act.form&&main.contains(act)?formKey(act.form):"",an=act&&act.name;
   main.querySelectorAll("form").forEach(function(f){var v={};Array.prototype.forEach.call(f.elements,function(el){if(!el.name)return;if(el.type==="checkbox")v[el.name+"|"+el.value]=el.checked;else v[el.name]=el.value});saved.push([formKey(f),v])});
   renderNow();
@@ -1383,7 +1450,7 @@ function render(){
 function renderNow(){
   renderFrame();
   var gate=S.mode==="me"&&!S.isAdmin;
-  document.body.classList.toggle("simple",isSimple());document.body.classList.toggle("one",S.mode==="one");
+  document.body.classList.toggle("simple",isSimple());document.body.classList.toggle("one",S.mode==="one");document.body.classList.toggle("inedit",isInline());
   document.getElementById("toolbar").hidden=gate;
   if(gate){document.getElementById("summary").innerHTML="";document.getElementById("sumhint").textContent="";document.getElementById("jump").innerHTML="";document.getElementById("filterbar").innerHTML="";
     main.innerHTML='<div class="gate"><h2>Badriyah’s dashboard</h2><p>'+(S.canEdit?"This page opens only with Badriyah’s own password. Lock, then unlock here with it.":"This page is private. Unlock with your own password at the top right.")+'</p><a class="btn" href="#">Go to the overview</a></div>';
@@ -1562,7 +1629,7 @@ main.addEventListener("click",function(e){
   var mn=t.closest("[data-mintoggle]");if(mn){var mid0=mn.closest("[data-min]").getAttribute("data-min"),box=mn.closest(".mins");S.minOpen[mid0]=!box.classList.contains("open");render();return}
   var ft=t.closest("[data-fulltoggle]");if(ft){var fid=(ft.closest("[data-min]")||ft.closest("[data-mid]")).getAttribute(ft.closest("[data-min]")?"data-min":"data-mid");S.fullOpen[fid]=!S.fullOpen[fid];render();return}
   var tg=t.closest("[data-toggle]");
-  if(tg&&!t.closest("select,button,a,input,label")){var tid=tg.closest("[data-id]").getAttribute("data-id");
+  if(tg&&!t.closest("select,button,a,input,label,[data-ed]")){var tid=tg.closest("[data-id]").getAttribute("data-id");
     if(isOpen({id:tid})&&!S.open[tid]&&S.allOpen){S.allOpen=false;S.open={}}else{S.open[tid]=!S.open[tid]}render();return}
   var dh=t.closest("[data-delhist]");
   if(dh&&S.isAdmin){if(confirm("Delete this History entry? This can’t be undone."))histCol.doc(dh.getAttribute("data-delhist")).delete().catch(fail);return}
@@ -1576,14 +1643,14 @@ main.addEventListener("click",function(e){
   // file previews: click a 📎 tag to open the viewer
   var sfb=t.closest("[data-sf]");if(sfb){S.sf=sfb.getAttribute("data-sf");render();return}
   if(t.closest("[data-detailed]")){S.detailed=true;ls("dtsDetailed","1");render();window.scrollTo(0,0);return}
-  var tls=t.closest("[data-tlsec]");if(tls){var k2=tls.getAttribute("data-tlsec");S.tlOpen=S.tlOpen||{};S.tlOpen[k2]=!S.tlOpen[k2];render();return}
-  var tk0=t.closest("[data-ttasks]");if(tk0){var k0=tk0.getAttribute("data-ttasks");S.tOpen=S.tOpen||{};S.tOpen[k0]=!S.tOpen[k0];render();return}
-  var td0=t.closest("[data-tdone]");if(td0){var k1=td0.getAttribute("data-tdone");S.tDone=S.tDone||{};S.tDone[k1]=!S.tDone[k1];render();return}
   var fc=t.closest("[data-fchip]");if(fc){var fpid=fc.closest("[data-id]").getAttribute("data-id");openLb(filesFor(fpid,fc.getAttribute("data-fchip")),0);return}
   // status lines (dashboard)
   var ta=t.closest("[data-tadd]");if(ta&&S.canEdit){var tp0=projOf(ta);if(tp0){S.topicForm={pid:tp0.id,tid:"",kind:ta.getAttribute("data-tadd")||""};render();focusIn("[data-tform] [name=title]")}return}
   var te=t.closest("[data-tedit]");if(te&&S.canEdit){var tp1=projOf(te);if(tp1){S.topicForm={pid:tp1.id,tid:te.getAttribute("data-tedit")};render();focusIn("[data-tform] [name=status]")}return}
   if(t.closest("[data-tcancel]")){S.topicForm=null;render();return}
+  var tx=t.closest("[data-tdel]");if(tx&&S.canEdit){var xp=oneProject(),xt=(S.sheet||S.topics).find(function(x){return x.id===tx.getAttribute("data-tdel")});
+    if(xp&&xt&&SHEET_API)syncOk(function(){if(confirm("Remove this line?\n\n"+xt.title+"\n\nA copy is kept in the sheet’s Removed tab.")){S.sheet=(S.sheet||[]).filter(function(x){return x!==xt});render();
+      sheetPost({action:"remove",kind:xt.kind==="issue"?"issue":"status",id:xt.sheetId,by:by()},xp,"Removed the status line: "+xt.title)}});return}
   var tr=t.closest("[data-tremove]");
   if(tr&&S.canEdit){var tfm=tr.closest("[data-tform]"),tid=tfm.getAttribute("data-tid"),tpp=projById(tfm.getAttribute("data-pid")),tt=(S.sheet||S.topics).find(function(x){return x.id===tid});
     if(tt&&SHEET_API){if(confirm("Remove this line?\n\n"+tt.title+"\n\nA copy is kept in the sheet’s Removed tab.")){S.sheet=(S.sheet||[]).filter(function(x){return x!==tt});S.topicForm=null;render();
