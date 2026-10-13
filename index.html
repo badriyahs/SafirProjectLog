@@ -821,13 +821,28 @@ function pv(kind,id,f,cur){var k=pkey(kind,id,f);return k in S.pend?S.pend[k].va
 function edT(kind,id,f,val,ph){val=val==null?"":String(val);if(!isInline())return esc(val);var k=pkey(kind,id,f),pend=k in S.pend;
   return '<span data-ed="'+kind+'" data-id="'+esc(id)+'" data-f="'+f+'" data-ph="'+esc(ph||"")+'" data-saved="'+esc(val)+'"'+(pend?' class="pend"':"")+' contenteditable="true" spellcheck="true">'+esc(pend?S.pend[k].val:val)+'</span>'}
 function edC(kind,id,f,inner){if(!isInline())return inner;return '<button type="button" class="edc'+(pkey(kind,id,f) in S.pend?" pend":"")+'" data-edc="'+kind+'" data-id="'+esc(id)+'" data-f="'+f+'" title="Change">'+inner+'</button>'}
-function setPend(kind,id,f,val,saved){var k=pkey(kind,id,f);if(saved!==undefined&&saved!==null&&String(val).trim()===String(saved).trim())delete S.pend[k];else S.pend[k]={kind:kind,id:id,f:f,val:val};saveBar()}
+// Each unsaved change remembers the saved value (orig) and the step before it, so Cmd+Z / Undo can step back.
+S.undo=[];
+function curVal(kind,id,f){var p=oneProject();if(kind==="proj")return p?(p[f]||""):"";
+  if(kind==="act"){var a=(S.sheetActs||[]).find(function(x){return x.sheetId===id});return a?(f==="text"?a.text:f==="owner"?a.owner:f==="status"?a.status:f==="latest"?a.latest:f==="due"?"Due "+dueText(a):""):""}
+  var t=(S.sheet||S.topics).find(function(x){return x.id===id});return t?(f==="description"?t.desc:t[f])||"":""}
+function setPend(kind,id,f,val,saved){var k=pkey(kind,id,f),had=k in S.pend;S.undo.push({k:k,had:had,prev:had?S.pend[k]:null});
+  var orig=had?S.pend[k].orig:(saved!==undefined&&saved!==null?saved:curVal(kind,id,f));
+  if(String(val).trim()===String(orig).trim())delete S.pend[k];else S.pend[k]={kind:kind,id:id,f:f,val:val,orig:orig};saveBar()}
+function undoPend(){var u=S.undo.pop();if(!u)return false;if(u.had)S.pend[u.k]=u.prev;else delete S.pend[u.k];saveBar();render();return true}
 function saveBar(){var n=Object.keys(S.pend).length,b=document.getElementById("savebar");
   if(!n){if(b)b.remove();return}
   if(!b){b=document.createElement("div");b.id="savebar";document.body.appendChild(b);
-    b.addEventListener("click",function(e){if(e.target.closest("[data-savepend]")){var l=Object.keys(S.pend).map(function(k){return S.pend[k]});S.pend={};saveBar();l.forEach(function(x){saveEd(x.kind,x.id,x.f,x.val)});render()}
-      else if(e.target.closest("[data-droppend]")){S.pend={};saveBar();render()}})}
-  b.innerHTML='<span>'+n+' unsaved change'+(n===1?"":"s")+'</span><button class="btn primary" type="button" data-savepend>Save</button><button class="btn" type="button" data-droppend>Discard</button>'}
+    b.addEventListener("click",function(e){if(e.target.closest("[data-savepend]")){var l=Object.keys(S.pend).map(function(k){return S.pend[k]});S.pend={};S.undo=[];saveBar();l.forEach(function(x){saveEd(x.kind,x.id,x.f,x.val)});render();
+        // After saving, Undo puts the old values back (in the sheet too).
+        toast("Saved "+l.length+" change"+(l.length===1?"":"s")+".",function(){l.forEach(function(x){saveEd(x.kind,x.id,x.f,x.orig)});render();toast("Undone.")})}
+      else if(e.target.closest("[data-undopend]"))undoPend();
+      else if(e.target.closest("[data-droppend]")){S.pend={};S.undo=[];saveBar();render()}})}
+  b.innerHTML='<span>'+n+' unsaved change'+(n===1?"":"s")+'</span><button class="btn" type="button" data-undopend title="Undo the last change (Cmd+Z)">Undo</button><button class="btn primary" type="button" data-savepend>Save</button><button class="btn" type="button" data-droppend>Discard</button>'}
+// Cmd+Z / Ctrl+Z: while typing in a field the browser undoes the typing; otherwise it steps back through unsaved changes.
+document.addEventListener("keydown",function(e){if(!isInline()||!(e.metaKey||e.ctrlKey)||e.shiftKey||String(e.key).toLowerCase()!=="z")return;
+  var el=document.activeElement;if(el&&el.hasAttribute&&el.hasAttribute("data-ed")&&el.innerText!==(el.getAttribute("data-orig")||el.innerText))return;
+  if(S.undo.length){e.preventDefault();if(el&&el.blur&&el.hasAttribute&&el.hasAttribute("data-ed")){el.removeAttribute("data-orig");el.blur()}undoPend()}});
 window.addEventListener("beforeunload",function(e){if(Object.keys(S.pend).length){e.preventDefault();e.returnValue=""}});
 var ED_CHOICES={proj:{status:STATUSES},topic:{status:["Open","In progress","Pending","Due ","Sent ","Done"]},issue:{status:["Open","In Progress","On Hold","Closed"],priority:["Critical","High","Medium","Low",""]},act:{status:["Open","In Progress","On Hold","Closed"]}};
 // The first edit in a session asks once: the change goes straight to the live log and the Google sheet.
