@@ -995,7 +995,7 @@ function statusClass(s){s=String(s||"");return /^open/i.test(s)?"red":/^(due|wai
 var STATUS_SUGGEST=["Open","In progress","Pending","Due ","Done"];
 // Her wording (13 Oct 2026): "Not set" is always TBC, "Waiting" is always Pending; older data is shown that way too.
 function tidy(s){s=s==null?"":String(s);return /^\s*not set\s*$/i.test(s)?"TBC":s.replace(/^(\s*)waiting\b/i,"$1Pending")}
-function filesFor(pid,tid){var fs0=S.files[pid]||[];return fs0.filter(function(f){return !tid||f.topicId===tid}).sort(function(a,b){return a.code<b.code?-1:1})}
+function filesFor(pid,tid){var fs0=S.files[pid]||[];return fs0.filter(function(f){return !f.removed&&(!tid||f.topicId===tid)}).sort(function(a,b){return a.code<b.code?-1:1})}
 function loadFiles(pid){
   if(S.files[pid]||S.filesLoading[pid]||!fileCol)return;S.filesLoading[pid]=1;
   fileCol.where("projectId","==",pid).get().then(function(snap){S.files[pid]=snap.docs.map(function(d){var x=d.data()||{};x.id=d.id;return x});delete S.filesLoading[pid];render()},function(){S.files[pid]=[];delete S.filesLoading[pid]});
@@ -2069,8 +2069,9 @@ document.getElementById("apply").addEventListener("change",function(e){
   f.text().then(function(txt){
     var d=JSON.parse(txt),list=Array.isArray(d.projects)?d.projects:[],mts=Array.isArray(d.meetings)?d.meetings:[];
     // Status lines and file previews for the overview: saved by id, so re-applying only refreshes them.
-    var tps=(Array.isArray(d.topics)?d.topics:[]).filter(function(x){return x&&x.id&&x.projectId}),fls=(Array.isArray(d.files)?d.files:[]).filter(function(x){return x&&x.id&&x.projectId&&x.preview});
-    if(!list.length&&!mts.length&&!tps.length&&!fls.length)throw new Error("No changes in this file");
+    var tps=(Array.isArray(d.topics)?d.topics:[]).filter(function(x){return x&&x.id&&x.projectId}),fls=(Array.isArray(d.files)?d.files:[]).filter(function(x){return x&&x.id&&x.projectId&&x.preview}),
+      hid=(Array.isArray(d.hideFiles)?d.hideFiles:[]).filter(Boolean).map(String);
+    if(!list.length&&!mts.length&&!tps.length&&!fls.length&&!hid.length)throw new Error("No changes in this file");
     var nl=function(v){return Array.isArray(v)?v:[]},asText=function(v){return Array.isArray(v)?bulletText(v.map(String).join("\n")):str(v)};
     var mById={};mts.forEach(function(m){if(m&&m.id&&m.date)mById[m.id]=m});
     var plan=[],skip=[];
@@ -2109,8 +2110,8 @@ document.getElementById("apply").addEventListener("change",function(e){
       if(Object.keys(patch).length||tasks.length||pvc.length)plan.push({p:p,patch:patch,tasks:tasks,pv:pvc.length?pv:null,desc:desc.join(", ")||"no visible change"});
     });
     var mplan=Object.keys(mById).map(function(id){return mById[id]});
-    if(!plan.length&&!mplan.length&&!tps.length&&!fls.length){alert((d.title||"This file")+"\n\nNothing to change: it’s already applied."+(skip.length?"\n\nNot found: "+skip.join(", "):""));return}
-    var extra=(tps.length?["• Status lines on the overview: "+tps.length+" ("+tps.map(function(x){return projName(x.projectId)}).filter(function(v,i,a){return a.indexOf(v)===i}).join(", ")+")"]:[]).concat(fls.length?["• Files with previews: "+fls.length]:[]);
+    if(!plan.length&&!mplan.length&&!tps.length&&!fls.length&&!hid.length){alert((d.title||"This file")+"\n\nNothing to change: it’s already applied."+(skip.length?"\n\nNot found: "+skip.join(", "):""));return}
+    var extra=(tps.length?["• Status lines on the overview: "+tps.length+" ("+tps.map(function(x){return projName(x.projectId)}).filter(function(v,i,a){return a.indexOf(v)===i}).join(", ")+")"]:[]).concat(fls.length?["• Files with previews: "+fls.length]:[]).concat(hid.length?["• Files hidden from the page (kept): "+hid.length]:[]);
     if(!confirm((d.title||"Apply changes")+"\n\n"+extra.join("\n")+(extra.length?"\n":"")+mplan.map(function(m){return "• Meeting "+fmtDue(m.date)+": "+(m.title||"")+(S.meetings.some(function(x){return x.id===m.id})?" (update)":" (new)")}).concat(plan.map(function(x){return "• "+x.p.name+": "+x.desc})).join("\n")+
       (skip.length?"\n\nNot found: "+skip.join(", "):"")+"\n\nApply these changes?"))return;
     sync.textContent="Applying changes…";
@@ -2119,7 +2120,9 @@ document.getElementById("apply").addEventListener("change",function(e){
       plog(tb,projById(tps[0].projectId),"topic","Status lines from "+(d.title||"a changes file")+": "+tps.length);return tb.commit()})}
     // Previews are up to ~150 KB each, so they go a few at a time.
     for(var fi=0;fi<fls.length;fi+=4)(function(chunk){mp=mp.then(function(){var fb=fs.batch();chunk.forEach(function(x){var c={};["projectId","topicId","code","title","kind","preview","driveUrl"].forEach(function(k){c[k]=str(x[k])});c.item=+x.item||0;c.updatedAt=stamp();fb.set(fileCol.doc(x.id),c,{merge:true})});return fb.commit()})})(fls.slice(fi,fi+4));
-    if(fls.length)mp=mp.then(function(){S.files={};S.filesLoading={}});
+    // Hidden attachments are kept with a "removed" date, never deleted.
+    if(hid.length)mp=mp.then(function(){var hb=fs.batch(),at=stamp();hid.forEach(function(id){hb.set(fileCol.doc(id),{removed:at,updatedAt:at},{merge:true})});return hb.commit()});
+    if(fls.length||hid.length)mp=mp.then(function(){S.files={};S.filesLoading={}});
     if(mplan.length){var mb=fs.batch();mplan.forEach(function(m){var isNew=!S.meetings.some(function(x){return x.id===m.id}),data={};
       ["date","title","place"].forEach(function(k){if(k in m)data[k]=str(m[k])});
       ["attendees","summary","decisions","openPoints","files","internal"].forEach(function(k){if(k in m)data[k]=asText(m[k])});
@@ -2135,7 +2138,7 @@ document.getElementById("apply").addEventListener("change",function(e){
       return b.commit().then(function(){return toSheet.reduce(function(q,t){return q.then(function(){var was=String(t.id).indexOf("act:")===0?(S.sheetActs||[]).find(function(y){return "act:"+y.sheetId===t.id}):null;
         var f=sheetActFields(x.p,t,was?Object.assign({},was,{done:""}):null);if(was&&!Object.keys(f).length)return;
         return sheetPost({action:"save",kind:"action",id:was?was.sheetId:"",fields:f,by:by()})})},Promise.resolve())})})},Promise.resolve())})
-      .then(function(){sync.textContent="Applied: "+(tps.length?tps.length+" status lines, ":"")+(fls.length?fls.length+" files, ":"")+(mplan.length?mplan.length+" meeting"+(mplan.length===1?"":"s")+", ":"")+plan.length+" project"+(plan.length===1?"":"s");plan.forEach(function(x){S.open[x.p.id]=true});setStep(2,true)});
+      .then(function(){sync.textContent="Applied: "+(tps.length?tps.length+" status lines, ":"")+(fls.length?fls.length+" files, ":"")+(hid.length?hid.length+" files hidden, ":"")+(mplan.length?mplan.length+" meeting"+(mplan.length===1?"":"s")+", ":"")+plan.length+" project"+(plan.length===1?"":"s");plan.forEach(function(x){S.open[x.p.id]=true});setStep(2,true)});
   }).catch(fail);
 });
 // One-time load of project_log.json from your computer (the data is never stored in the public repo).
