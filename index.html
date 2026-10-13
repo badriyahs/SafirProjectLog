@@ -442,6 +442,7 @@ a.prow:hover .pd{text-decoration:underline}
 body.inedit [data-ed]{border-radius:4px;cursor:text;outline:1px dashed transparent;outline-offset:2px}
 body.inedit [data-ed]:hover{outline-color:var(--line-strong);background:var(--brand-tint)}
 body.inedit [data-ed]:focus{outline:2px solid var(--accent);background:var(--surface)}
+[data-ed]{display:inline-block;max-width:100%;min-width:3ch;vertical-align:top}
 [data-ed]:empty::before{content:attr(data-ph);color:var(--faint)}
 [data-ed][data-f="intro"]{white-space:pre-line;display:block}
 .edc{border:0;background:none;padding:0;font:inherit;cursor:pointer}
@@ -457,6 +458,42 @@ body.inedit [data-ed]:focus{outline:2px solid var(--accent);background:var(--sur
 .rmx{opacity:0;border:0;background:none;color:var(--faint);font-size:15px;cursor:pointer;padding:2px 6px}
 .trow:hover .rmx,.irow:hover .rmx,.rmx:focus{opacity:1}
 .rmx:hover{color:var(--req)}
+.tloader{display:flex;flex-direction:column;align-items:center;gap:4px;padding:48px 16px;color:var(--muted)}
+.tk-marks{display:flex;gap:10px;direction:rtl;height:34px;align-items:flex-end;color:var(--accent)}
+.tk-marks svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.tk-marks span{display:inline-block;animation:tkb 1.4s ease-in-out infinite}
+.tk-marks span:nth-child(2){animation-delay:.12s}.tk-marks span:nth-child(3){animation-delay:.24s}.tk-marks span:nth-child(4){animation-delay:.36s}.tk-marks span:nth-child(5){animation-delay:.48s}
+.tk-word{font-family:"Geeza Pro","Noto Naskh Arabic","Arial",sans-serif;font-size:30px;color:var(--ink);opacity:.8}
+.tk-label{font-size:14px;letter-spacing:.06em}
+@keyframes tkb{0%,100%{transform:translateY(0);opacity:.35}40%{transform:translateY(-12px);opacity:1}}
+@media (prefers-reduced-motion:reduce){.tk-marks span{animation:none;opacity:.8}}
+.topics .tloader{padding:28px 16px}
+.mcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:10px}
+.mcardx{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:14px 16px;border:1px solid var(--line-strong);border-radius:12px;background:var(--surface);font:inherit;color:var(--ink);cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.mcardx:hover{border-color:var(--accent);box-shadow:0 4px 14px rgba(31,95,153,.12)}
+.mcardx .mdate{font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent)}
+.mcardx .mtitle{font-size:17px;font-weight:700;line-height:1.3}
+.mcardx .mplace{font-size:14px;color:var(--muted)}
+.mcardx .mfoot{margin-top:6px;font-size:14px;color:var(--accent)}
+#minmodal{position:fixed;inset:0;z-index:70;background:rgba(20,30,40,.45);display:flex;justify-content:center;align-items:flex-start;padding:28px 16px;overflow-y:auto}
+.mmcard{background:#fff;color:#24282d;width:min(820px,100%);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.25);overflow:hidden}
+.mmbar{position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px 10px 22px;background:#F3F6F9;border-bottom:1px solid var(--line);font-size:14px;color:var(--muted)}
+.mmx{border:1px solid var(--line-strong);background:#fff;border-radius:999px;padding:6px 14px;font:inherit;font-size:14px;cursor:pointer}
+.mmdoc{padding:26px 34px 34px;font-size:15.5px;line-height:1.55}
+.mmhead{border-bottom:2px solid #1F3A5F;padding-bottom:14px;margin-bottom:8px}
+.mmkicker{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#737476}
+.mmdoc h2{margin:4px 0 2px;font-size:24px;color:#1F3A5F}
+.mmsub{font-size:16px;color:#4a4f55;margin-bottom:10px}
+.mmmeta th{text-align:left;font-weight:600;color:#737476;padding:2px 16px 2px 0;font-size:14px;vertical-align:top}
+.mmmeta td{padding:2px 0;font-size:14.5px}
+.mmdoc h4{margin:22px 0 8px;font-size:13.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#1F3A5F;border-bottom:1px solid #BAD8EB;padding-bottom:4px}
+.mmdoc h5{margin:14px 0 4px;font-size:15px;font-weight:700}
+.mmdoc ul{margin:0;padding-left:20px}
+.mmdoc li{margin:3px 0}
+.mmtab{width:100%;border-collapse:collapse;font-size:14.5px}
+.mmtab th{background:#BAD8EB;color:#1F3A5F;text-align:left;padding:6px 10px;font-weight:700}
+.mmtab td{border-bottom:1px solid #E3E7EB;padding:6px 10px;vertical-align:top}
+@media (max-width:600px){.mmdoc{padding:18px}}
 .msec{margin-top:18px;padding:8px 14px;border-radius:10px;background:var(--brand-tint);font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink)}
 .trow{display:grid;grid-template-columns:minmax(150px,1.15fr) 118px minmax(220px,2fr) minmax(120px,.9fr);gap:6px 14px;padding:10px 14px;border-top:1px solid var(--line);align-items:start}
 .trow.head{border-top:0;padding-block:6px;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--surface)}
@@ -470,17 +507,25 @@ body.inedit [data-ed]:focus{outline:2px solid var(--accent);background:var(--sur
 .fchip{margin-top:6px;display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line-strong);border-radius:999px;padding:3px 11px;font-size:14px;background:var(--surface);cursor:pointer;color:var(--accent)}
 .fchip:hover{border-color:var(--accent)}
 .trow .tact{grid-column:1/-1;display:flex;gap:10px}
-.urow{position:relative;display:grid;grid-template-columns:minmax(150px,1.25fr) minmax(190px,1.7fr) minmax(110px,.8fr) 120px minmax(160px,1.3fr);gap:6px 14px;padding:10px 30px 10px 14px;border-top:1px solid var(--line);align-items:start}
-.urow.head{padding-block:6px;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--surface)}
+.urow{position:relative;display:grid;grid-template-columns:minmax(150px,1.25fr) minmax(190px,1.7fr) minmax(110px,.8fr) 128px minmax(160px,1.3fr);gap:0;padding:0;border-top:1px solid var(--line);align-items:stretch;font-size:15px;line-height:1.45}
+.urow>*{padding:9px 12px;border-left:1px solid var(--line);min-width:0}
+.urow>*:first-child{border-left:0}
+.urow>.tact{border-left:0}
+.urow:not(.head):hover{background:#F8FAFC}
+.urow.head{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:#F3F6F9}
+.urow.head>*{padding-block:7px}
 .urow .tt{font-weight:700}
 .urow .tw{color:var(--muted)}
-.urow .tact{grid-column:1/-1;display:flex;gap:10px}
-.urow .tact.x{position:absolute;right:6px;top:9px}
-.urow.tk{border-top:1px dashed var(--line);padding-block:6px}
-.urow.tk .tt{font-weight:400;padding-left:22px;position:relative}
-.urow.tk .bul{position:absolute;left:8px;color:var(--muted)}
+.urow .tact{grid-column:1/-1;display:flex;gap:10px;padding:8px 12px}
+.urow .tact.x{position:absolute;right:2px;top:6px;padding:0}
+.urow.tk{background:#FBFCFD;font-size:14.5px}
+.urow.tk .tt{font-weight:400;padding-left:34px;position:relative}
+.urow.tk .bul{position:absolute;left:20px;top:9px;color:var(--muted)}
 .urow.tk .tkid{font-size:12.5px;color:var(--faint);font-weight:400}
-.urow.tk .tn,.urow.tk .tw{font-size:15px}
+.urow.tk .tn,.urow.tk .tw{font-size:14.5px}
+.urow .tst{font-size:13px;padding:2px 8px}
+.topics{border:1px solid var(--line-strong)!important;border-radius:10px}
+@media (max-width:700px){.urow>*{border-left:0;padding:4px 12px}.urow{padding-block:6px}}
 .pend{background:#FFF6DA!important;outline:1px solid #E8C25A!important}
 .edc.pend{border-radius:8px}
 #savebar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:55;display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line-strong);border-radius:999px;padding:8px 10px 8px 18px;box-shadow:0 10px 30px rgba(0,0,0,.15);font-size:15px}
@@ -555,7 +600,7 @@ body.inedit [data-ed]:focus{outline:2px solid var(--accent);background:var(--sur
   </div>
 
   <div id="filterbar"></div>
-  <main id="main"><div class="empty">Loading projects…</div></main>
+  <main id="main"><div class="tloader" role="status" aria-label="Loading"><div class="tk-marks" aria-hidden="true"><span><svg viewBox="0 0 20 20"><path d="M4 13 16 7"/></svg></span><span><svg viewBox="0 0 20 20"><path d="M4 17 16 11"/></svg></span><span><svg viewBox="0 0 20 20"><path d="M13 7a3 3 0 1 0-3 3c0 3-2 5.5-5.5 6.5"/></svg></span><span><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="4"/></svg></span><span><svg viewBox="0 0 20 20"><path d="M3 7c0 6 5 6 5 .5c0 5.5 5 5.5 5 0c0 5 4.5 5 4.5-.5"/></svg></span></div><div class="tk-word" aria-hidden="true">سفير</div><div class="tk-label">Loading…</div></div></main>
   <div class="tools" id="tools" hidden>
     <p class="note" id="toolnote">Anyone with the link can view and edit this log with their name; every change is signed in History. Archived projects are kept, never deleted.</p>
     <button class="lnk" id="export" hidden>Download JSON</button>
@@ -737,12 +782,34 @@ function fullView(m){
 }
 function minutesView(p){
   var ms=minutesFor(p);if(!ms.length)return"";
-  return '<div class="msec"><b>Meetings</b><span class="msub">Notes as issued</span></div>'+ms.map(function(m,i){
-    var op=S.minOpen[m.id]!==undefined?S.minOpen[m.id]:i===0,fo=!!S.fullOpen[m.id];
-    return '<div class="mins'+(op?" open":"")+'" data-min="'+esc(m.id)+'"><div class="mt" role="button" tabindex="0" data-mintoggle aria-expanded="'+op+'">'+CHEV+'<span><b>'+esc(fmtDue(m.date))+'</b>'+(m.place?' · '+esc(m.place):"")+' – '+esc(m.title||"Meeting")+'</span></div>'+
-      (op?labelled(m.summary)+(lines(m.decisions).length?'<div class="ml">Decisions</div>'+labelled(m.decisions):"")+
-        '<button class="tlbtn" data-fulltoggle aria-expanded="'+fo+'">'+(fo?"▾ Hide the full notes":"▸ Show the full notes")+'</button>'+(fo?'<div class="full">'+fullView(m)+'</div>':""):"")+'</div>'}).join("");
+  return '<div class="msec"><b>Meetings</b><span class="msub">Click a meeting to read its minutes</span></div><div class="mcards">'+ms.map(function(m){
+    var att=lines(m.attendees).length;
+    return '<button type="button" class="mcardx" data-minopen="'+esc(m.id)+'"><span class="mdate">'+esc(fmtDue(m.date))+'</span><span class="mtitle">'+esc(m.title||"Meeting")+'</span>'+
+      (m.place?'<span class="mplace">'+esc(m.place)+'</span>':"")+'<span class="mfoot">'+(att?att+' attendees · ':"")+'Read the minutes →</span></button>'}).join("")+'</div>';
 }
+function minutesDoc(m){
+  var proj=(m.projects||[]).map(function(id){var q=projById(id);return q?q.name:""}).filter(Boolean).join(", ");
+  var att=lines(m.attendees).map(function(l){var k=l.indexOf(", ");return k>0?[l.slice(0,k),l.slice(k+2)]:[l,""]});
+  var h='<div class="mmhead"><div class="mmkicker">Meeting notes</div><h2>'+esc(proj||"Meeting")+'</h2><div class="mmsub">'+esc(m.title||"")+'</div>'+
+    '<table class="mmmeta"><tr><th>Date</th><td>'+esc(fmtDue(m.date))+'</td></tr>'+(m.place?'<tr><th>Time and place</th><td>'+esc(m.place)+'</td></tr>':"")+'</table></div>';
+  if(att.length)h+='<h4>Attendees</h4><table class="mmtab"><thead><tr><th>Name</th><th>Title</th></tr></thead><tbody>'+att.map(function(a){return '<tr><td>'+esc(a[0])+'</td><td>'+esc(a[1])+'</td></tr>'}).join("")+'</tbody></table>';
+  if(lines(m.summary).length)h+='<h4>Summary</h4>'+labelled(m.summary);
+  if(lines(m.decisions).length)h+='<h4>Decisions</h4>'+labelled(m.decisions);
+  (Array.isArray(m.full)?m.full:[]).forEach(function(b){if(/^attendees$/i.test(b.h||""))return;
+    h+='<h4>'+esc(b.h||"")+'</h4>';
+    if(Array.isArray(b.items))h+=labelled(b.items.join("\n"));
+    if(Array.isArray(b.sub))b.sub.forEach(function(x){h+='<h5>'+esc(x.h||"")+'</h5>'+labelled((x.items||[]).join("\n"))});
+    if(b.table)h+='<table class="mmtab">'+(b.table.head?'<thead><tr>'+b.table.head.map(function(c){return '<th>'+esc(c)+'</th>'}).join("")+'</tr></thead>':"")+'<tbody>'+
+      (b.table.rows||[]).map(function(r){return '<tr>'+(Array.isArray(r)?r:r.c||[]).map(function(c){return '<td>'+esc(tidy(c))+'</td>'}).join("")+'</tr>'}).join("")+'</tbody></table>'});
+  if((!Array.isArray(m.full)||!m.full.length)&&lines(m.openPoints).length)h+='<h4>Open points</h4>'+labelled(m.openPoints);
+  return h}
+function openMinutes(id){var m=S.minutes.find(function(x){return x.id===id});if(!m)return;closeMinutes();
+  var d=document.createElement("div");d.id="minmodal";
+  d.innerHTML='<div class="mmcard" role="dialog" aria-modal="true" aria-label="Meeting notes"><div class="mmbar"><span>'+esc(fmtDue(m.date))+' · '+esc(m.title||"Meeting")+'</span><button type="button" class="mmx" data-minclose aria-label="Close">✕ Close</button></div><div class="mmdoc">'+minutesDoc(m)+'</div></div>';
+  document.body.appendChild(d);document.body.style.overflow="hidden";d.querySelector(".mmx").focus();
+  d.addEventListener("click",function(e){if(e.target===d||e.target.closest("[data-minclose]"))closeMinutes()})}
+function closeMinutes(){var d=document.getElementById("minmodal");if(d){d.remove();document.body.style.overflow=""}}
+document.addEventListener("keydown",function(e){if(e.key==="Escape")closeMinutes()});
 
 // ---------- Project status: a few topic lines per project, with file previews (public; Badriyah edits on her dashboard) ----------
 // topics: {projectId, order, title, status, next, who, updatedAt, removed}
@@ -877,7 +944,13 @@ function saveEd(kind,id,f,val){var p=oneProject();if(!p)return;
 function closeEdMenu(){var m=document.getElementById("edmenu");if(m)m.remove()}
 function openEdMenu(btn){closeEdMenu();var kind=btn.getAttribute("data-edc"),f=btn.getAttribute("data-f"),id=btn.getAttribute("data-id"),opts0=(ED_CHOICES[kind]||{})[f]||[];
   var m=document.createElement("div");m.id="edmenu";m.className="edmenu";
-  m.innerHTML=opts0.map(function(o){return '<button type="button" data-pick="'+esc(o)+'">'+(o===""?"–":esc(o.trim()+(/ $/.test(o)?"…":"")))+'</button>'}).join("")+(kind==="topic"?'<button type="button" data-pick-own>Type your own…</button>':"");
+  // Each option looks like the coloured pill it becomes.
+  var look=function(o){var lab=o===""?"–":o.trim()+(/ $/.test(o)?"…":"");
+    if(kind==="proj")return pill(o)||esc(lab);
+    if(f==="priority")return '<span class="prio '+esc(prioWord(o).charAt(0))+'">'+esc(lab)+'</span>';
+    var c=kind==="issue"?(/^closed/i.test(o)?"green":/^open/i.test(o)?"red":statusClass(o)):statusClass(o);
+    return '<span class="tst '+c+'">'+esc(lab)+'</span>'};
+  m.innerHTML=opts0.map(function(o){return '<button type="button" data-pick="'+esc(o)+'">'+look(o)+'</button>'}).join("")+(kind==="topic"?'<button type="button" data-pick-own><span class="tst">Type your own…</span></button>':"");
   document.body.appendChild(m);var r=btn.getBoundingClientRect();m.style.top=(r.bottom+window.scrollY+4)+"px";m.style.left=Math.max(8,Math.min(r.left+window.scrollX,window.scrollX+document.documentElement.clientWidth-m.offsetWidth-8))+"px";
   m.addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var v;
     if(b.hasAttribute("data-pick-own")){var cur=((S.sheet||[]).find(function(x){return x.id===id})||{}).status||"";v=prompt("Status",cur);if(v==null){closeEdMenu();return}v=v.trim()}
@@ -897,6 +970,7 @@ document.addEventListener("focusout",function(e){var el=e.target.closest&&e.targ
   var orig=el.getAttribute("data-orig");el.removeAttribute("data-orig");var v=el.innerText.replace(/ /g," ").trim();
   if(orig!==null&&v!==orig.trim()){var ek=el.getAttribute("data-ed"),ei=el.getAttribute("data-id"),ef=el.getAttribute("data-f");setPend(ek,ei,ef,v,el.getAttribute("data-saved"));el.classList.toggle("pend",pkey(ek,ei,ef) in S.pend)}
   if(S.pendingRender){S.pendingRender=false;setTimeout(render,0)}});
+var LOADER_HTML='<div class="tloader" role="status" aria-label="Loading"><div class="tk-marks" aria-hidden="true"><span><svg viewBox="0 0 20 20"><path d="M4 13 16 7"/></svg></span><span><svg viewBox="0 0 20 20"><path d="M4 17 16 11"/></svg></span><span><svg viewBox="0 0 20 20"><path d="M13 7a3 3 0 1 0-3 3c0 3-2 5.5-5.5 6.5"/></svg></span><span><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="4"/></svg></span><span><svg viewBox="0 0 20 20"><path d="M3 7c0 6 5 6 5 .5c0 5.5 5 5.5 5 0c0 5 4.5 5 4.5-.5"/></svg></span></div><div class="tk-word" aria-hidden="true">سفير</div><div class="tk-label">Loading…</div></div>';
 function topicsFor(p,kind){return (S.sheet||S.topics).filter(function(t){return (t.projectId===p.id||(!t.projectId&&sheetMatch(t.project,p)))&&!t.removed&&(kind==="issue"?t.kind==="issue":kind?t.kind!=="issue":true)}).sort(function(a,b){return (a.order||0)-(b.order||0)})}
 function statusClass(s){s=String(s||"");return /^open/i.test(s)?"red":/^(due|waiting|pending|overdue)/i.test(s)?"amber":/^in progress/i.test(s)?"blue":/^(done|received|closed|sent)/i.test(s)?"green":""}
 var STATUS_SUGGEST=["Open","In progress","Pending","Due ","Done"];
@@ -910,6 +984,7 @@ function loadFiles(pid){
 function fileLabel(list){var im=list.filter(function(f){return f.kind!=="pdf"}).length,pd=list.length-im;
   return [im?im+(im===1?" image":" images"):"",pd?pd+" PDF"+(pd===1?"":"s"):""].filter(Boolean).join(" · ")}
 function topicsView(p){
+  if(SHEET_API&&!S.sheet&&S.mode==="one")return '<div class="topics">'+LOADER_HTML.replace("Loading…","Loading the tracker…")+'</div>';
   var all=topicsFor(p),ts=topicsFor(p,"status"),is=topicsFor(p,"issue"),me=S.canEdit,inl=isInline();if(!all.length&&!me)return"";
   if(all.length)loadFiles(p.id);
   var last=all.reduce(function(m,t){return t.updatedAt&&t.updatedAt>m?t.updatedAt:m},"");
@@ -1697,6 +1772,7 @@ main.addEventListener("click",function(e){
   var ta=t.closest("[data-tadd]");if(ta&&S.canEdit){var tp0=projOf(ta);if(tp0){S.topicForm={pid:tp0.id,tid:"",kind:ta.getAttribute("data-tadd")||""};render();focusIn("[data-tform] [name=title]")}return}
   var te=t.closest("[data-tedit]");if(te&&S.canEdit){var tp1=projOf(te);if(tp1){S.topicForm={pid:tp1.id,tid:te.getAttribute("data-tedit")};render();focusIn("[data-tform] [name=status]")}return}
   if(t.closest("[data-tcancel]")){S.topicForm=null;render();return}
+  var mo=t.closest("[data-minopen]");if(mo){openMinutes(mo.getAttribute("data-minopen"));return}
   var tx=t.closest("[data-tdel]");if(tx&&S.canEdit){var xp=oneProject(),xt=(S.sheet||S.topics).find(function(x){return x.id===tx.getAttribute("data-tdel")});
     if(xp&&xt&&SHEET_API)syncOk(function(){if(confirm("Remove this line?\n\n"+xt.title+"\n\nA copy is kept in the sheet’s Removed tab.")){S.sheet=(S.sheet||[]).filter(function(x){return x!==xt});render();
       sheetPost({action:"remove",kind:xt.kind==="issue"?"issue":"status",id:xt.sheetId,by:by()},xp,"Removed the status line: "+xt.title)}});return}
