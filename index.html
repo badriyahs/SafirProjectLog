@@ -458,16 +458,17 @@ body.inedit [data-ed]:focus{outline:2px solid var(--accent);background:var(--sur
 .rmx{opacity:0;border:0;background:none;color:var(--faint);font-size:15px;cursor:pointer;padding:2px 6px}
 .trow:hover .rmx,.irow:hover .rmx,.rmx:focus{opacity:1}
 .rmx:hover{color:var(--req)}
-.tloader{display:flex;flex-direction:column;align-items:center;gap:4px;padding:48px 16px;color:var(--muted)}
-.tk-marks{display:flex;gap:10px;direction:rtl;height:34px;align-items:flex-end;color:var(--accent)}
-.tk-marks svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.tk-marks span{display:inline-block;animation:tkb 1.4s ease-in-out infinite}
-.tk-marks span:nth-child(2){animation-delay:.12s}.tk-marks span:nth-child(3){animation-delay:.24s}.tk-marks span:nth-child(4){animation-delay:.36s}.tk-marks span:nth-child(5){animation-delay:.48s}
-.tk-word{font-family:"Geeza Pro","Noto Naskh Arabic","Arial",sans-serif;font-size:30px;color:var(--ink);opacity:.8}
-.tk-label{font-size:14px;letter-spacing:.06em}
-@keyframes tkb{0%,100%{transform:translateY(0);opacity:.35}40%{transform:translateY(-12px);opacity:1}}
-@media (prefers-reduced-motion:reduce){.tk-marks span{animation:none;opacity:.8}}
-.topics .tloader{padding:28px 16px}
+/* Loading: the presentation cover (blue, white Arabic letters streaming out of the round Safir emblem). Art cut from the SHR template, loader.png. */
+.boot{position:fixed;inset:0;z-index:200;background:#C0D8E9;display:flex;align-items:center;justify-content:center;transition:opacity .5s ease,visibility 0s linear .5s}
+.boot.out{opacity:0;visibility:hidden}
+.burst{position:relative;flex:none}
+.burst i{position:absolute;display:block;background:url("loader.png") no-repeat;animation:bfly 3.2s cubic-bezier(.22,.7,.25,1) infinite both}
+.burst i.lg{animation:blogo .6s ease-out both}
+@keyframes bfly{0%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.12) rotate(var(--r))}10%{opacity:1}36%{opacity:1;transform:none}78%{opacity:1;transform:none}100%{opacity:0;transform:translate(calc(var(--dx) * -.12),calc(var(--dy) * -.12))}}
+@keyframes blogo{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.burst i{animation:none}}
+.tloader{display:flex;flex-direction:column;align-items:center;gap:10px;padding:26px 16px 20px;background:#C0D8E9}
+.tk-label{font-size:14px;letter-spacing:.06em;color:#58595B}
 .mcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:10px}
 .mcardx{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:14px 16px;border:1px solid var(--line-strong);border-radius:12px;background:var(--surface);font:inherit;color:var(--ink);cursor:pointer;transition:border-color .15s,box-shadow .15s}
 .mcardx:hover{border-color:var(--accent);box-shadow:0 4px 14px rgba(31,95,153,.12)}
@@ -521,7 +522,7 @@ body.inedit [data-ed]:focus{outline:2px solid var(--accent);background:var(--sur
 .urow.tk{background:#FBFCFD;font-size:14.5px}
 .urow.tk .tt{font-weight:400;padding-left:34px;position:relative}
 .urow.tk .bul{position:absolute;left:20px;top:9px;color:var(--muted)}
-.urow.tk .tkid{font-size:12.5px;color:var(--faint);font-weight:400}
+.urow.tk .tkid{display:inline-block;margin:0 8px 2px 0;padding:1px 7px;border:1px solid #C9D7E3;border-radius:5px;background:#EEF4F9;color:#1F3A5A;font-size:12.5px;font-weight:600;letter-spacing:.02em;font-variant-numeric:tabular-nums;white-space:nowrap;vertical-align:1px}
 .urow.tk .tn,.urow.tk .tw{font-size:14.5px}
 .urow .tst{font-size:13px;padding:2px 8px}
 .topics{border:1px solid var(--line-strong)!important;border-radius:10px}
@@ -571,6 +572,20 @@ body.inedit [data-ed]:focus{outline:2px solid var(--accent);background:var(--sur
 </style>
 </head>
 <body>
+<div id="boot" class="boot" role="status" aria-label="Loading"></div>
+<script>
+// Builds the loading art: each letter of the cover burst is one piece of loader.png; it flies out of the emblem to its place.
+(function(){var D={"w":300,"h":308.5,"sw":256,"sh":210.5,"ex":201.8,"ey":256.4,"logo":[169,243,65.5,65.5,0.5,0.5],"p":[[36.5,91.5,51,26.5,67,0.5],[45,71.5,12,16.5,119,0.5],[75,52,16,16,132,0.5],[80.5,124,13.5,13.5,149,0.5],[89,79.5,9,9,163.5,0.5],[90,138,45,25.5,173.5,0.5],[98.5,58,7.5,8,219.5,0.5],[101.5,111,15,29,228,0.5],[108,71.5,12,23.5,0.5,67],[114.5,18,16,14.5,13.5,67],[114.5,30.5,32.5,23.5,30.5,67],[123.5,102.5,5,8,64,67],[131.5,186.5,18,26.5,70,67],[133.5,101,8,16,89,67],[133.5,161.5,8,8,98,67],[137.5,150.5,52.5,30.5,107,67],[143,132,24,24.5,160.5,67],[144.5,61,35.5,45.5,185.5,67],[154.5,200,9.5,9.5,222,67],[160,185.5,7.5,9.5,232.5,67],[164,113.5,6.5,12,241,67],[165.5,214,8,14,0.5,113.5],[171.5,176,11.5,12,9.5,113.5],[175,138.5,5,8.5,22,113.5],[177,208.5,5,5,28,113.5],[182.5,25.5,10.5,20,34,113.5],[182.5,120.5,5.5,6.5,45.5,113.5],[187,85.5,13,25,52,113.5],[187.5,194.5,12,8,66,113.5],[193,55,12,16.5,79,113.5],[193.5,173,16,12,92,113.5],[195.5,160,5,8,109,113.5],[197.5,211,7.5,9.5,115,113.5],[198,129.5,10.5,20,123.5,113.5],[203.5,191,9.5,13.5,135,113.5],[205,71.5,15,34.5,145.5,113.5],[207.5,142,29,17,161.5,113.5],[210,118.5,5.5,10,191.5,113.5],[210.5,38.5,8,7.5,198,113.5],[211.5,168,6,7.5,207,113.5],[215,198.5,5,5,214,113.5],[217,215,20.5,21.5,220,113.5],[220,176.5,14,18.5,241.5,113.5],[221,101.5,26.5,16.5,0.5,149],[222,130.5,7,9.5,28,149],[222,197,13.5,13.5,36,149],[222.5,161,9,9,50.5,149],[225,34,10.5,20,60.5,149],[229,257.5,3,3,72,149],[230.5,121.5,3.5,3.5,76,149],[231,268,5,5.5,80.5,149],[231.5,243.5,7,9,86.5,149],[232.5,228,5,9.5,94.5,149],[234,66.5,27.5,26.5,100.5,149],[237.5,154.5,14.5,15,129,149],[237.5,255,5.5,10,144.5,149],[239,124.5,5.5,7,151,149],[239,267.5,5,8.5,157.5,149],[240.5,234,3.5,5,163.5,149],[241.5,204.5,10.5,42,168,149],[242,247.5,3.5,3.5,179.5,149],[242.5,275.5,3.5,5.5,184,149],[243.5,282.5,5,6.5,188.5,149],[244,177.5,5.5,10,194.5,149],[245,195,5.5,6.5,201,149],[248.5,262.5,6,6.5,207.5,149],[250,247,6.5,9,214.5,149],[250.5,274.5,3,3,222,149],[250.5,281,3.5,4,226,149],[252.5,128.5,7,6.5,230.5,149],[253,200.5,5.5,9.5,238.5,149],[253.5,134.5,20.5,16.5,0.5,192],[254,240.5,3,3.5,22,192],[255,104,7.5,9.5,26,192],[255,277,4,6,34.5,192],[255.5,188.5,3,3.5,39.5,192],[256,176,7,8.5,43.5,192],[256.5,33,13,18,51.5,192],[256.5,158,11.5,12,65.5,192],[256.5,268.5,11.5,11.5,78,192],[256.5,286.5,9,4,90.5,192],[258,222,5.5,10,100.5,192],[259,236,12,12.5,107,192],[259.5,248.5,5.5,7,120,192],[260.5,189.5,9.5,10,126.5,192],[260.5,282,3,3,137,192],[261,257.5,4.5,8,141,192],[262,199,9,10,146.5,192],[263,208.5,9.5,10,156.5,192],[264,147.5,9,9,167,192],[266.5,290,6,4.5,177,192],[267,260,10,7.5,184,192],[268,224.5,5.5,7.5,195,192],[268,276,3.5,3.5,201.5,192],[269,254.5,3.5,3,206,192],[269,297,3.5,3.5,210.5,192],[269,304.5,3,4.5,215,192],[269.5,166.5,7.5,13,219,192],[270,88.5,7,11.5,227.5,192],[270,269.5,4.5,4.5,235.5,192],[270.5,247,4.5,4.5,241,192],[273,239,4,3.5,246.5,192]]};
+window.__bootT0=Date.now();
+window.safirBurst=function(s){s=s||1;var f=function(v){return +(v*s).toFixed(1)},maxd=1;
+  D.p.forEach(function(q){q.cx=q[0]+q[2]/2;q.cy=q[1]+q[3]/2;q.d=Math.sqrt(Math.pow(q.cx-D.ex,2)+Math.pow(q.cy-D.ey,2));if(q.d>maxd)maxd=q.d});
+  var piece=function(q,cls,more){return '<i'+(cls?' class="'+cls+'"':'')+' style="left:'+f(q[0])+'px;top:'+f(q[1])+'px;width:'+f(q[2])+'px;height:'+f(q[3])+'px;background-size:'+f(D.sw)+'px '+f(D.sh)+'px;background-position:-'+f(q[4])+'px -'+f(q[5])+'px;'+(more||'')+'"></i>'};
+  return '<div class="burst" aria-hidden="true" style="width:'+f(D.w)+'px;height:'+f(D.h)+'px">'+D.p.map(function(q,i){
+    return piece(q,'','--dx:'+f(D.ex-q.cx)+'px;--dy:'+f(D.ey-q.cy)+'px;--r:'+((i*47)%60-30)+'deg;animation-delay:'+(q.d/maxd*.9).toFixed(2)+'s')}).join('')+piece(D.logo,'lg')+'</div>'};
+var b=document.getElementById("boot");b.innerHTML=window.safirBurst(Math.min(1.5,Math.max(.9,Math.min(innerWidth,innerHeight)/560)));
+setTimeout(function(){b.classList.add("out")},12000);
+})();
+</script>
 
 <div class="wrap">
   <header class="top">
@@ -600,7 +615,7 @@ body.inedit [data-ed]:focus{outline:2px solid var(--accent);background:var(--sur
   </div>
 
   <div id="filterbar"></div>
-  <main id="main"><div class="tloader" role="status" aria-label="Loading"><div class="tk-marks" aria-hidden="true"><span><svg viewBox="0 0 20 20"><path d="M4 13 16 7"/></svg></span><span><svg viewBox="0 0 20 20"><path d="M4 17 16 11"/></svg></span><span><svg viewBox="0 0 20 20"><path d="M13 7a3 3 0 1 0-3 3c0 3-2 5.5-5.5 6.5"/></svg></span><span><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="4"/></svg></span><span><svg viewBox="0 0 20 20"><path d="M3 7c0 6 5 6 5 .5c0 5.5 5 5.5 5 0c0 5 4.5 5 4.5-.5"/></svg></span></div><div class="tk-word" aria-hidden="true">سفير</div><div class="tk-label">Loading…</div></div></main>
+  <main id="main"></main>
   <div class="tools" id="tools" hidden>
     <p class="note" id="toolnote">Anyone with the link can view and edit this log with their name; every change is signed in History. Archived projects are kept, never deleted.</p>
     <button class="lnk" id="export" hidden>Download JSON</button>
@@ -872,7 +887,7 @@ function topicTasks(p,title){var t=norm(title);if(!t)return[];var l=sheetActsFor
   return l.filter(function(a){var g=norm(a.group);return !!g&&(g===t||t.indexOf(g+" ")===0||g.indexOf(t+" ")===0)})}
 function topicTasksList(p,t){if(S.mode!=="one")return"";var l=topicTasks(p,t.title).filter(function(a){return !a.done});if(!l.length)return"";
   return sortActs(l).map(function(a){var st=pv("act",a.sheetId,"status",a.status||"Open");
-    return '<div class="urow tk"><div class="tt"><span class="bul" aria-hidden="true">•</span>'+edT("act",a.sheetId,"text",a.text,"Task")+' <span class="tkid">'+esc(a.sheetId)+'</span></div>'+
+    return '<div class="urow tk"><div class="tt"><span class="bul" aria-hidden="true">•</span><span class="tkid">'+esc(a.sheetId)+'</span>'+edT("act",a.sheetId,"text",a.text,"Task")+'</div>'+
       '<div class="tn">'+edT("act",a.sheetId,"latest",a.latest||"","Latest update")+'</div><div class="tw">'+edT("act",a.sheetId,"owner",tidy(a.owner)||"TBC","Owner")+'</div>'+
       '<div>'+edC("act",a.sheetId,"status",'<span class="tst '+statusClass(st)+'">'+esc(st)+'</span>')+'</div><div class="tn">'+edT("act",a.sheetId,"due","Due "+dueText(a),"Due")+'</div></div>'}).join("")}
 // Project page: the undated summary lines sit under the description; the dated updates are a Timeline section, closed until clicked.
@@ -970,7 +985,10 @@ document.addEventListener("focusout",function(e){var el=e.target.closest&&e.targ
   var orig=el.getAttribute("data-orig");el.removeAttribute("data-orig");var v=el.innerText.replace(/ /g," ").trim();
   if(orig!==null&&v!==orig.trim()){var ek=el.getAttribute("data-ed"),ei=el.getAttribute("data-id"),ef=el.getAttribute("data-f");setPend(ek,ei,ef,v,el.getAttribute("data-saved"));el.classList.toggle("pend",pkey(ek,ei,ef) in S.pend)}
   if(S.pendingRender){S.pendingRender=false;setTimeout(render,0)}});
-var LOADER_HTML='<div class="tloader" role="status" aria-label="Loading"><div class="tk-marks" aria-hidden="true"><span><svg viewBox="0 0 20 20"><path d="M4 13 16 7"/></svg></span><span><svg viewBox="0 0 20 20"><path d="M4 17 16 11"/></svg></span><span><svg viewBox="0 0 20 20"><path d="M13 7a3 3 0 1 0-3 3c0 3-2 5.5-5.5 6.5"/></svg></span><span><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="4"/></svg></span><span><svg viewBox="0 0 20 20"><path d="M3 7c0 6 5 6 5 .5c0 5.5 5 5.5 5 0c0 5 4.5 5 4.5-.5"/></svg></span></div><div class="tk-word" aria-hidden="true">سفير</div><div class="tk-label">Loading…</div></div>';
+function loaderHTML(label){return '<div class="tloader" role="status" aria-label="'+esc(label)+'">'+(window.safirBurst?window.safirBurst(.55):"")+'<div class="tk-label">'+esc(label)+'</div></div>'}
+// The boot screen stays at least long enough for the letters to stream out, then fades.
+function bootDone(){var b=document.getElementById("boot");if(!b||b.getAttribute("data-done"))return;b.setAttribute("data-done","1");
+  setTimeout(function(){b.classList.add("out");setTimeout(function(){if(b.parentNode)b.parentNode.removeChild(b)},700)},Math.max(0,1600-(Date.now()-(window.__bootT0||0))))}
 function topicsFor(p,kind){return (S.sheet||S.topics).filter(function(t){return (t.projectId===p.id||(!t.projectId&&sheetMatch(t.project,p)))&&!t.removed&&(kind==="issue"?t.kind==="issue":kind?t.kind!=="issue":true)}).sort(function(a,b){return (a.order||0)-(b.order||0)})}
 function statusClass(s){s=String(s||"");return /^open/i.test(s)?"red":/^(due|waiting|pending|overdue)/i.test(s)?"amber":/^in progress/i.test(s)?"blue":/^(done|received|closed|sent)/i.test(s)?"green":""}
 var STATUS_SUGGEST=["Open","In progress","Pending","Due ","Done"];
@@ -984,7 +1002,7 @@ function loadFiles(pid){
 function fileLabel(list){var im=list.filter(function(f){return f.kind!=="pdf"}).length,pd=list.length-im;
   return [im?im+(im===1?" image":" images"):"",pd?pd+" PDF"+(pd===1?"":"s"):""].filter(Boolean).join(" · ")}
 function topicsView(p){
-  if(SHEET_API&&!S.sheet&&S.mode==="one")return '<div class="topics">'+LOADER_HTML.replace("Loading…","Loading the tracker…")+'</div>';
+  if(SHEET_API&&!S.sheet&&S.mode==="one")return '<div class="topics">'+loaderHTML("Loading the tracker…")+'</div>';
   var all=topicsFor(p),ts=topicsFor(p,"status"),is=topicsFor(p,"issue"),me=S.canEdit,inl=isInline();if(!all.length&&!me)return"";
   if(all.length)loadFiles(p.id);
   var last=all.reduce(function(m,t){return t.updatedAt&&t.updatedAt>m?t.updatedAt:m},"");
@@ -1532,7 +1550,7 @@ function renderFrame(){
   var me=S.mode==="me";
   document.title=me?"My Dashboard – Safir DTS":"Safir DTS Project Log";
   document.getElementById("h1").innerHTML=me?'My <span>Dashboard</span>':'Safir <span>Project Log</span>';
-  document.getElementById("dept").textContent=me?"Design and Technical Services Department · private, only you can open it":"Badriyah Alsalem, Architect, Design and Technical Services Department";
+  document.getElementById("dept").textContent=me?"Design and Technical Services Department · private, only you can open it":"Prepared by Badriyah Alsalem, Architect, Design and Technical Services Department";
   document.getElementById("modelink").innerHTML=me?'<a href="#">← Overview</a>':(S.isAdmin?'<a href="#me">My dashboard →</a>':"");
   var tip=document.getElementById("tip");if(me||isSimple())tip.hidden=true;else{try{tip.hidden=!!localStorage.getItem("dtsTipHidden")}catch(e){tip.hidden=false}}
   document.getElementById("seg").innerHTML=VIEWS[S.mode].map(function(v){
@@ -1951,8 +1969,8 @@ col.onSnapshot(function(snap){
   S.live=true;dot.classList.add("live");tools.hidden=false;
   var last=S.projects.reduce(function(m,p){return p.updatedAt&&p.updatedAt>m?p.updatedAt:m},"");
   sync.textContent="Live"+(last?" · last change "+fmtDate(last):"");
-  render();
-},function(err){sync.textContent="Couldn’t sync: "+((err&&err.code)||"unavailable")});
+  render();bootDone();
+},function(err){sync.textContent="Couldn’t sync: "+((err&&err.code)||"unavailable");bootDone()});
 // Badriyah's private data loads only with her admin password.
 function subPrivate(on){
   subs.forEach(function(u){u()});subs=[];
