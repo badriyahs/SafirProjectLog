@@ -416,6 +416,8 @@ a.prow:hover .pd{text-decoration:underline}
 .topics{margin:2px 0 14px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
 .topics .th{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:8px 14px;background:var(--brand-tint);font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .topics .th b{color:var(--ink)}
+.agrp{margin:12px 0 2px;font-size:13.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.msec{margin-top:18px;padding:8px 14px;border-radius:10px;background:var(--brand-tint);font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink)}
 .trow{display:grid;grid-template-columns:minmax(150px,1.15fr) 118px minmax(220px,2fr) minmax(120px,.9fr);gap:6px 14px;padding:10px 14px;border-top:1px solid var(--line);align-items:start}
 .trow.head{border-top:0;padding-block:6px;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--surface)}
 .trow .tt{font-weight:700}
@@ -669,7 +671,7 @@ function fullView(m){
 }
 function minutesView(p){
   var ms=minutesFor(p);if(!ms.length)return"";
-  return '<div class="nl">Meetings:</div>'+ms.map(function(m,i){
+  return '<div class="msec"><b>Meetings</b></div>'+ms.map(function(m,i){
     var op=S.minOpen[m.id]!==undefined?S.minOpen[m.id]:i===0,fo=!!S.fullOpen[m.id];
     return '<div class="mins'+(op?" open":"")+'" data-min="'+esc(m.id)+'"><div class="mt" role="button" tabindex="0" data-mintoggle aria-expanded="'+op+'">'+CHEV+'<span><b>'+esc(fmtDue(m.date))+'</b>'+(m.place?' · '+esc(m.place):"")+' – '+esc(m.title||"Meeting")+'</span></div>'+
       (op?labelled(m.summary)+(lines(m.decisions).length?'<div class="ml">Decisions</div>'+labelled(m.decisions):"")+
@@ -688,7 +690,7 @@ function issueStatus(v){v=String(v||"");return /^closed/i.test(v)?"Closed":/^in 
 function loadSheet(){if(!SHEET_API)return Promise.resolve();return fetch(SHEET_API+"?include=actions",{cache:"no-store"}).then(function(r){return r.json()}).then(applySheet).catch(function(){})}
 // Action Tracker rows become the follow-ups of their project (her decision, 13 Oct 2026: one action list, in the sheet).
 function sheetAct(o){var due=ISO.test(o.due||"")?o.due:"",closed=/^closed/i.test(o.status||"");
-  return{id:"act:"+o.id,sheetId:o.id,sheet:true,projectName:o.project,text:o.title,owner:o.who,due:due,dueText:due?"":(o.due||""),src:o.id+(o.category?" · "+o.category:""),
+  return{id:"act:"+o.id,sheetId:o.id,sheet:true,projectName:o.project,text:o.title,owner:o.who,due:due,dueText:due?"":(o.due||""),src:o.id+(o.group?" · "+o.group:""),group:o.group||"",
     meeting:"",pre:false,status:o.status,next:o.next,latest:o.latest,done:closed?((o.updated||"").slice(0,10)||o.opened||today()):"",doneBy:closed?(o.by||""):"",added:o.opened||"",chased:"",snooze:"",removed:"",doneLine:""}}
 function sheetActsFor(p){if(!S.sheetActs)return null;var l=S.sheetActs.filter(function(a){return sheetMatch(a.projectName,p)});if(!l.length)return null;
   var meta=(S.priv[p.id]||{}).sheetMeta||{};
@@ -697,7 +699,7 @@ function isSheetProj(p){return !!sheetActsFor(p)}
 function sheetActProject(p){var a=(S.sheetActs||[]).find(function(x){return sheetMatch(x.projectName,p)});return a?a.projectName:sheetProjectName(p)}
 // What to send to the sheet for a changed (or new, when a is null) follow-up.
 function sheetActFields(p,t,a){var f={},dd=function(x){return x.due||(x.dueText?tidy(x.dueText):"")};
-  if(!a){f.project=sheetActProject(p);f.title=t.text;if(t.owner)f.who=t.owner;if(dd(t))f.due=dd(t);f.status=t.done?"Closed":"Open";return f}
+  if(!a){f.project=sheetActProject(p);f.title=t.text;if(t.owner)f.who=t.owner;if(dd(t))f.due=dd(t);f.status=t.done?"Closed":"Open";if(t.group)f.group=t.group;return f}
   if(t.text!==a.text)f.title=t.text;if((t.owner||"")!==(a.owner||""))f.who=t.owner||"";if(dd(t)!==dd(a))f.due=dd(t);
   if(!!t.done!==!!a.done)f.status=t.done?"Closed":"Open";return f}
 function sheetChangeTask(p,a,fn,kind,extraPatch,pubKind){
@@ -713,7 +715,7 @@ function sheetChangeTask(p,a,fn,kind,extraPatch,pubKind){
   if(loc){Object.assign(loc,{text:t.text,owner:t.owner,due:t.due,dueText:t.dueText,done:t.done,doneBy:t.doneBy||loc.doneBy});if(f.status)loc.status=f.status}render();
   return pr.then(function(){return sheetPost({action:"save",kind:"action",id:a.sheetId,fields:f,by:by()})}).catch(fail)}
 function sheetAddTask(p,t){var f=sheetActFields(p,t,null);
-  S.sheetActs.push(Object.assign(sheetAct({id:"new"+Date.now(),project:f.project,title:t.text,who:t.owner,due:f.due||"",status:"Open",opened:today()}),{}));render();
+  S.sheetActs.push(sheetAct({id:"new"+Date.now(),project:f.project,title:t.text,who:t.owner,due:f.due||"",status:"Open",opened:today(),group:t.group||""}));render();
   return sheetPost({action:"save",kind:"action",id:"",fields:f,by:by()})}
 function applySheet(d){if(!d||!Array.isArray(d.rows))return;
   var acts=d.rows.filter(function(o){return o.kind==="action"});if(acts.length)S.sheetActs=acts.map(sheetAct);
@@ -870,6 +872,8 @@ function taskForm(p,a,o){
   a=a||{};o=o||{};var ch=(o.choices||[]).filter(function(id){return S.projects.some(function(x){return x.id===id&&!x.archived})});
   return '<form class="aform" data-aform data-pid="'+esc(p.id)+'" data-aid="'+esc(a.id||"")+'" data-mid="'+esc(o.mid||"")+'">'+
     (ch.length>1?'<select name="pid" class="w" aria-label="Project">'+ch.map(function(id){return '<option value="'+esc(id)+'"'+(id===p.id?" selected":"")+'>'+esc(projName(id))+'</option>'}).join("")+'</select>':"")+
+    (!a.id&&isSheetProj(p)?(function(){var gs=[];tasksOf(p).forEach(function(x){if(x.group&&gs.indexOf(x.group)<0)gs.push(x.group)});
+      return gs.length?'<select name="group" class="w" aria-label="Under">'+gs.map(function(g){return '<option>'+esc(g)+'</option>'}).join("")+'</select>':""})():"")+
     '<input name="text" class="w" placeholder="What needs doing" value="'+esc(a.text||"")+'" required aria-label="Task">'+
     '<input name="owner" placeholder="Who (e.g. Wael Habib)" value="'+esc(a.owner||"")+'" list="owners" aria-label="Who">'+
     '<input name="dueText" placeholder="Or when, in words" value="'+esc(a.dueText||"")+'" aria-label="Due, in words (if there is no date)">'+
@@ -880,7 +884,11 @@ function taskForm(p,a,o){
 }
 function taskList(p){
   var all=tasksOf(p),open=openActs(p),done=all.filter(function(a){return a.done}),ed=S.isAdmin&&!p.archived,tf=S.taskForm,html="";
-  if(open.length)html+='<ul class="acts">'+open.map(function(a){return actRow(p,a,"card")}).join("")+'</ul>';
+  var grp=open.some(function(a){return a.group});
+  if(open.length&&grp){var gs=[];all.forEach(function(a){if(a.group&&gs.indexOf(a.group)<0)gs.push(a.group)});
+    gs.concat([""]).forEach(function(g){var l=open.filter(function(a){return (a.group||"")===g});if(!l.length)return;
+      html+=(g?'<div class="agrp">'+esc(g)+'</div>':"")+'<ul class="acts">'+l.map(function(a){return actRow(p,a,"card")}).join("")+'</ul>'})}
+  else if(open.length)html+='<ul class="acts">'+open.map(function(a){return actRow(p,a,"card")}).join("")+'</ul>';
   if(ed)html+=tf&&tf.pid===p.id&&!tf.aid&&!tf.mid?taskForm(p,null,{}):'<button class="tlbtn" data-aadd>+ Add a task</button> ';
   if(done.length){var op=!!S.showDone[p.id];
     html+='<button class="tlbtn" data-adone aria-expanded="'+op+'">'+(op?"▾ Hide done tasks":"▸ Done tasks ("+done.length+")")+'</button>';
@@ -1611,7 +1619,7 @@ main.addEventListener("submit",function(e){
     var v={text:String(afd.get("text")||"").trim(),owner:afd.get("owner"),due:afd.get("due"),dueText:afd.get("dueText")};if(!v.text)return;
     S.taskForm=null;
     if(aid)changeTask(ap,aid,function(x){var wasPre=x.pre;Object.assign(x,v);if(wasPre){x.pre=false;x.confirmed=today();x.confirmedBy=by()}x.snooze="";return (wasPre?"Confirmed and changed: ":"Changed: ")+x.text},"taskedit");
-    else if(isSheetProj(ap)){sheetAddTask(ap,cleanTask(v,ap.id));var lb=fs.batch();plog(lb,ap,"taskadd","Added (Action Tracker): "+v.text);lb.commit().catch(fail)}
+    else if(isSheetProj(ap)){sheetAddTask(ap,Object.assign(cleanTask(v,ap.id),{group:String(afd.get("group")||"")}));var lb=fs.batch();plog(lb,ap,"taskadd","Added (Action Tracker): "+v.text);lb.commit().catch(fail)}
     else{var mt=amid&&S.meetings.find(function(x){return x.id===amid});var nt=cleanTask(Object.assign({meeting:amid||"",src:mt?"Meeting "+fmtDue(mt.date):""},v),ap.id);
       var nb=fs.batch(),pt=taskOps(nb,ap,[nt],null);if(pt)projectOps(nb,ap,pt,"edit",by());plog(nb,ap,"taskadd","Added: "+nt.text);nb.commit().catch(fail)}
     render();return}
