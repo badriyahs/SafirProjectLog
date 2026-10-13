@@ -63,6 +63,7 @@ button,input,select,textarea{font:inherit;color:inherit}
   -webkit-mask:url("logo.png") center/contain no-repeat;mask:url("logo.png") center/contain no-repeat}
 .top h1{font-family:var(--f-display);font-weight:600;font-size:clamp(30px,5vw,40px);letter-spacing:-.01em;line-height:1.15;margin:0;text-wrap:balance}
 .top h1 span{color:var(--accent)}
+.top h1 .pill{margin-left:14px;vertical-align:middle;position:relative;top:-4px;font-family:var(--f-body);font-weight:600}
 .top .dept{color:var(--muted);font-size:17px;margin-top:4px}
 .top .sub{color:var(--muted);font-size:15.5px;display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
@@ -391,11 +392,14 @@ body.simple .wrap{max-width:1280px}
 .prow:first-child{border-top:0}
 body.one .chev,body.one .num{display:none}
 body.one .card .ch.tog{cursor:default}
+body.one .card .pn{display:none}
+body.one .card .pm{margin-top:6px}
 body.one .card>.body{padding-left:0}
 .onelink{margin:22px 0 14px;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;font-size:15.5px}
 .onelink a{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border:1px solid var(--line-strong);border-radius:999px;background:var(--surface);color:var(--ink);text-decoration:none;font-weight:600}
 .onelink a:hover{background:var(--brand-tint)}
-.onelink a.sheet{border-color:var(--accent);color:var(--accent)}
+.atbtn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:999px;background:#1F3A5F;color:#fff;text-decoration:none;font-weight:600;font-size:15px;white-space:nowrap}
+.atbtn:hover{background:#2C4F7C}
 body.one .logo{cursor:pointer}
 .prow.head{padding-block:10px;background:var(--brand-tint);font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .prow .pc{display:flex;gap:8px;align-items:center;color:var(--muted)}
@@ -423,6 +427,17 @@ a.prow:hover .pd{text-decoration:underline}
 .spill{padding:6px 14px;border:1px solid var(--line-strong);border-radius:999px;background:var(--surface);color:var(--muted);font:inherit;font-size:15px;cursor:pointer}
 .spill.on{background:var(--brand-tint);border-color:var(--accent);color:var(--ink);font-weight:600}
 #sq{flex:1;min-width:160px;max-width:320px;margin-left:auto;padding:7px 12px;border:1px solid var(--line-strong);border-radius:999px;font:inherit;font-size:15px;background:var(--surface)}
+.msub{margin-left:10px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--muted);font-size:14px}
+.topics .th .msub,.topics .sub .msub{font-size:13.5px}
+.topics .sub b{color:var(--ink)}
+.msbtn{display:flex;align-items:baseline;width:100%;border:0;text-align:left;font:inherit;cursor:pointer}
+.msbtn .mchev{margin-left:auto;text-transform:none;letter-spacing:0;color:var(--accent);font-size:14px}
+.tline{list-style:none;margin:6px 0 0;padding:0}
+.tline li{padding:9px 14px;border-top:1px solid var(--line)}
+.tline li:first-child{border-top:0}
+.tld{font-weight:700;font-size:14px;color:var(--muted)}
+.tlt{font-size:16px}
+.pintro{margin:4px 0 14px;font-size:16px;color:var(--ink);max-width:75ch}
 .msec{margin-top:18px;padding:8px 14px;border-radius:10px;background:var(--brand-tint);font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink)}
 .trow{display:grid;grid-template-columns:minmax(150px,1.15fr) 118px minmax(220px,2fr) minmax(120px,.9fr);gap:6px 14px;padding:10px 14px;border-top:1px solid var(--line);align-items:start}
 .trow.head{border-top:0;padding-block:6px;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--surface)}
@@ -687,7 +702,7 @@ function fullView(m){
 }
 function minutesView(p){
   var ms=minutesFor(p);if(!ms.length)return"";
-  return '<div class="msec"><b>Meetings</b></div>'+ms.map(function(m,i){
+  return '<div class="msec"><b>Meetings</b><span class="msub">Notes as issued</span></div>'+ms.map(function(m,i){
     var op=S.minOpen[m.id]!==undefined?S.minOpen[m.id]:i===0,fo=!!S.fullOpen[m.id];
     return '<div class="mins'+(op?" open":"")+'" data-min="'+esc(m.id)+'"><div class="mt" role="button" tabindex="0" data-mintoggle aria-expanded="'+op+'">'+CHEV+'<span><b>'+esc(fmtDue(m.date))+'</b>'+(m.place?' · '+esc(m.place):"")+' – '+esc(m.title||"Meeting")+'</span></div>'+
       (op?labelled(m.summary)+(lines(m.decisions).length?'<div class="ml">Decisions</div>'+labelled(m.decisions):"")+
@@ -758,6 +773,16 @@ function topicTasksList(p,t){if(!(S.tOpen||{})[t.id])return"";var l=topicTasks(p
   var open=sortActs(l.filter(function(a){return !a.done})),done=l.filter(function(a){return a.done}),sd=!!(S.tDone||{})[t.id];
   var row=function(a){return '<div class="tkrow'+(a.done?" done":"")+'"><span class="tkid">'+esc(a.sheetId)+'</span><span>'+esc(a.text)+'</span><span class="tkwho">'+esc(tidy(a.owner)||"TBC")+'</span><span>'+esc(a.done?"Done":dueText(a))+'</span><span><span class="tst '+statusClass(a.status)+'">'+esc(a.status||"Open")+'</span></span></div>'};
   return '<div class="tksub">'+open.map(row).join("")+(done.length?(sd?done.map(row).join(""):"")+'<button class="tlbtn" type="button" data-tdone="'+esc(t.id)+'">'+(sd?"Hide done":"Show "+done.length+" done")+'</button>':"")+'</div>'}
+// Project page: the undated summary lines sit under the description; the dated updates are a Timeline section, closed until clicked.
+function introView(p){var l=detailItems(p).filter(function(x){return x.d===null}).map(function(x){return x.l.replace(/^[•\-]\s*/,"")}).filter(Boolean);
+  return l.length?'<div class="pintro">'+l.map(esc).join("<br>")+'</div>':""}
+function timelineSec(p){var items=detailItems(p).filter(function(x){return x.d!==null}).sort(function(a,b){return b.d-a.d||b.i-a.i});if(!items.length)return"";
+  var op=!!(S.tlOpen||{})[p.id];
+  var h='<button class="msec msbtn" type="button" data-tlsec="'+esc(p.id)+'" aria-expanded="'+op+'"><b>Timeline</b><span class="msub">'+items.length+' dated updates, newest first</span><span class="mchev">'+(op?"Hide ▾":"Show ▸")+'</span></button>';
+  if(!op)return h;
+  return h+'<ul class="tline">'+items.map(function(x){var t=x.l.replace(/^[•\-]\s*/,""),m=/^(.*?)\s+–\s+([\s\S]*)$/.exec(t);
+    var lab=m?m[1]:fmtDate(x.d),w=/^([^:]{1,40}):\s*(.+)$/.exec(lab);if(w)lab=w[2]+" · "+w[1].charAt(0).toUpperCase()+w[1].slice(1);
+    return '<li><div class="tld">'+esc(lab)+'</div><div class="tlt">'+esc(m?m[2]:t)+'</div></li>'}).join("")+'</ul>'}
 function topicsFor(p,kind){return (S.sheet||S.topics).filter(function(t){return (t.projectId===p.id||(!t.projectId&&sheetMatch(t.project,p)))&&!t.removed&&(kind==="issue"?t.kind==="issue":kind?t.kind!=="issue":true)}).sort(function(a,b){return (a.order||0)-(b.order||0)})}
 function statusClass(s){s=String(s||"");return /^open/i.test(s)?"red":/^(due|waiting|pending|overdue)/i.test(s)?"amber":/^in progress/i.test(s)?"blue":/^(done|received|closed|sent)/i.test(s)?"green":""}
 var STATUS_SUGGEST=["Open","In progress","Pending","Due ","Done"];
@@ -775,7 +800,7 @@ function topicsView(p){
   if(all.length)loadFiles(p.id);
   var last=all.reduce(function(m,t){return t.updatedAt&&t.updatedAt>m?t.updatedAt:m},"");
   var tf=S.topicForm;
-  var html='<div class="topics"><div class="th"><span><b>Status</b></span>'+(last?'<span>Updated '+esc(fmtDate(last))+'</span>':"")+'</div>'+
+  var html='<div class="topics"><div class="th"><span><b>Status</b><span class="msub">Where each topic stands</span></span>'+(last?'<span>Updated '+esc(fmtDate(last))+'</span>':"")+'</div>'+
     (ts.length?'<div class="trow head"><span>Topic</span><span>Status</span><span>Next step</span><span>Who</span></div>':"");
   ts.forEach(function(t){
     if(tf&&tf.pid===p.id&&tf.tid===t.id){html+=topicForm(p,t);return}
@@ -787,7 +812,7 @@ function topicsView(p){
   if(me)html+=tf&&tf.pid===p.id&&!tf.tid&&tf.kind!=="issue"?topicForm(p,null):'<div class="trow"><div class="tact"><button class="tlbtn" type="button" data-tadd>+ Add a status line</button></div></div>';
   // Risks & issues (the sheet's Issues & Risks tab, 13 Oct 2026 layout): Issue · Priority · Next action · Owner · Due · Status
   if(is.length||me){
-    html+='<div class="sub">Risks &amp; issues</div>'+(is.length?'<div class="irow head"><span>Issue</span><span>Priority</span><span>Next action</span><span>Owner</span><span>Due</span><span>Status</span></div>':"");
+    html+='<div class="sub"><b>Risks &amp; issues</b><span class="msub">What could hold the project up</span></div>'+(is.length?'<div class="irow head"><span>Issue</span><span>Priority</span><span>Next action</span><span>Owner</span><span>Due</span><span>Status</span></div>':"");
     is.forEach(function(t){
       if(tf&&tf.pid===p.id&&tf.tid===t.id){html+=topicForm(p,t);return}
       var fl=filesFor(p.id,t.id),due=/^\d{4}-\d{2}-\d{2}$/.test(t.due||"")?fmtDue(t.due):tidy(t.due||"TBC");
@@ -985,11 +1010,11 @@ function cardView(p,n){
   var head='<div class="ch tog" role="button" tabindex="0" aria-expanded="'+op+'" data-toggle><span class="num">'+(n||"")+'</span>'+CHEV+'<div class="nm"><div class="pn">'+esc(p.name||"Untitled project")+
       (me&&!pv.confirmed?'<span class="tag pre">Pre-system</span>':"")+'</div>'+(meta?'<div class="pm">'+meta+'</div>':"")+
       (!op&&lt?'<div class="prev">'+bullets(lt).replace(/^<ul><li[^>]*>|<\/li><\/ul>$/g,"")+'</div>':"")+'</div>'+
-    '<div class="tags">'+(S.canEdit&&!p.archived?stSel(p):pill(p.status))+'</div></div>';
+    '<div class="tags">'+(S.mode==="one"?(p.sheetUrl?'<a class="atbtn" href="'+esc(p.sheetUrl)+'" target="_blank" rel="noopener" title="Opens the Google Sheet: actions, status lines, issues and risks">Action tracker ↗</a>':""):S.canEdit&&!p.archived?stSel(p):pill(p.status))+'</div></div>';
   if(!op)return '<article class="card closed'+cls+'" data-id="'+p.id+'">'+head+'</article>';
-  var dt=detailsView(p),tk=me?taskList(p):"",nt=me?bullets(pv.notes):"";
+  var dt=detailsView(p),tk=me?taskList(p):"",nt=me?bullets(pv.notes):"",one=S.mode==="one";
   return '<article class="card open'+cls+'" data-id="'+p.id+'">'+head+
-    '<div class="body">'+topicsView(p)+(dt||'<div class="none">No details yet.</div>')+(S.commenting===p.id?commentForm(p):"")+minutesView(p)+
+    '<div class="body">'+(one?introView(p)+topicsView(p)+timelineSec(p):topicsView(p)+(dt||'<div class="none">No details yet.</div>'))+(S.commenting===p.id?commentForm(p):"")+minutesView(p)+
       (me?'<div class="tl">Tasks:</div>'+(tk||'<div class="none">No tasks.</div>'):"")+(nt?'<div class="nl">Notes (private):</div>'+nt:"")+'</div>'+
     '<div class="foot">'+(p.updatedAt?'<span class="when">Last updated '+fmtDate(p.updatedAt)+(p.updatedBy?' by '+esc(p.updatedBy):"")+'</span>':'<span class="when"></span>')+
       (me?'<button class="act" data-act="prep">'+ICON.list+'Meeting prep</button>':"")+
@@ -1332,7 +1357,7 @@ function renderFrame(){
   document.getElementById("export").hidden=!S.canEdit;document.getElementById("apply-l").hidden=!S.isAdmin;
   document.getElementById("import-l").hidden=!S.canEdit||S.projects.length>0;
   if(S.mode==="one"){var op=oneProject();document.title=(op?op.name:"Project")+" – Safir DTS";
-    document.getElementById("h1").innerHTML=op?nameHtml(op.name):'Safir <span>Project</span>';
+    document.getElementById("h1").innerHTML=op?nameHtml(op.name)+pill(op.status):'Safir <span>Project</span>';
     document.getElementById("modelink").innerHTML="";tip.hidden=true;document.getElementById("toolnote").textContent="Live from the Design & Technical Services Department’s project log."}
 }
 function nameHtml(n){var m=/^(Safir)\s+(.+)$/.exec(n||"");return m?m[1]+' <span>'+esc(m[2])+'</span>':esc(n)}
@@ -1342,7 +1367,7 @@ function oneProject(){var id=oneId();return S.projects.find(function(p){return p
 function renderOne(){
   var p=oneProject();
   if(!p){if(S.live||S.projects.length)main.innerHTML='<div class="empty">This project isn’t in the log.</div>';return}
-  main.innerHTML='<p class="onelink"><a href="#" class="back">← All projects</a>'+(p.sheetUrl?'<a class="sheet" href="'+esc(p.sheetUrl)+'" target="_blank" rel="noopener" title="Opens the Google Sheet: actions, status lines, issues and risks">Action tracker ↗</a>':"")+'</p>'+cardView(p);
+  main.innerHTML='<p class="onelink"><a href="#" class="back">← All projects</a></p>'+cardView(p);
 }
 // Live updates re-draw the page; keep whatever someone is typing in an open form (and where the cursor was).
 function formKey(f){return ["data-aform","data-mform","data-form","data-cform","data-qform"].map(function(k){return f.hasAttribute(k)?k+"="+f.getAttribute(k)+"|"+(f.getAttribute("data-pid")||"")+"|"+(f.getAttribute("data-aid")||"")+"|"+(f.getAttribute("data-mid")||""):""}).join("")+((f.closest("[data-qk]")||{getAttribute:function(){return""}}).getAttribute("data-qk")||"")}
@@ -1551,6 +1576,7 @@ main.addEventListener("click",function(e){
   // file previews: click a 📎 tag to open the viewer
   var sfb=t.closest("[data-sf]");if(sfb){S.sf=sfb.getAttribute("data-sf");render();return}
   if(t.closest("[data-detailed]")){S.detailed=true;ls("dtsDetailed","1");render();window.scrollTo(0,0);return}
+  var tls=t.closest("[data-tlsec]");if(tls){var k2=tls.getAttribute("data-tlsec");S.tlOpen=S.tlOpen||{};S.tlOpen[k2]=!S.tlOpen[k2];render();return}
   var tk0=t.closest("[data-ttasks]");if(tk0){var k0=tk0.getAttribute("data-ttasks");S.tOpen=S.tOpen||{};S.tOpen[k0]=!S.tOpen[k0];render();return}
   var td0=t.closest("[data-tdone]");if(td0){var k1=td0.getAttribute("data-tdone");S.tDone=S.tDone||{};S.tDone[k1]=!S.tDone[k1];render();return}
   var fc=t.closest("[data-fchip]");if(fc){var fpid=fc.closest("[data-id]").getAttribute("data-id");openLb(filesFor(fpid,fc.getAttribute("data-fchip")),0);return}
