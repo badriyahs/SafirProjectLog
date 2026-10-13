@@ -459,6 +459,7 @@ body.inedit [data-ed]:focus{outline:2px solid var(--accent);background:var(--sur
 .trow:hover .rmx,.irow:hover .rmx,.rmx:focus{opacity:1}
 .rmx:hover{color:var(--req)}
 /* Loading: the presentation cover (blue, white Arabic letters streaming out of the round Safir emblem). Art cut from the SHR template, loader.png. */
+#sync a{color:var(--accent);text-underline-offset:2px}
 .boot{position:fixed;inset:0;z-index:200;background:#C0D8E9;display:flex;align-items:center;justify-content:center;transition:opacity .5s ease,visibility 0s linear .5s}
 .boot.out{opacity:0;visibility:hidden}
 .burst{position:relative;flex:none}
@@ -1589,7 +1590,13 @@ function render(){
     Array.prototype.forEach.call(f.elements,function(el){if(!el.name)return;if(el.type==="checkbox"){if((el.name+"|"+el.value) in s[1])el.checked=s[1][el.name+"|"+el.value]}else if(el.name in s[1])el.value=s[1][el.name]});
     if(k===af&&an&&f.elements[an]&&f.elements[an].focus)f.elements[an].focus()});
 }
+// The header line: "Live", plus "and synced to Google Sheet tracker" (a link to the sheet) on a project page that the sheet feeds (her wording, 13 Oct 2026).
+// Rewritten only when the page or the link changes, so messages like "Couldn't save" stay until then.
+function syncLine(){if(!S.live)return;var p=S.mode==="one"?oneProject():null,linked=!!(p&&SHEET_API&&S.sheet&&(sheetActsFor(p)||[]).length),k=S.mode+"|"+(p?p.id:"")+"|"+linked;
+  if(k===S.syncKey)return;S.syncKey=k;
+  sync.innerHTML="Live"+(linked?" and synced to "+(p.sheetUrl?'<a href="'+esc(p.sheetUrl)+'" target="_blank" rel="noopener">Google Sheet tracker</a>':"Google Sheet tracker"):"")+(S.lastChange?" · last change "+esc(fmtDate(S.lastChange)):"")}
 function renderNow(){
+  syncLine();
   renderFrame();
   var gate=S.mode==="me"&&!S.isAdmin;
   document.body.classList.toggle("simple",isSimple());document.body.classList.toggle("one",S.mode==="one");document.body.classList.toggle("inedit",isInline());
@@ -1968,7 +1975,7 @@ col.onSnapshot(function(snap){
   S.projects=snap.docs.map(function(d){var x=d.data()||{};x.id=d.id;return x});
   S.live=true;dot.classList.add("live");tools.hidden=false;
   var last=S.projects.reduce(function(m,p){return p.updatedAt&&p.updatedAt>m?p.updatedAt:m},"");
-  sync.textContent="Live"+(last?" · last change "+fmtDate(last):"");
+  S.lastChange=last;S.syncKey="";syncLine();
   render();bootDone();
 },function(err){sync.textContent="Couldn’t sync: "+((err&&err.code)||"unavailable");bootDone()});
 // Badriyah's private data loads only with her admin password.
