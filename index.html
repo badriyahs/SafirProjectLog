@@ -434,6 +434,7 @@ a.prow:hover .pd{text-decoration:underline}
 .irow .tw,.irow .td{color:var(--muted)}
 .prio{display:inline-block;min-width:26px;text-align:center;padding:2px 7px;border-radius:6px;font-weight:700;font-size:14px;background:var(--line);color:var(--muted)}
 .prio.H{background:var(--req-tint);color:var(--req)}
+.prio.C{background:var(--req);color:#fff}
 .prio.M{background:var(--amber-bg);color:var(--amber-fg)}
 .topics .sub{padding:8px 14px;border-top:1px solid var(--line-strong);background:var(--brand-tint);font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 @media (max-width:700px){.trow,.irow{grid-template-columns:1fr auto}.trow.head,.irow.head{display:none}.trow .tn,.trow .tw,.irow .tn,.irow .tw,.irow .td{grid-column:1/-1}}
@@ -531,7 +532,7 @@ var S={mode:modeOf(),view:"",q:"",country:"",filter:"active",editing:null,confir
   open:{},allOpen:false,tl:{},sort:ls("dtsSort")||"recent",history:[],histFor:null,commenting:null,
   projects:[],sections:[],minutes:[],tasks:[],meetings:[],priv:{},plog:[],topics:[],files:{},filesLoading:{},topicForm:null,
   person:ls("dtsPerson")||"",taskForm:null,showDone:{},fuDone:false,meetOpen:{},meetEdit:null,prep:null,minOpen:{},fullOpen:{},qOpen:null,sentTo:{},reviewAll:false};
-S.view=VIEWS[S.mode][0][0];
+S.view=VIEWS[S.mode][0][0];S.sheet=null;
 var col=null,secCol=null,histCol=null,minCol=null,taskCol=null,meetCol=null,privCol=null,plogCol=null,topicCol=null,fileCol=null,subs=[];
 var main=document.getElementById("main");
 function oneId(){var h=decodeURIComponent(location.hash.slice(1)).toLowerCase();return ONE_PAGE[h]||(/^p=([\w-]+)$/.exec(h)||[])[1]||""}
@@ -678,7 +679,29 @@ function minutesView(p){
 // ---------- Project status: a few topic lines per project, with file previews (public; Badriyah edits on her dashboard) ----------
 // topics: {projectId, order, title, status, next, who, updatedAt, removed}
 // files:  {projectId, topicId, code, title, kind:"image"|"pdf", preview:"data:image/jpeg;base64,…", driveUrl, item} – previews are made on her Mac
-function topicsFor(p,kind){return S.topics.filter(function(t){return t.projectId===p.id&&!t.removed&&(kind==="issue"?t.kind==="issue":kind?t.kind!=="issue":true)}).sort(function(a,b){return (a.order||0)-(b.order||0)})}
+// Sheet rows name the project ("Safir Dahab"); match it to the log's project ("Safir Dahab Resort").
+function sheetMatch(name,p){var a=norm(name),b=norm(p&&p.name);return !!a&&!!b&&(a===b||b.indexOf(a+" ")===0||a.indexOf(b+" ")===0)}
+function sheetProjectName(p){var r=(S.sheet||[]).find(function(t){return t.project&&sheetMatch(t.project,p)});return r?r.project:p.name}
+var PRIO_WORD={C:"Critical",H:"High",M:"Medium",L:"Low"};
+function prioWord(v){v=String(v||"");return PRIO_WORD[v]||v}
+function issueStatus(v){v=String(v||"");return /^closed/i.test(v)?"Closed":/^in progress/i.test(v)?"In Progress":/^on hold/i.test(v)?"On Hold":"Open"}
+function loadSheet(){if(!SHEET_API)return Promise.resolve();return fetch(SHEET_API,{cache:"no-store"}).then(function(r){return r.json()}).then(applySheet).catch(function(){})}
+function applySheet(d){if(!d||!Array.isArray(d.rows))return;
+  S.sheet=d.rows.map(function(o){return{id:o.webId||o.id,sheetId:o.id,kind:o.kind==="issue"?"issue":"status",project:o.project,title:o.title,status:o.status,next:o.next,who:o.who,
+    priority:o.priority||"",due:o.due||"",opened:o.opened||"",order:o.order,updatedAt:o.updated||"",updatedBy:o.by||""}});render()}
+function sheetPost(body,p,note){
+  return fetch(SHEET_API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)}).then(function(r){return r.json()}).then(function(d){
+    if(!d||!d.ok)throw{code:"sheet",message:(d&&d.error)||"The Google sheet didn’t answer."};applySheet(d.data);
+    if(note&&S.canEdit){var hb=fs.batch();tlog(hb,p,note);hb.commit().catch(function(){})}
+  }).catch(function(e){fail(e&&e.code?e:{code:"sheet",message:String((e&&e.message)||e)});loadSheet()})}
+function sheetSave(p,tid,td,isIss){
+  var cur=tid?(S.sheet||[]).find(function(x){return x.id===tid}):null,f={title:td.title,status:td.status,next:td.next,who:td.who};
+  if(isIss){f.priority=td.priority;f.due=td.due;f.opened=td.opened}
+  if(!cur)f.project=sheetProjectName(p);
+  // Show it straight away; the sheet's answer replaces it.
+  if(S.sheet){if(cur)Object.assign(cur,f,{updatedAt:stamp()});else S.sheet.push(Object.assign({id:"new"+Date.now(),sheetId:"",kind:isIss?"issue":"status",order:999,updatedAt:stamp()},f))}
+  sheetPost({action:"save",kind:isIss?"issue":"status",id:cur?cur.sheetId:"",fields:f,by:by()},p,(cur?"Changed":"Added")+" the status line: "+td.title+" – "+td.status)}
+function topicsFor(p,kind){return (S.sheet||S.topics).filter(function(t){return (t.projectId===p.id||(!t.projectId&&sheetMatch(t.project,p)))&&!t.removed&&(kind==="issue"?t.kind==="issue":kind?t.kind!=="issue":true)}).sort(function(a,b){return (a.order||0)-(b.order||0)})}
 function statusClass(s){s=String(s||"");return /^open/i.test(s)?"red":/^(due|waiting|pending|overdue)/i.test(s)?"amber":/^in progress/i.test(s)?"blue":/^(done|received|closed|sent)/i.test(s)?"green":""}
 var STATUS_SUGGEST=["Open","In progress","Pending","Due ","Done"];
 // Her wording (13 Oct 2026): "Not set" is always TBC, "Waiting" is always Pending; older data is shown that way too.
@@ -713,8 +736,8 @@ function topicsView(p){
       var fl=filesFor(p.id,t.id),due=/^\d{4}-\d{2}-\d{2}$/.test(t.due||"")?fmtDue(t.due):tidy(t.due||"TBC");
       html+='<div class="irow" data-tid="'+esc(t.id)+'"><div class="tt">'+esc(t.title)+(t.opened?'<div class="ameta">Opened '+esc(fmtDue(t.opened)||t.opened)+'</div>':"")+
         (fl.length?'<div><button class="fchip" type="button" data-fchip="'+esc(t.id)+'">📎 '+esc(fileLabel(fl))+'</button></div>':"")+'</div>'+
-        '<div><span class="prio '+esc(t.priority||"")+'">'+esc(t.priority||"–")+'</span></div><div class="tn">'+esc(tidy(t.next))+'</div><div class="tw">'+esc(tidy(t.who))+'</div>'+
-        '<div class="td">'+esc(due)+'</div><div><span class="tst '+(/^closed/i.test(t.status||"")?"green":/^open/i.test(t.status||"")?"red":statusClass(t.status))+'">'+esc(t.status||"Open")+'</span></div>'+
+        '<div><span class="prio '+esc(prioWord(t.priority).charAt(0))+'">'+esc(prioWord(t.priority)||"–")+'</span></div><div class="tn">'+esc(tidy(t.next))+'</div><div class="tw">'+esc(tidy(t.who))+'</div>'+
+        '<div class="td">'+esc(due)+'</div><div><span class="tst '+(/^closed/i.test(t.status||"")?"green":/^open/i.test(t.status||"")?"red":statusClass(t.status))+'">'+esc(tidy(t.status)||"Open")+'</span></div>'+
         (me?'<div class="tact"><button class="plink" type="button" data-tedit="'+esc(t.id)+'">Edit</button></div>':"")+'</div>';
     });
     if(me)html+=tf&&tf.pid===p.id&&!tf.tid&&tf.kind==="issue"?topicForm(p,{kind:"issue",status:"Open",opened:today()}):'<div class="irow"><div class="tact"><button class="tlbtn" type="button" data-tadd="issue">+ Add a risk or issue</button></div></div>';
@@ -726,19 +749,19 @@ function topicForm(p,t){
   if(iss)return '<form class="aform" data-tform data-pid="'+esc(p.id)+'" data-tid="'+esc(t.id||"")+'" style="margin:8px 12px"><input type="hidden" name="kind" value="issue">'+
     '<input name="title" class="w" placeholder="Issue or risk" value="'+esc(t.title||"")+'" required aria-label="Issue">'+
     '<input name="next" class="w" placeholder="Required action" value="'+esc(t.next||"")+'" aria-label="Required action">'+
-    '<select name="priority" aria-label="Priority">'+opts(["","H","M","L"],t.priority||"",{"":"Priority: not set","H":"H – high","M":"M – medium","L":"L – low"})+'</select>'+
+    '<select name="priority" aria-label="Priority">'+opts(["","Critical","High","Medium","Low"],prioWord(t.priority),{"":"Priority: TBC"})+'</select>'+
     '<input name="who" placeholder="Action by" value="'+esc(t.who||"")+'" list="owners" aria-label="Action by">'+
-    '<select name="status" aria-label="Status">'+opts(["Open","Closed"],/^closed/i.test(t.status||"")?"Closed":"Open")+'</select>'+
-    '<input name="due" placeholder="Due: a date or TBC" value="'+esc(t.due||"")+'" aria-label="Due">'+
+    '<select name="status" aria-label="Status">'+opts(["Open","In Progress","On Hold","Closed"],issueStatus(t.status))+'</select>'+
+    '<input name="due" placeholder="Due: 2026-10-15 or TBC" value="'+esc(t.due||"")+'" aria-label="Due">'+
     '<input name="opened" type="date" value="'+esc(t.opened||"")+'" aria-label="Opened">'+
-    '<input name="order" type="number" placeholder="Order" value="'+esc(t.order!=null?t.order:"")+'" aria-label="Order (1 = first)">'+
+    (SHEET_API?"":'<input name="order" type="number" placeholder="Order" value="'+esc(t.order!=null?t.order:"")+'" aria-label="Order (1 = first)">')+
     '<div class="lbl">Shown on the overview under Risks &amp; issues. Due can be a date (2026-10-15) or words.</div>'+
     '<div class="row"><button class="btn primary" type="submit">'+(t.id?"Save":"Add")+'</button><button class="btn" type="button" data-tcancel>Cancel</button>'+(t.id?'<span class="sp"></span><button class="btn warn" type="button" data-tremove>Remove</button>':"")+'</div></form>';
   return '<form class="aform" data-tform data-pid="'+esc(p.id)+'" data-tid="'+esc(t.id||"")+'" style="margin:8px 12px">'+
     '<input name="title" class="w" placeholder="Topic, e.g. Restaurant terrace extension" value="'+esc(t.title||"")+'" required aria-label="Topic">'+
     '<input name="status" placeholder="Status: Open, In progress, Pending, Due 15 Oct, Sent, Done" value="'+esc(t.status||"")+'" list="tstatus" aria-label="Status">'+
     '<input name="who" placeholder="Who" value="'+esc(t.who||"")+'" list="owners" aria-label="Who">'+
-    '<input name="order" type="number" placeholder="Order" value="'+esc(t.order!=null?t.order:"")+'" aria-label="Order (1 = first)">'+
+    (SHEET_API?"":'<input name="order" type="number" placeholder="Order" value="'+esc(t.order!=null?t.order:"")+'" aria-label="Order (1 = first)">')+
     '<input name="next" class="w" placeholder="Next step" value="'+esc(t.next||"")+'" aria-label="Next step">'+
     '<div class="lbl">The status colour follows its first word: Open is red; Pending and Due are amber; In progress is blue; Done, Sent and Received are green. Management sees these lines on the overview.</div>'+
     '<div class="row"><button class="btn primary" type="submit">'+(t.id?"Save":"Add")+'</button><button class="btn" type="button" data-tcancel>Cancel</button>'+(t.id?'<span class="sp"></span><button class="btn warn" type="button" data-tremove>Remove line</button>':"")+'</div></form>';
@@ -1448,7 +1471,9 @@ main.addEventListener("click",function(e){
   var te=t.closest("[data-tedit]");if(te&&S.canEdit){var tp1=projOf(te);if(tp1){S.topicForm={pid:tp1.id,tid:te.getAttribute("data-tedit")};render();focusIn("[data-tform] [name=status]")}return}
   if(t.closest("[data-tcancel]")){S.topicForm=null;render();return}
   var tr=t.closest("[data-tremove]");
-  if(tr&&S.canEdit){var tfm=tr.closest("[data-tform]"),tid=tfm.getAttribute("data-tid"),tpp=projById(tfm.getAttribute("data-pid")),tt=S.topics.find(function(x){return x.id===tid});
+  if(tr&&S.canEdit){var tfm=tr.closest("[data-tform]"),tid=tfm.getAttribute("data-tid"),tpp=projById(tfm.getAttribute("data-pid")),tt=(S.sheet||S.topics).find(function(x){return x.id===tid});
+    if(tt&&SHEET_API){if(confirm("Remove this line?\n\n"+tt.title+"\n\nA copy is kept in the sheet’s Removed tab.")){S.sheet=(S.sheet||[]).filter(function(x){return x!==tt});S.topicForm=null;render();
+      sheetPost({action:"remove",kind:tt.kind==="issue"?"issue":"status",id:tt.sheetId,by:by()},tpp,"Removed the status line: "+tt.title)}return}
     if(tt&&confirm("Remove this status line from the overview?\n\n"+tt.title)){var rb=fs.batch();rb.set(topicCol.doc(tid),{removed:today(),updatedAt:stamp(),updatedBy:by()},{merge:true});tlog(rb,tpp,"Removed the status line: "+tt.title);S.topicForm=null;rb.commit().catch(fail)}return}
   // tasks (dashboard)
   var aa=t.closest("[data-aadd]");if(aa&&S.isAdmin){var ap=projOf(aa);if(ap){S.taskForm={pid:ap.id,aid:"",mid:""};render();focusIn('[data-aform][data-pid="'+ap.id+'"] [name=text]')}return}
@@ -1539,7 +1564,9 @@ main.addEventListener("submit",function(e){
     var td={projectId:tpid,kind:isIss?"issue":"status",title:String(tfd.get("title")||"").trim(),status:String(tfd.get("status")||"").trim(),next:String(tfd.get("next")||"").trim(),who:String(tfd.get("who")||"").trim(),
       order:isNaN(ord)?(tid?((S.topics.find(function(x){return x.id===tid})||{}).order||0):cur.reduce(function(m,x){return Math.max(m,x.order||0)},0)+1):ord,updatedAt:stamp(),updatedBy:by()};
     if(isIss){td.priority=String(tfd.get("priority")||"");td.due=String(tfd.get("due")||"").trim();td.opened=String(tfd.get("opened")||"")}
-    if(!td.title)return;var tb=fs.batch(),ref=tid?topicCol.doc(tid):topicCol.doc(tpid+(isIss?"-i":"-t")+Date.now().toString(36));
+    if(!td.title)return;
+    if(SHEET_API){S.topicForm=null;sheetSave(tp,tid,td,isIss);render();return}
+    var tb=fs.batch(),ref=tid?topicCol.doc(tid):topicCol.doc(tpid+(isIss?"-i":"-t")+Date.now().toString(36));
     tb.set(ref,td,{merge:true});tlog(tb,tp,(tid?"Changed":"Added")+" the status line: "+td.title+" – "+td.status);S.topicForm=null;tb.commit().catch(fail);render();return}
   var qf=t.closest("[data-qform]");
   if(qf){e.preventDefault();var qd=qf.closest("[data-qk]"),qp=projById(qd.getAttribute("data-pid")),ow=String(new FormData(qf).get("owner")||"").trim();
@@ -1593,6 +1620,10 @@ var FIREBASE_CONFIG={
   messagingSenderId:"293284465630",
   appId:"1:293284465630:web:704862947804444a8dab4f"
 };
+// Status lines and risks live in the Google sheet "Safir DTS – Project Details" (tabs Status and Issues & Risks) and are read and
+// saved through its Apps Script web app (scripts/sheet-link/Code.gs), so the sheet and the site always match (her choice, 13 Oct 2026).
+// Empty = use the old Firestore "topics" collection.
+var SHEET_API="";
 var sync=document.getElementById("sync"),dot=document.getElementById("dot"),who=document.getElementById("who"),tools=document.getElementById("tools");
 if(!FIREBASE_CONFIG||!window.firebase){sync.textContent="Not connected.";main.innerHTML='<div class="gate"><h2>Not set up yet</h2><p>The Firebase settings for this log haven’t been added.</p></div>';return}
 firebase.initializeApp(FIREBASE_CONFIG);
@@ -1603,6 +1634,7 @@ function lock(){ss("dtsUnlocked",null);firebase.auth().signOut()}
 col=fs.collection("projects");secCol=fs.collection("sections");histCol=fs.collection("history");minCol=fs.collection("minutes");
 taskCol=fs.collection("tasks");meetCol=fs.collection("meetings");privCol=fs.collection("private");plogCol=fs.collection("privateLog");
 topicCol=fs.collection("topics");fileCol=fs.collection("files");
+loadSheet();setInterval(loadSheet,120000);document.addEventListener("visibilitychange",function(){if(!document.hidden)loadSheet()});
 topicCol.onSnapshot(function(snap){S.topics=snap.docs.map(function(d){var x=d.data()||{};x.id=d.id;return x});render()},function(){});
 histCol.orderBy("at","desc").limit(500).onSnapshot(function(snap){S.history=snap.docs.map(function(d){var x=d.data();x.id=d.id;return x});if(S.view==="history"||S.view==="mylog")render()},function(){});
 minCol.onSnapshot(function(snap){S.minutes=snap.docs.map(function(d){var x=d.data()||{};x.id=d.id;return x});render()},function(){});
