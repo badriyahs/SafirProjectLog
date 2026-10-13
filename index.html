@@ -470,7 +470,7 @@ a.prow:hover .pd{text-decoration:underline}
     <div class="who" id="who"></div>
   </header>
 
-  <div class="tip" id="tip" hidden><p><b>How this works:</b> anyone can add a dated update to a project with the blue <b>Add update</b> button. To change status, edit or archive projects, click <b>Unlock to edit</b> at the top and enter the password.</p><button class="x" id="tip-x" aria-label="Hide this tip">×</button></div>
+  <div class="tip" id="tip" hidden><p><b>How this works:</b> anyone can add a dated update to a project with the blue <b>Add update</b> button. To change status, edit or archive projects, click <b>Edit</b> at the top and enter your name.</p><button class="x" id="tip-x" aria-label="Hide this tip">×</button></div>
   <div id="summary"></div>
   <p class="sumhint" id="sumhint"></p>
   <nav class="jump" id="jump" aria-label="Jump to country"></nav>
@@ -488,7 +488,7 @@ a.prow:hover .pd{text-decoration:underline}
   <div id="filterbar"></div>
   <main id="main"><div class="empty">Loading projects…</div></main>
   <div class="tools" id="tools" hidden>
-    <p class="note" id="toolnote">Anyone with the link can view this log and add updates. Other changes need the edit password. Archived projects are kept, never deleted.</p>
+    <p class="note" id="toolnote">Anyone with the link can view and edit this log with their name; every change is signed in History. Archived projects are kept, never deleted.</p>
     <button class="lnk" id="export" hidden>Download JSON</button>
     <label class="btn primary" id="apply-l" hidden style="cursor:pointer">Apply changes file…<input type="file" id="apply" accept=".json,application/json" hidden></label>
     <label class="lnk" id="import-l" hidden>Import project_log.json<input type="file" id="import" accept=".json,application/json" hidden></label>
@@ -496,7 +496,7 @@ a.prow:hover .pd{text-decoration:underline}
 </div>
 <div class="prep" id="prep" hidden></div>
 <datalist id="owners"></datalist>
-<datalist id="tstatus"><option value="Open"><option value="In progress"><option value="Waiting"><option value="Due "><option value="Done"></datalist>
+<datalist id="tstatus"><option value="Open"><option value="In progress"><option value="Pending"><option value="Due "><option value="Done"></datalist>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <div class="fpop" id="fpop" hidden></div>
 <div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="File viewer"></div>
@@ -661,7 +661,7 @@ function fullView(m){
     if(Array.isArray(b.items))html+=labelled(b.items.join("\n"));
     if(Array.isArray(b.sub))b.sub.forEach(function(s){html+='<h5>'+esc(s.h||"")+'</h5>'+labelled((s.items||[]).join("\n"))});
     if(b.table)html+='<table>'+(b.table.head?'<thead><tr>'+b.table.head.map(function(h){return '<th>'+esc(h)+'</th>'}).join("")+'</tr></thead>':"")+'<tbody>'+
-      (b.table.rows||[]).map(function(r){return '<tr>'+(Array.isArray(r)?r:r.c||[]).map(function(c){return '<td>'+esc(c)+'</td>'}).join("")+'</tr>'}).join("")+'</tbody></table>';
+      (b.table.rows||[]).map(function(r){return '<tr>'+(Array.isArray(r)?r:r.c||[]).map(function(c){return '<td>'+esc(tidy(c))+'</td>'}).join("")+'</tr>'}).join("")+'</tbody></table>';
   });
   if(!Array.isArray(m.full)||!m.full.length){if(lines(m.openPoints).length)html+='<h4>Open points</h4>'+labelled(m.openPoints)}
   return html;
@@ -679,8 +679,10 @@ function minutesView(p){
 // topics: {projectId, order, title, status, next, who, updatedAt, removed}
 // files:  {projectId, topicId, code, title, kind:"image"|"pdf", preview:"data:image/jpeg;base64,…", driveUrl, item} – previews are made on her Mac
 function topicsFor(p,kind){return S.topics.filter(function(t){return t.projectId===p.id&&!t.removed&&(kind==="issue"?t.kind==="issue":kind?t.kind!=="issue":true)}).sort(function(a,b){return (a.order||0)-(b.order||0)})}
-function statusClass(s){s=String(s||"");return /^open/i.test(s)?"red":/^(due|waiting|overdue)/i.test(s)?"amber":/^in progress/i.test(s)?"blue":/^(done|received|closed)/i.test(s)?"green":""}
-var STATUS_SUGGEST=["Open","In progress","Waiting","Due ","Done"];
+function statusClass(s){s=String(s||"");return /^open/i.test(s)?"red":/^(due|waiting|pending|overdue)/i.test(s)?"amber":/^in progress/i.test(s)?"blue":/^(done|received|closed|sent)/i.test(s)?"green":""}
+var STATUS_SUGGEST=["Open","In progress","Pending","Due ","Done"];
+// Her wording (13 Oct 2026): "Not set" is always TBC, "Waiting" is always Pending; older data is shown that way too.
+function tidy(s){s=s==null?"":String(s);return /^\s*not set\s*$/i.test(s)?"TBC":s.replace(/^(\s*)waiting\b/i,"$1Pending")}
 function filesFor(pid,tid){var fs0=S.files[pid]||[];return fs0.filter(function(f){return !tid||f.topicId===tid}).sort(function(a,b){return a.code<b.code?-1:1})}
 function loadFiles(pid){
   if(S.files[pid]||S.filesLoading[pid]||!fileCol)return;S.filesLoading[pid]=1;
@@ -689,7 +691,7 @@ function loadFiles(pid){
 function fileLabel(list){var im=list.filter(function(f){return f.kind!=="pdf"}).length,pd=list.length-im;
   return [im?im+(im===1?" image":" images"):"",pd?pd+" PDF"+(pd===1?"":"s"):""].filter(Boolean).join(" · ")}
 function topicsView(p){
-  var all=topicsFor(p),ts=topicsFor(p,"status"),is=topicsFor(p,"issue"),me=S.mode==="me"&&S.isAdmin;if(!all.length&&!me)return"";
+  var all=topicsFor(p),ts=topicsFor(p,"status"),is=topicsFor(p,"issue"),me=S.canEdit;if(!all.length&&!me)return"";
   if(all.length)loadFiles(p.id);
   var last=all.reduce(function(m,t){return t.updatedAt&&t.updatedAt>m?t.updatedAt:m},"");
   var tf=S.topicForm;
@@ -699,7 +701,7 @@ function topicsView(p){
     if(tf&&tf.pid===p.id&&tf.tid===t.id){html+=topicForm(p,t);return}
     var fl=filesFor(p.id,t.id);
     html+='<div class="trow" data-tid="'+esc(t.id)+'"><div class="tt">'+esc(t.title)+(fl.length?'<div><button class="fchip" type="button" data-fchip="'+esc(t.id)+'" aria-label="See the files for '+esc(t.title)+'">📎 '+esc(fileLabel(fl))+'</button></div>':"")+'</div>'+
-      '<div><span class="tst '+statusClass(t.status)+'">'+esc(t.status||"–")+'</span></div><div class="tn">'+esc(t.next||"")+'</div><div class="tw">'+esc(t.who||"")+'</div>'+
+      '<div><span class="tst '+statusClass(tidy(t.status))+'">'+esc(tidy(t.status)||"–")+'</span></div><div class="tn">'+esc(tidy(t.next))+'</div><div class="tw">'+esc(tidy(t.who))+'</div>'+
       (me?'<div class="tact"><button class="plink" type="button" data-tedit="'+esc(t.id)+'">Edit</button></div>':"")+'</div>';
   });
   if(me)html+=tf&&tf.pid===p.id&&!tf.tid&&tf.kind!=="issue"?topicForm(p,null):'<div class="trow"><div class="tact"><button class="tlbtn" type="button" data-tadd>+ Add a status line</button></div></div>';
@@ -708,10 +710,10 @@ function topicsView(p){
     html+='<div class="sub">Risks &amp; issues</div>'+(is.length?'<div class="irow head"><span>Issue</span><span>Priority</span><span>Required action</span><span>Action by</span><span>Due</span><span>Status</span></div>':"");
     is.forEach(function(t){
       if(tf&&tf.pid===p.id&&tf.tid===t.id){html+=topicForm(p,t);return}
-      var fl=filesFor(p.id,t.id),due=/^\d{4}-\d{2}-\d{2}$/.test(t.due||"")?fmtDue(t.due):(t.due||"Not set");
+      var fl=filesFor(p.id,t.id),due=/^\d{4}-\d{2}-\d{2}$/.test(t.due||"")?fmtDue(t.due):tidy(t.due||"TBC");
       html+='<div class="irow" data-tid="'+esc(t.id)+'"><div class="tt">'+esc(t.title)+(t.opened?'<div class="ameta">Opened '+esc(fmtDue(t.opened)||t.opened)+'</div>':"")+
         (fl.length?'<div><button class="fchip" type="button" data-fchip="'+esc(t.id)+'">📎 '+esc(fileLabel(fl))+'</button></div>':"")+'</div>'+
-        '<div><span class="prio '+esc(t.priority||"")+'">'+esc(t.priority||"–")+'</span></div><div class="tn">'+esc(t.next||"")+'</div><div class="tw">'+esc(t.who||"")+'</div>'+
+        '<div><span class="prio '+esc(t.priority||"")+'">'+esc(t.priority||"–")+'</span></div><div class="tn">'+esc(tidy(t.next))+'</div><div class="tw">'+esc(tidy(t.who))+'</div>'+
         '<div class="td">'+esc(due)+'</div><div><span class="tst '+(/^closed/i.test(t.status||"")?"green":/^open/i.test(t.status||"")?"red":statusClass(t.status))+'">'+esc(t.status||"Open")+'</span></div>'+
         (me?'<div class="tact"><button class="plink" type="button" data-tedit="'+esc(t.id)+'">Edit</button></div>':"")+'</div>';
     });
@@ -727,18 +729,18 @@ function topicForm(p,t){
     '<select name="priority" aria-label="Priority">'+opts(["","H","M","L"],t.priority||"",{"":"Priority: not set","H":"H – high","M":"M – medium","L":"L – low"})+'</select>'+
     '<input name="who" placeholder="Action by" value="'+esc(t.who||"")+'" list="owners" aria-label="Action by">'+
     '<select name="status" aria-label="Status">'+opts(["Open","Closed"],/^closed/i.test(t.status||"")?"Closed":"Open")+'</select>'+
-    '<input name="due" placeholder="Due: a date or Not set" value="'+esc(t.due||"")+'" aria-label="Due">'+
+    '<input name="due" placeholder="Due: a date or TBC" value="'+esc(t.due||"")+'" aria-label="Due">'+
     '<input name="opened" type="date" value="'+esc(t.opened||"")+'" aria-label="Opened">'+
     '<input name="order" type="number" placeholder="Order" value="'+esc(t.order!=null?t.order:"")+'" aria-label="Order (1 = first)">'+
     '<div class="lbl">Shown on the overview under Risks &amp; issues. Due can be a date (2026-10-15) or words.</div>'+
     '<div class="row"><button class="btn primary" type="submit">'+(t.id?"Save":"Add")+'</button><button class="btn" type="button" data-tcancel>Cancel</button>'+(t.id?'<span class="sp"></span><button class="btn warn" type="button" data-tremove>Remove</button>':"")+'</div></form>';
   return '<form class="aform" data-tform data-pid="'+esc(p.id)+'" data-tid="'+esc(t.id||"")+'" style="margin:8px 12px">'+
     '<input name="title" class="w" placeholder="Topic, e.g. Restaurant terrace extension" value="'+esc(t.title||"")+'" required aria-label="Topic">'+
-    '<input name="status" placeholder="Status: Open, In progress, Waiting, Due 15 Oct, Done" value="'+esc(t.status||"")+'" list="tstatus" aria-label="Status">'+
+    '<input name="status" placeholder="Status: Open, In progress, Pending, Due 15 Oct, Sent, Done" value="'+esc(t.status||"")+'" list="tstatus" aria-label="Status">'+
     '<input name="who" placeholder="Who" value="'+esc(t.who||"")+'" list="owners" aria-label="Who">'+
     '<input name="order" type="number" placeholder="Order" value="'+esc(t.order!=null?t.order:"")+'" aria-label="Order (1 = first)">'+
     '<input name="next" class="w" placeholder="Next step" value="'+esc(t.next||"")+'" aria-label="Next step">'+
-    '<div class="lbl">The status colour follows its first word: Open is red; Waiting and Due are amber; In progress is blue; Done and Received are green. Management sees these lines on the overview.</div>'+
+    '<div class="lbl">The status colour follows its first word: Open is red; Pending and Due are amber; In progress is blue; Done, Sent and Received are green. Management sees these lines on the overview.</div>'+
     '<div class="row"><button class="btn primary" type="submit">'+(t.id?"Save":"Add")+'</button><button class="btn" type="button" data-tcancel>Cancel</button>'+(t.id?'<span class="sp"></span><button class="btn warn" type="button" data-tremove>Remove line</button>':"")+'</div></form>';
 }
 // Hover a 📎 tag to see the previews; click it (or a preview) to flip through them full size.
@@ -782,7 +784,7 @@ function isSelf(o){return !o||SELF.indexOf(o)>-1}
 function dueState(a){if(a.done)return"done";if(!a.due)return"none";var t=today();return a.due<t?"over":a.due===t?"today":a.due<=addDays(t,7)?"week":"later"}
 var DUE_LABEL={over:"Overdue",today:"Due today",week:"Due in the next 7 days",later:"Due later",none:"No due date"};
 var DUE_COL={over:"#C0392B",today:"#D99A1E",week:"#1F5F99",later:"#5E6B7A",none:"#A6AAAE"};
-function dueText(a){return a.due?fmtDue(a.due,true):(a.dueText||"Not set")}
+function dueText(a){return a.due?fmtDue(a.due,true):tidy(a.dueText||"TBC")}
 function dueChip(a){var st=dueState(a);return '<span class="due '+st+'"'+(st==="over"?' title="Overdue"':"")+'>'+esc(a.done?"Done "+fmtDue(a.done):dueText(a))+'</span>'}
 function isReq(a){return /UPDATE REQUIRED/i.test(a.text||"")}
 function newId(){return "a"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
@@ -793,7 +795,7 @@ function cleanTask(a,pid){a=a||{};var s=function(v){return String(v==null?"":v).
     pre:!!a.pre,added:d(a.added)||today(),addedBy:s(a.addedBy)||by(),confirmed:d(a.confirmed),confirmedBy:s(a.confirmedBy),
     done:d(a.done),doneBy:s(a.doneBy),doneLine:s(a.doneLine),snooze:d(a.snooze),chased:d(a.chased),removed:d(a.removed)}}
 // One line per task, for copied text and the log.
-function actLine(a,proj){return (a.done?"Done "+fmtDue(a.done)+" – ":a.due?"Due "+fmtDue(a.due,true)+" – ":a.dueText?a.dueText+" – ":"")+(a.owner?a.owner+": ":"")+a.text+(proj?" ("+proj+")":"")}
+function actLine(a,proj){return (a.done?"Done "+fmtDue(a.done)+" – ":a.due?"Due "+fmtDue(a.due,true)+" – ":a.dueText?tidy(a.dueText)+" – ":"")+(a.owner?a.owner+": ":"")+a.text+(proj?" ("+proj+")":"")}
 function allOpen(){var out=[];S.projects.forEach(function(p){if(!p.archived)openActs(p).forEach(function(a){out.push({p:p,a:a})})});return out}
 function actRow(p,a,ctx){
   var ed=S.isAdmin&&S.mode==="me"&&!p.archived,tf=S.taskForm;
@@ -818,7 +820,7 @@ function taskForm(p,a,o){
     '<input name="owner" placeholder="Who (e.g. Wael Habib)" value="'+esc(a.owner||"")+'" list="owners" aria-label="Who">'+
     '<input name="dueText" placeholder="Or when, in words" value="'+esc(a.dueText||"")+'" aria-label="Due, in words (if there is no date)">'+
     '<input name="due" type="date" value="'+esc(a.due||"")+'" aria-label="Due date">'+
-    '<div class="lbl">Leave the date empty if nobody set one: it shows as “Not set”.'+(a.pre?" Saving also marks it as confirmed.":"")+'</div>'+
+    '<div class="lbl">Leave the date empty if nobody set one: it shows as “TBC”.'+(a.pre?" Saving also marks it as confirmed.":"")+'</div>'+
     '<div class="row"><button class="btn primary" type="submit">'+(a.id?"Save":"Add task")+'</button><button class="btn" type="button" data-acancel>Cancel</button>'+
     (a.id?'<span class="sp"></span><button class="btn warn" type="button" data-aremove>Remove task</button>':"")+'</div></form>';
 }
@@ -1022,7 +1024,7 @@ function renderFollowups(){
 function listText(){
   var g=fuGroups(),out=["Follow-ups"+(S.person?" – "+(S.person==="—"?"nobody named yet":S.person):"")+" – "+fmtDue(today())];
   ["over","today","week","later","none"].forEach(function(k){if(!g[k].length)return;out.push("",DUE_LABEL[k].toUpperCase());
-    g[k].forEach(function(x){out.push("• "+actLine({due:x.a.due,dueText:x.a.dueText||"Not set",owner:x.a.owner,text:x.a.text},x.p.name))})});
+    g[k].forEach(function(x){out.push("• "+actLine({due:x.a.due,dueText:tidy(x.a.dueText||"TBC"),owner:x.a.owner,text:x.a.text},x.p.name))})});
   return out.join("\n")}
 // A chase email for one person: everything open with them, or only what's overdue or due this week (soon=true).
 function chaseItems(person,soon){var g=fuGroups(false,person),ks=soon?["over","today","week"]:["over","today","week","later","none"],items=[];ks.forEach(function(k){items=items.concat(g[k])});return items}
@@ -1030,7 +1032,7 @@ function chaseText(person,soon){
   var items=chaseItems(person,soon),byP={},order=[];items.forEach(function(x){if(!byP[x.p.id]){byP[x.p.id]=[];order.push(x.p)}byP[x.p.id].push(x.a)});
   var out=["Dear "+(TITLES[person]||person)+",","","Kindly find below the open items for your follow-up:"];
   order.forEach(function(p){out.push("",p.name);byP[p.id].forEach(function(a){
-    var w=a.due?(dueState(a)==="over"?"was due ":"due ")+fmtDue(a.due,true):(a.dueText||"").replace(/^[A-Z](?=[a-z])/,function(c){return c.toLowerCase()});
+    var w=a.due?(dueState(a)==="over"?"was due ":"due ")+fmtDue(a.due,true):tidy(a.dueText).replace(/^[A-Z](?=[a-z])/,function(c){return c.toLowerCase()});
     var tx=a.text.replace(/\.$/,"");out.push("• "+tx+(w?(/\)$/.test(tx)?" – "+w:" ("+w+")"):"")+".")})});
   out.push("","Best regards,");return out.join("\n")}
 // After she sends a chase email: note the date on each item and don't ask about them again for two days.
@@ -1206,7 +1208,7 @@ function renderPrep(){
   if(d.last)html+='<p class="pm" style="margin-top:12px">Last meeting: '+esc(fmtDue(d.last.date,true))+' – '+esc(d.last.title||"")+'</p>';
   html+='<div class="tl">Open tasks</div>';
   html+=d.open.length?'<table><thead><tr><th>Due</th><th>Who</th><th>Task</th></tr></thead><tbody>'+d.open.map(function(a){var st=dueState(a);
-    return '<tr><td class="d'+(st==="over"?" over":"")+'">'+esc(dueText(a))+(st==="over"?"<br>Overdue":"")+'</td><td class="o">'+esc(a.owner||"Not set")+'</td><td>'+esc(a.text)+(a.src?'<div class="ameta">'+esc(a.src)+'</div>':"")+'</td></tr>'}).join("")+'</tbody></table>':'<div class="none">No open tasks.</div>';
+    return '<tr><td class="d'+(st==="over"?" over":"")+'">'+esc(dueText(a))+(st==="over"?"<br>Overdue":"")+'</td><td class="o">'+esc(tidy(a.owner||"TBC"))+'</td><td>'+esc(a.text)+(a.src?'<div class="ameta">'+esc(a.src)+'</div>':"")+'</td></tr>'}).join("")+'</tbody></table>':'<div class="none">No open tasks.</div>';
   d.ms.forEach(function(m){html+='<div class="tl">Open points from the meeting of '+esc(fmtDue(m.date))+'</div>'+labelled(m.openPoints)});
   if(d.upd.length)html+='<div class="tl">Latest updates</div><ul>'+d.upd.map(function(x){return '<li>'+lineHtml(x.l)+'</li>'}).join("")+'</ul>';
   html+='<div class="tl">Notes</div><div class="wl"></div><div class="wl"></div><div class="wl"></div><div class="wl"></div><div class="wl"></div>';
@@ -1216,7 +1218,7 @@ function prepText(p){
   var d=prepData(p),out=["Meeting prep – "+p.name+" – "+fmtDue(today())];
   if(d.last)out.push("Last meeting: "+fmtDue(d.last.date)+" – "+(d.last.title||""));
   out.push("","OPEN TASKS");if(!d.open.length)out.push("• None.");
-  d.open.forEach(function(a){out.push("• "+(dueState(a)==="over"?"OVERDUE – ":"")+actLine({due:a.due,dueText:a.dueText||"Not set",owner:a.owner,text:a.text}))});
+  d.open.forEach(function(a){out.push("• "+(dueState(a)==="over"?"OVERDUE – ":"")+actLine({due:a.due,dueText:tidy(a.dueText||"TBC"),owner:a.owner,text:a.text}))});
   d.ms.forEach(function(m){out.push("","OPEN POINTS (meeting of "+fmtDue(m.date)+")");lines(m.openPoints).forEach(function(l){out.push("• "+l)})});
   if(d.upd.length){out.push("","LATEST UPDATES");d.upd.forEach(function(x){out.push("• "+x.l)})}
   return out.join("\n")}
@@ -1238,7 +1240,7 @@ function renderFrame(){
   document.getElementById("openall").hidden=!lv;document.getElementById("sort").hidden=!lv;
   document.getElementById("openall").textContent=S.allOpen?"Close all":"Open all";document.getElementById("sort").value=S.sort;
   document.getElementById("toolnote").textContent=isSimple()?(S.projects.some(function(p){return p.sheetUrl&&onOverview(p)})?"Click a project for its full status, risks and issues, meetings and files.":""):me?"Your dashboard: only your admin password opens it, and the database rules keep it private. Archived projects and removed tasks are kept, never deleted.":
-    "Anyone with the link can view this log and add updates. Other changes need the edit password. Archived projects are kept, never deleted.";
+    "Anyone with the link can view and edit this log with their name; every change is signed in History. Archived projects are kept, never deleted.";
   document.getElementById("export").hidden=!S.canEdit;document.getElementById("apply-l").hidden=!S.isAdmin;
   document.getElementById("import-l").hidden=!S.canEdit||S.projects.length>0;
   if(S.mode==="one"){var op=oneProject();document.title=(op?op.name:"Project")+" – Safir DTS";
@@ -1271,7 +1273,7 @@ function renderNow(){
   document.body.classList.toggle("simple",isSimple());document.body.classList.toggle("one",S.mode==="one");
   document.getElementById("toolbar").hidden=gate;
   if(gate){document.getElementById("summary").innerHTML="";document.getElementById("sumhint").textContent="";document.getElementById("jump").innerHTML="";document.getElementById("filterbar").innerHTML="";
-    main.innerHTML='<div class="gate"><h2>Badriyah’s dashboard</h2><p>'+(S.canEdit?"This page opens only with Badriyah’s own password. The team password edits the overview.":"This page is private. Unlock with your own password at the top right.")+'</p><a class="btn" href="#">Go to the overview</a></div>';
+    main.innerHTML='<div class="gate"><h2>Badriyah’s dashboard</h2><p>'+(S.canEdit?"This page opens only with Badriyah’s own password. Lock, then unlock here with it.":"This page is private. Unlock with your own password at the top right.")+'</p><a class="btn" href="#">Go to the overview</a></div>';
     renderPrep();return}
   if(S.mode==="one"){document.getElementById("toolbar").hidden=true;["summary","jump","filterbar"].forEach(function(id){document.getElementById(id).innerHTML=""});document.getElementById("sumhint").textContent="";renderPrep();renderOne();return}
   if(isSimple()){document.getElementById("toolbar").hidden=true;["summary","jump","filterbar"].forEach(function(id){document.getElementById(id).innerHTML=""});document.getElementById("sumhint").textContent="";renderPrep();renderSimple();return}
@@ -1325,6 +1327,10 @@ function projectOps(b,p,patch,kind,name,note){
   return true;
 }
 function save(p,patch,kind,name,note){var b=fs.batch();if(!projectOps(b,p,patch,kind,name,note))return Promise.resolve();return b.commit()}
+// Status-line changes: hers go to her private log; anyone else's go to the public History, signed with their name.
+function tlog(b,p,note){if(S.isAdmin){plog(b,p,"topic",note);return}
+  var m=/^(Changed|Added|Removed) the status line: ([\s\S]*)$/.exec(note)||[null,"Changed",note];
+  b.set(histCol.doc(),{at:stamp(),by:by(),projectId:p?p.id:"",projectName:p?(p.name||""):"",kind:"topic",changes:[{f:m[1].toLowerCase(),from:"",to:m[2]}]})}
 function plog(b,p,kind,note){b.set(plogCol.doc(),{at:stamp(),by:by(),kind:kind,projectId:p?p.id:"",projectName:p?(p.name||""):"",note:note||""})}
 // Writes changed tasks for one project. If the project still has its old Tasks text, those lines are saved as pre-system tasks first.
 function taskOps(b,p,list,patch){
@@ -1438,12 +1444,12 @@ main.addEventListener("click",function(e){
   // file previews: click a 📎 tag to open the viewer
   var fc=t.closest("[data-fchip]");if(fc){var fpid=fc.closest("[data-id]").getAttribute("data-id");openLb(filesFor(fpid,fc.getAttribute("data-fchip")),0);return}
   // status lines (dashboard)
-  var ta=t.closest("[data-tadd]");if(ta&&S.isAdmin){var tp0=projOf(ta);if(tp0){S.topicForm={pid:tp0.id,tid:"",kind:ta.getAttribute("data-tadd")||""};render();focusIn("[data-tform] [name=title]")}return}
-  var te=t.closest("[data-tedit]");if(te&&S.isAdmin){var tp1=projOf(te);if(tp1){S.topicForm={pid:tp1.id,tid:te.getAttribute("data-tedit")};render();focusIn("[data-tform] [name=status]")}return}
+  var ta=t.closest("[data-tadd]");if(ta&&S.canEdit){var tp0=projOf(ta);if(tp0){S.topicForm={pid:tp0.id,tid:"",kind:ta.getAttribute("data-tadd")||""};render();focusIn("[data-tform] [name=title]")}return}
+  var te=t.closest("[data-tedit]");if(te&&S.canEdit){var tp1=projOf(te);if(tp1){S.topicForm={pid:tp1.id,tid:te.getAttribute("data-tedit")};render();focusIn("[data-tform] [name=status]")}return}
   if(t.closest("[data-tcancel]")){S.topicForm=null;render();return}
   var tr=t.closest("[data-tremove]");
-  if(tr&&S.isAdmin){var tfm=tr.closest("[data-tform]"),tid=tfm.getAttribute("data-tid"),tpp=projById(tfm.getAttribute("data-pid")),tt=S.topics.find(function(x){return x.id===tid});
-    if(tt&&confirm("Remove this status line from the overview?\n\n"+tt.title)){var rb=fs.batch();rb.set(topicCol.doc(tid),{removed:today(),updatedAt:stamp(),updatedBy:by()},{merge:true});plog(rb,tpp,"topic","Removed the status line: "+tt.title);S.topicForm=null;rb.commit().catch(fail)}return}
+  if(tr&&S.canEdit){var tfm=tr.closest("[data-tform]"),tid=tfm.getAttribute("data-tid"),tpp=projById(tfm.getAttribute("data-pid")),tt=S.topics.find(function(x){return x.id===tid});
+    if(tt&&confirm("Remove this status line from the overview?\n\n"+tt.title)){var rb=fs.batch();rb.set(topicCol.doc(tid),{removed:today(),updatedAt:stamp(),updatedBy:by()},{merge:true});tlog(rb,tpp,"Removed the status line: "+tt.title);S.topicForm=null;rb.commit().catch(fail)}return}
   // tasks (dashboard)
   var aa=t.closest("[data-aadd]");if(aa&&S.isAdmin){var ap=projOf(aa);if(ap){S.taskForm={pid:ap.id,aid:"",mid:""};render();focusIn('[data-aform][data-pid="'+ap.id+'"] [name=text]')}return}
   var ad=t.closest("[data-adone]");if(ad){var dp=projOf(ad);if(dp){S.showDone[dp.id]=!S.showDone[dp.id];render()}return}
@@ -1474,7 +1480,7 @@ main.addEventListener("click",function(e){
     if(qa==="move"){S.qOpen=qk+"|move";render();return}
     if(qa==="setdue"){var v=qb.getAttribute("data-v");S.qOpen=null;changeTask(qp,qid,function(x){x.due=v;x.dueText="";x.snooze="";return "Moved the date to "+fmtDue(v)+": "+x.text},"taskedit");return}
     if(qa==="nudge"){changeTask(qp,qid,function(x){x.snooze=addDays(today(),1);return "Nudge again tomorrow: "+x.text},"snooze");return}
-    if(qa==="nodate"){changeTask(qp,qid,function(x){x.dueText="Not set";return "No date was set: "+x.text},"taskedit");return}
+    if(qa==="nodate"){changeTask(qp,qid,function(x){x.dueText="TBC";return "No date was set: "+x.text},"taskedit");return}
     if(qa==="chase"&&qt0){var o1=owners(qt0)[0];copyText(chaseText(o1,true),qb,function(){S.sentTo[o1]="soon";S.qOpen=qk;render()});return}
     if(qa==="sent"&&qt0){markChased(owners(qt0)[0],true);return}
   }
@@ -1527,14 +1533,14 @@ main.addEventListener("change",function(e){
 main.addEventListener("submit",function(e){
   var t=e.target;
   var tfm=t.closest("[data-tform]");
-  if(tfm){e.preventDefault();if(!S.isAdmin)return;var tfd=new FormData(tfm),tpid=tfm.getAttribute("data-pid"),tid=tfm.getAttribute("data-tid"),tp=projById(tpid);if(!tp)return;
+  if(tfm){e.preventDefault();if(!S.canEdit)return;var tfd=new FormData(tfm),tpid=tfm.getAttribute("data-pid"),tid=tfm.getAttribute("data-tid"),tp=projById(tpid);if(!tp)return;
     var ord=parseInt(tfd.get("order"),10),cur=topicsFor(tp);
     var isIss=tfd.get("kind")==="issue";if(isIss)cur=topicsFor(tp,"issue");
     var td={projectId:tpid,kind:isIss?"issue":"status",title:String(tfd.get("title")||"").trim(),status:String(tfd.get("status")||"").trim(),next:String(tfd.get("next")||"").trim(),who:String(tfd.get("who")||"").trim(),
       order:isNaN(ord)?(tid?((S.topics.find(function(x){return x.id===tid})||{}).order||0):cur.reduce(function(m,x){return Math.max(m,x.order||0)},0)+1):ord,updatedAt:stamp(),updatedBy:by()};
     if(isIss){td.priority=String(tfd.get("priority")||"");td.due=String(tfd.get("due")||"").trim();td.opened=String(tfd.get("opened")||"")}
     if(!td.title)return;var tb=fs.batch(),ref=tid?topicCol.doc(tid):topicCol.doc(tpid+(isIss?"-i":"-t")+Date.now().toString(36));
-    tb.set(ref,td,{merge:true});plog(tb,tp,"topic",(tid?"Changed":"Added")+" the status line: "+td.title+" – "+td.status);S.topicForm=null;tb.commit().catch(fail);render();return}
+    tb.set(ref,td,{merge:true});tlog(tb,tp,(tid?"Changed":"Added")+" the status line: "+td.title+" – "+td.status);S.topicForm=null;tb.commit().catch(fail);render();return}
   var qf=t.closest("[data-qform]");
   if(qf){e.preventDefault();var qd=qf.closest("[data-qk]"),qp=projById(qd.getAttribute("data-pid")),ow=String(new FormData(qf).get("owner")||"").trim();
     if(qp&&ow)changeTask(qp,qd.getAttribute("data-aid"),function(x){x.owner=ow;return "Owner: "+ow+" – "+x.text},"taskedit");return}
@@ -1625,7 +1631,21 @@ function setEditor(on,admin){S.canEdit=on;S.isAdmin=!!(on&&admin);
 // Editing: the team password (shared editor account) or Badriyah's own admin password. The dashboard opens only with hers.
 var EDITOR_EMAIL="editor@safir-dts-log.com",ADMIN_EMAIL="admin@safir-dts-log.com";
 function showLocked(err){
-  if(S.mode==="one"){who.innerHTML="";return}
+  // Overview and project pages: anyone can edit with just their name (her rule, 13 Oct 2026). Every change is signed in History.
+  if(S.mode!=="me"){
+    who.innerHTML='<button class="btn" id="unlock" style="display:inline-flex;gap:8px;align-items:center">'+ICON.pencil+'Edit</button>';
+    document.getElementById("unlock").addEventListener("click",function(){
+      who.innerHTML='<form class="unlock" id="uf"><input id="u-name" placeholder="Your name" autocomplete="name" required maxlength="60" value="'+esc(ls("dtsEditorName"))+'">'+
+        '<button class="btn primary" type="submit">Start editing</button><button class="btn" type="button" id="u-x">Cancel</button>'+(err?'<span class="err">'+esc(err)+'</span>':"")+'</form>';
+      document.getElementById("u-name").focus();
+      document.getElementById("u-x").addEventListener("click",function(){showLocked()});
+      document.getElementById("uf").addEventListener("submit",function(e){
+        e.preventDefault();var nm=document.getElementById("u-name").value.trim();if(!nm)return;
+        ls("dtsEditorName",nm);ss("dtsUnlocked","1");
+        firebase.auth().signInAnonymously().catch(function(er){ss("dtsUnlocked",null);showLocked("Couldn’t start editing: "+((er&&er.code)||"error"));document.getElementById("unlock").click()});
+      });
+    });
+    return}
   who.innerHTML='<button class="btn" id="unlock" style="display:inline-flex;gap:8px;align-items:center">'+ICON.lock+(S.mode==="me"?"Unlock":"Unlock to edit")+'</button>';
   document.getElementById("unlock").addEventListener("click",function(){
     who.innerHTML='<form class="unlock" id="uf"><input id="u-name" placeholder="Your name" autocomplete="name" required value="'+esc(ls("dtsEditorName"))+'">'+
