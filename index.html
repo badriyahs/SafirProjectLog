@@ -687,7 +687,7 @@ function prioWord(v){v=String(v||"");return PRIO_WORD[v]||v}
 function issueStatus(v){v=String(v||"");return /^closed/i.test(v)?"Closed":/^in progress/i.test(v)?"In Progress":/^on hold/i.test(v)?"On Hold":"Open"}
 function loadSheet(){if(!SHEET_API)return Promise.resolve();return fetch(SHEET_API,{cache:"no-store"}).then(function(r){return r.json()}).then(applySheet).catch(function(){})}
 function applySheet(d){if(!d||!Array.isArray(d.rows))return;
-  S.sheet=d.rows.map(function(o){return{id:o.webId||o.id,sheetId:o.id,kind:o.kind==="issue"?"issue":"status",project:o.project,title:o.title,status:o.status,next:o.next,who:o.who,
+  S.sheet=d.rows.filter(function(o){return o.kind==="status"||o.kind==="issue"}).map(function(o){return{id:o.webId||o.id,sheetId:o.id,kind:o.kind==="issue"?"issue":"status",project:o.project,title:o.title,status:o.status,next:o.next,who:o.who,
     priority:o.priority||"",due:o.due||"",opened:o.opened||"",order:o.order,updatedAt:o.updated||"",updatedBy:o.by||""}});render()}
 function sheetPost(body,p,note){
   return fetch(SHEET_API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)}).then(function(r){return r.json()}).then(function(d){
@@ -696,7 +696,7 @@ function sheetPost(body,p,note){
   }).catch(function(e){fail(e&&e.code?e:{code:"sheet",message:String((e&&e.message)||e)});loadSheet()})}
 function sheetSave(p,tid,td,isIss){
   var cur=tid?(S.sheet||[]).find(function(x){return x.id===tid}):null,f={title:td.title,status:td.status,next:td.next,who:td.who};
-  if(isIss){f.priority=td.priority;f.due=td.due;f.opened=td.opened}
+  if(isIss){f.type=td.type;f.priority=td.priority;f.due=td.due;if(!cur)f.opened=today()}
   if(!cur)f.project=sheetProjectName(p);
   // Show it straight away; the sheet's answer replaces it.
   if(S.sheet){if(cur)Object.assign(cur,f,{updatedAt:stamp()});else S.sheet.push(Object.assign({id:"new"+Date.now(),sheetId:"",kind:isIss?"issue":"status",order:999,updatedAt:stamp()},f))}
@@ -728,9 +728,9 @@ function topicsView(p){
       (me?'<div class="tact"><button class="plink" type="button" data-tedit="'+esc(t.id)+'">Edit</button></div>':"")+'</div>';
   });
   if(me)html+=tf&&tf.pid===p.id&&!tf.tid&&tf.kind!=="issue"?topicForm(p,null):'<div class="trow"><div class="tact"><button class="tlbtn" type="button" data-tadd>+ Add a status line</button></div></div>';
-  // Risks & issues (Arch. Ruba's Issues Log, simplified): Issue · Priority · Required action · Action by · Due · Status
+  // Risks & issues (the sheet's Issues & Risks tab, 13 Oct 2026 layout): Issue · Priority · Next action · Owner · Due · Status
   if(is.length||me){
-    html+='<div class="sub">Risks &amp; issues</div>'+(is.length?'<div class="irow head"><span>Issue</span><span>Priority</span><span>Required action</span><span>Action by</span><span>Due</span><span>Status</span></div>':"");
+    html+='<div class="sub">Risks &amp; issues</div>'+(is.length?'<div class="irow head"><span>Issue</span><span>Priority</span><span>Next action</span><span>Owner</span><span>Due</span><span>Status</span></div>':"");
     is.forEach(function(t){
       if(tf&&tf.pid===p.id&&tf.tid===t.id){html+=topicForm(p,t);return}
       var fl=filesFor(p.id,t.id),due=/^\d{4}-\d{2}-\d{2}$/.test(t.due||"")?fmtDue(t.due):tidy(t.due||"TBC");
@@ -748,12 +748,12 @@ function topicForm(p,t){
   t=t||{};var iss=t.kind==="issue";
   if(iss)return '<form class="aform" data-tform data-pid="'+esc(p.id)+'" data-tid="'+esc(t.id||"")+'" style="margin:8px 12px"><input type="hidden" name="kind" value="issue">'+
     '<input name="title" class="w" placeholder="Issue or risk" value="'+esc(t.title||"")+'" required aria-label="Issue">'+
-    '<input name="next" class="w" placeholder="Required action" value="'+esc(t.next||"")+'" aria-label="Required action">'+
+    '<input name="next" class="w" placeholder="Next action" value="'+esc(t.next||"")+'" aria-label="Next action">'+
     '<select name="priority" aria-label="Priority">'+opts(["","Critical","High","Medium","Low"],prioWord(t.priority),{"":"Priority: TBC"})+'</select>'+
-    '<input name="who" placeholder="Action by" value="'+esc(t.who||"")+'" list="owners" aria-label="Action by">'+
+    '<input name="who" placeholder="Owner" value="'+esc(t.who||"")+'" list="owners" aria-label="Owner">'+
     '<select name="status" aria-label="Status">'+opts(["Open","In Progress","On Hold","Closed"],issueStatus(t.status))+'</select>'+
     '<input name="due" placeholder="Due: 2026-10-15 or TBC" value="'+esc(t.due||"")+'" aria-label="Due">'+
-    '<input name="opened" type="date" value="'+esc(t.opened||"")+'" aria-label="Opened">'+
+    '<select name="type" aria-label="Issue or risk">'+opts(["Issue","Risk"],/^risk/i.test(t.type||"")?"Risk":"Issue")+'</select>'+
     (SHEET_API?"":'<input name="order" type="number" placeholder="Order" value="'+esc(t.order!=null?t.order:"")+'" aria-label="Order (1 = first)">')+
     '<div class="lbl">Shown on the overview under Risks &amp; issues. Due can be a date (2026-10-15) or words.</div>'+
     '<div class="row"><button class="btn primary" type="submit">'+(t.id?"Save":"Add")+'</button><button class="btn" type="button" data-tcancel>Cancel</button>'+(t.id?'<span class="sp"></span><button class="btn warn" type="button" data-tremove>Remove</button>':"")+'</div></form>';
@@ -1563,7 +1563,7 @@ main.addEventListener("submit",function(e){
     var isIss=tfd.get("kind")==="issue";if(isIss)cur=topicsFor(tp,"issue");
     var td={projectId:tpid,kind:isIss?"issue":"status",title:String(tfd.get("title")||"").trim(),status:String(tfd.get("status")||"").trim(),next:String(tfd.get("next")||"").trim(),who:String(tfd.get("who")||"").trim(),
       order:isNaN(ord)?(tid?((S.topics.find(function(x){return x.id===tid})||{}).order||0):cur.reduce(function(m,x){return Math.max(m,x.order||0)},0)+1):ord,updatedAt:stamp(),updatedBy:by()};
-    if(isIss){td.priority=String(tfd.get("priority")||"");td.due=String(tfd.get("due")||"").trim();td.opened=String(tfd.get("opened")||"")}
+    if(isIss){td.priority=String(tfd.get("priority")||"");td.due=String(tfd.get("due")||"").trim();td.type=String(tfd.get("type")||"Issue");td.opened=(S.sheet||S.topics).some(function(x){return x.id===tid})?((S.sheet||S.topics).find(function(x){return x.id===tid}).opened||""):today()}
     if(!td.title)return;
     if(SHEET_API){S.topicForm=null;sheetSave(tp,tid,td,isIss);render();return}
     var tb=fs.batch(),ref=tid?topicCol.doc(tid):topicCol.doc(tpid+(isIss?"-i":"-t")+Date.now().toString(36));
