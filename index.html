@@ -685,8 +685,38 @@ function sheetProjectName(p){var r=(S.sheet||[]).find(function(t){return t.proje
 var PRIO_WORD={C:"Critical",H:"High",M:"Medium",L:"Low"};
 function prioWord(v){v=String(v||"");return PRIO_WORD[v]||v}
 function issueStatus(v){v=String(v||"");return /^closed/i.test(v)?"Closed":/^in progress/i.test(v)?"In Progress":/^on hold/i.test(v)?"On Hold":"Open"}
-function loadSheet(){if(!SHEET_API)return Promise.resolve();return fetch(SHEET_API,{cache:"no-store"}).then(function(r){return r.json()}).then(applySheet).catch(function(){})}
+function loadSheet(){if(!SHEET_API)return Promise.resolve();return fetch(SHEET_API+"?include=actions",{cache:"no-store"}).then(function(r){return r.json()}).then(applySheet).catch(function(){})}
+// Action Tracker rows become the follow-ups of their project (her decision, 13 Oct 2026: one action list, in the sheet).
+function sheetAct(o){var due=ISO.test(o.due||"")?o.due:"",closed=/^closed/i.test(o.status||"");
+  return{id:"act:"+o.id,sheetId:o.id,sheet:true,projectName:o.project,text:o.title,owner:o.who,due:due,dueText:due?"":(o.due||""),src:o.id+(o.category?" · "+o.category:""),
+    meeting:"",pre:false,status:o.status,next:o.next,latest:o.latest,done:closed?((o.updated||"").slice(0,10)||o.opened||today()):"",doneBy:closed?(o.by||""):"",added:o.opened||"",chased:"",snooze:"",removed:"",doneLine:""}}
+function sheetActsFor(p){if(!S.sheetActs)return null;var l=S.sheetActs.filter(function(a){return sheetMatch(a.projectName,p)});if(!l.length)return null;
+  var meta=(S.priv[p.id]||{}).sheetMeta||{};
+  return l.map(function(a){var m=meta[a.sheetId]||{};return Object.assign({},a,{projectId:p.id,chased:m.chased||"",snooze:m.snooze||"",doneLine:m.doneLine||""})})}
+function isSheetProj(p){return !!sheetActsFor(p)}
+function sheetActProject(p){var a=(S.sheetActs||[]).find(function(x){return sheetMatch(x.projectName,p)});return a?a.projectName:sheetProjectName(p)}
+// What to send to the sheet for a changed (or new, when a is null) follow-up.
+function sheetActFields(p,t,a){var f={},dd=function(x){return x.due||(x.dueText?tidy(x.dueText):"")};
+  if(!a){f.project=sheetActProject(p);f.title=t.text;if(t.owner)f.who=t.owner;if(dd(t))f.due=dd(t);f.status=t.done?"Closed":"Open";return f}
+  if(t.text!==a.text)f.title=t.text;if((t.owner||"")!==(a.owner||""))f.who=t.owner||"";if(dd(t)!==dd(a))f.due=dd(t);
+  if(!!t.done!==!!a.done)f.status=t.done?"Closed":"Open";return f}
+function sheetChangeTask(p,a,fn,kind,extraPatch,pubKind){
+  var t=Object.assign({},a),note=fn(t)||t.text,b=fs.batch(),meta={};
+  if(extraPatch&&Object.keys(extraPatch).length)projectOps(b,p,extraPatch,pubKind||"edit",by(),pubKind==="task"?t.text:"");
+  ["chased","snooze","doneLine"].forEach(function(k){if((t[k]||"")!==(a[k]||""))meta[k]=t[k]||""});
+  if(Object.keys(meta).length){var m={};m[a.sheetId]=meta;b.set(privCol.doc(p.id),{sheetMeta:m},{merge:true})}
+  plog(b,p,kind,note);var pr=b.commit();
+  if(t.removed&&!a.removed){S.sheetActs=S.sheetActs.filter(function(x){return x.sheetId!==a.sheetId});render();
+    return pr.then(function(){return sheetPost({action:"remove",kind:"action",id:a.sheetId,by:by()})}).catch(fail)}
+  var f=sheetActFields(p,t,a);if(!Object.keys(f).length)return pr.catch(fail);
+  var loc=S.sheetActs.find(function(x){return x.sheetId===a.sheetId});
+  if(loc){Object.assign(loc,{text:t.text,owner:t.owner,due:t.due,dueText:t.dueText,done:t.done,doneBy:t.doneBy||loc.doneBy});if(f.status)loc.status=f.status}render();
+  return pr.then(function(){return sheetPost({action:"save",kind:"action",id:a.sheetId,fields:f,by:by()})}).catch(fail)}
+function sheetAddTask(p,t){var f=sheetActFields(p,t,null);
+  S.sheetActs.push(Object.assign(sheetAct({id:"new"+Date.now(),project:f.project,title:t.text,who:t.owner,due:f.due||"",status:"Open",opened:today()}),{}));render();
+  return sheetPost({action:"save",kind:"action",id:"",fields:f,by:by()})}
 function applySheet(d){if(!d||!Array.isArray(d.rows))return;
+  var acts=d.rows.filter(function(o){return o.kind==="action"});if(acts.length)S.sheetActs=acts.map(sheetAct);
   S.sheet=d.rows.filter(function(o){return o.kind==="status"||o.kind==="issue"}).map(function(o){return{id:o.webId||o.id,sheetId:o.id,kind:o.kind==="issue"?"issue":"status",project:o.project,title:o.title,status:o.status,next:o.next,who:o.who,
     priority:o.priority||"",due:o.due||"",opened:o.opened||"",order:o.order,updatedAt:o.updated||"",updatedBy:o.by||""}});render()}
 function sheetPost(body,p,note){
@@ -796,6 +826,7 @@ document.addEventListener("keydown",function(e){if(lb.hidden)return;if(e.key==="
 // done/doneBy/doneLine, snooze (don't ask before), chased (last chased), removed (kept, never deleted).
 // A project whose old one-per-line Tasks text hasn't been moved yet shows it as pre-system tasks; the first change saves them as tasks.
 function tasksOf(p){
+  var sa=sheetActsFor(p);if(sa)return sa;
   var ts=S.tasks.filter(function(t){return t.projectId===p.id&&!t.removed});
   if(ts.length||!String(p.tasks||"").trim())return ts;
   return lines(p.tasks).map(function(l,i){return{id:"old-"+p.id+"-"+i,projectId:p.id,text:l,owner:"",due:"",dueText:"",src:"",meeting:"",pre:true,legacy:true,added:"",done:""}});
@@ -1016,7 +1047,7 @@ function renderHistory(){
 
 // ---------- Dashboard: Follow-ups ----------
 function people(){var m={};allOpen().forEach(function(x){owners(x.a).forEach(function(o){m[o]=1})});return Object.keys(m).sort(function(a,b){return a.localeCompare(b)})}
-function renderOwners(){var m={};Object.keys(TITLES).forEach(function(k){m[k]=1});S.tasks.forEach(function(a){owners(a).forEach(function(o){m[o]=1})});
+function renderOwners(){var m={};Object.keys(TITLES).forEach(function(k){m[k]=1});S.tasks.concat(S.sheetActs||[]).forEach(function(a){owners(a).forEach(function(o){m[o]=1})});
   document.getElementById("owners").innerHTML=Object.keys(m).sort().map(function(o){return '<option value="'+esc(o)+'">'}).join("")}
 function fuMatch(x,person){
   var os=owners(x.a);person=person===undefined?S.person:person;
@@ -1062,7 +1093,8 @@ function chaseText(person,soon){
 function markChased(person,soon){
   var items=chaseItems(person,soon).filter(function(x){return !x.a.legacy});if(!items.length)return;
   var t=today(),b=fs.batch();
-  items.forEach(function(x){b.set(taskCol.doc(x.a.id),{chased:t,snooze:addDays(t,2)},{merge:true})});
+  items.forEach(function(x){if(x.a.sheet){var m={};m[x.a.sheetId]={chased:t,snooze:addDays(t,2)};b.set(privCol.doc(x.p.id),{sheetMeta:m},{merge:true})}
+    else b.set(taskCol.doc(x.a.id),{chased:t,snooze:addDays(t,2)},{merge:true})});
   b.set(plogCol.doc(),{at:stamp(),by:by(),kind:"chase",projectId:items[0].p.id,projectName:items[0].p.name,note:"Sent a chase email to "+person+" ("+items.length+" item"+(items.length===1?"":"s")+")"});
   delete S.sentTo[person];b.commit().then(function(){toast("Marked as chased today: "+person+".")}).catch(fail);
 }
@@ -1364,6 +1396,7 @@ function taskOps(b,p,list,patch){
 }
 function changeTask(p,aid,fn,kind,extraPatch,pubKind){
   var a=tasksOf(p).find(function(x){return x.id===aid});if(!a)return Promise.resolve();
+  if(a.sheet)return sheetChangeTask(p,a,fn,kind,extraPatch,pubKind);
   var t=cleanTask(a,p.id),b=fs.batch();var note=fn(t)||t.text;
   var patch=taskOps(b,p,[t],extraPatch||null);
   if(patch&&Object.keys(patch).length)projectOps(b,p,patch,pubKind||"edit",by(),pubKind==="task"?t.text:"");
@@ -1578,6 +1611,7 @@ main.addEventListener("submit",function(e){
     var v={text:String(afd.get("text")||"").trim(),owner:afd.get("owner"),due:afd.get("due"),dueText:afd.get("dueText")};if(!v.text)return;
     S.taskForm=null;
     if(aid)changeTask(ap,aid,function(x){var wasPre=x.pre;Object.assign(x,v);if(wasPre){x.pre=false;x.confirmed=today();x.confirmedBy=by()}x.snooze="";return (wasPre?"Confirmed and changed: ":"Changed: ")+x.text},"taskedit");
+    else if(isSheetProj(ap)){sheetAddTask(ap,cleanTask(v,ap.id));var lb=fs.batch();plog(lb,ap,"taskadd","Added (Action Tracker): "+v.text);lb.commit().catch(fail)}
     else{var mt=amid&&S.meetings.find(function(x){return x.id===amid});var nt=cleanTask(Object.assign({meeting:amid||"",src:mt?"Meeting "+fmtDue(mt.date):""},v),ap.id);
       var nb=fs.batch(),pt=taskOps(nb,ap,[nt],null);if(pt)projectOps(nb,ap,pt,"edit",by());plog(nb,ap,"taskadd","Added: "+nt.text);nb.commit().catch(fail)}
     render();return}
@@ -1796,9 +1830,13 @@ document.getElementById("apply").addEventListener("change",function(e){
       meetingOps(mb,m.id,data,isNew)});mp=mp.then(function(){return mb.commit()})}
     return mp.then(function(){return plan.reduce(function(pr,x){return pr.then(function(){
       var b=fs.batch();projectOps(b,x.p,x.patch,"edit",by());
-      x.tasks.forEach(function(t){b.set(taskCol.doc(t.id),cleanTask(t,x.p.id))});
+      var toSheet=isSheetProj(x.p)?x.tasks:[];
+      x.tasks.forEach(function(t){if(toSheet.indexOf(t)<0)b.set(taskCol.doc(t.id),cleanTask(t,x.p.id))});
       if(x.pv)b.set(privCol.doc(x.p.id),x.pv,{merge:true});
-      plog(b,x.p,"apply",(d.title||"Changes file")+": "+x.desc);return b.commit()})},Promise.resolve())})
+      plog(b,x.p,"apply",(d.title||"Changes file")+": "+x.desc);
+      return b.commit().then(function(){return toSheet.reduce(function(q,t){return q.then(function(){var was=String(t.id).indexOf("act:")===0?(S.sheetActs||[]).find(function(y){return "act:"+y.sheetId===t.id}):null;
+        var f=sheetActFields(x.p,t,was?Object.assign({},was,{done:""}):null);if(was&&!Object.keys(f).length)return;
+        return sheetPost({action:"save",kind:"action",id:was?was.sheetId:"",fields:f,by:by()})})},Promise.resolve())})})},Promise.resolve())})
       .then(function(){sync.textContent="Applied: "+(tps.length?tps.length+" status lines, ":"")+(fls.length?fls.length+" files, ":"")+(mplan.length?mplan.length+" meeting"+(mplan.length===1?"":"s")+", ":"")+plan.length+" project"+(plan.length===1?"":"s");plan.forEach(function(x){S.open[x.p.id]=true});setStep(2,true)});
   }).catch(fail);
 });
