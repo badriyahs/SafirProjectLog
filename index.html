@@ -858,7 +858,7 @@ function actRow(p,a,ctx){
   if(tf&&tf.pid===p.id&&tf.aid===a.id)return '<li class="arow" data-pid="'+esc(p.id)+'">'+taskForm(p,a,{})+'</li>';
   var meta=[];
   if(ctx!=="card")meta.push('<button class="plink" data-goto="'+esc(p.id)+'">'+esc(p.name||"Untitled project")+'</button>');
-  if(a.src&&ctx!=="meet")meta.push(esc(a.src));
+  var src=a.sheet?(ctx==="card"&&a.group?a.sheetId:a.src):a.src;if(src&&ctx!=="meet")meta.push(esc(src));
   if(a.chased&&!a.done)meta.push("chased "+esc(fmtDue(a.chased)));
   if(a.done&&a.doneBy)meta.push("ticked off by "+esc(a.doneBy));
   if(ed&&a.pre&&!a.done)meta.push('<button class="plink" data-aconfirm="'+esc(a.id)+'">Correct as it is ✓</button>');
