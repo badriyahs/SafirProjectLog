@@ -120,7 +120,9 @@ ul.tasks input{width:20px;height:20px;margin:2px 0 0;flex:none;accent-color:var(
 .filterbar button{margin-left:auto;border:1px solid currentColor;background:transparent;color:inherit;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:15.5px}
 
 /* toolbar */
-.toolbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding-block:12px;border-bottom:1px solid var(--line)}
+.toolbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding-block:12px}
+/* Text scrolling under the bar fades out instead of being cut by a hard line. */
+.toolbar::after{content:"";position:absolute;left:0;right:0;bottom:-18px;height:18px;background:linear-gradient(var(--bg),transparent);pointer-events:none}
 .search{flex:1 1 240px;min-width:0;position:relative}
 .search input{width:100%;padding:11px 12px 11px 38px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);font-size:18px}
 .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
@@ -390,10 +392,10 @@ body.simple .wrap{max-width:1280px}
 body.one .chev,body.one .num{display:none}
 body.one .card .ch.tog{cursor:default}
 body.one .card>.body{padding-left:0}
-.onelink{margin:22px 0 -8px;display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;font-size:16px}
-.onelink a{color:var(--accent)}
-.onelink a.back{text-decoration:none;font-weight:600}
-.onelink a.back:hover{text-decoration:underline}
+.onelink{margin:22px 0 14px;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;font-size:15.5px}
+.onelink a{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border:1px solid var(--line-strong);border-radius:999px;background:var(--surface);color:var(--ink);text-decoration:none;font-weight:600}
+.onelink a:hover{background:var(--brand-tint)}
+.onelink a.sheet{border-color:var(--accent);color:var(--accent)}
 body.one .logo{cursor:pointer}
 .prow.head{padding-block:10px;background:var(--brand-tint);font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .prow .pc{display:flex;gap:8px;align-items:center;color:var(--muted)}
@@ -417,6 +419,10 @@ a.prow:hover .pd{text-decoration:underline}
 .topics .th{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:8px 14px;background:var(--brand-tint);font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .topics .th b{color:var(--ink)}
 .agrp{margin:12px 0 2px;font-size:13.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:18px 0 -8px}
+.spill{padding:6px 14px;border:1px solid var(--line-strong);border-radius:999px;background:var(--surface);color:var(--muted);font:inherit;font-size:15px;cursor:pointer}
+.spill.on{background:var(--brand-tint);border-color:var(--accent);color:var(--ink);font-weight:600}
+#sq{flex:1;min-width:160px;max-width:320px;margin-left:auto;padding:7px 12px;border:1px solid var(--line-strong);border-radius:999px;font:inherit;font-size:15px;background:var(--surface)}
 .msec{margin-top:18px;padding:8px 14px;border-radius:10px;background:var(--brand-tint);font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink)}
 .trow{display:grid;grid-template-columns:minmax(150px,1.15fr) 118px minmax(220px,2fr) minmax(120px,.9fr);gap:6px 14px;padding:10px 14px;border-top:1px solid var(--line);align-items:start}
 .trow.head{border-top:0;padding-block:6px;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--surface)}
@@ -437,6 +443,15 @@ a.prow:hover .pd{text-decoration:underline}
 .prio{display:inline-block;min-width:26px;text-align:center;padding:2px 7px;border-radius:6px;font-weight:700;font-size:14px;background:var(--line);color:var(--muted)}
 .prio.H{background:var(--req-tint);color:var(--req)}
 .prio.C{background:var(--req);color:#fff}
+.tkchip{margin-top:6px;padding:3px 10px;border:1px solid var(--line-strong);border-radius:999px;background:var(--surface);color:var(--accent);font:inherit;font-size:13.5px;cursor:pointer}
+.tkchip[aria-expanded="true"]{background:var(--brand-tint)}
+.tksub{padding:6px 14px 10px 34px;border-top:1px dashed var(--line);background:var(--brand-tint)}
+.tkrow{display:grid;grid-template-columns:76px minmax(0,2fr) minmax(0,1.2fr) 110px 110px;gap:4px 12px;align-items:center;padding:6px 0;font-size:15px;border-top:1px solid var(--line)}
+.tkrow:first-child{border-top:0}
+.tkrow.done{color:var(--faint)}
+.tkid{font-weight:700;font-size:13.5px;color:var(--muted)}
+.tkwho{color:var(--muted)}
+@media (max-width:760px){.tksub{padding-left:14px}.tkrow{grid-template-columns:64px minmax(0,1fr);}.tkrow>span:nth-child(n+3){grid-column:2}}
 .prio.M{background:var(--amber-bg);color:var(--amber-fg)}
 .topics .sub{padding:8px 14px;border-top:1px solid var(--line-strong);background:var(--brand-tint);font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 @media (max-width:700px){.trow,.irow{grid-template-columns:1fr auto}.trow.head,.irow.head{display:none}.trow .tn,.trow .tw,.irow .tn,.irow .tw,.irow .td{grid-column:1/-1}}
@@ -484,6 +499,7 @@ a.prow:hover .pd{text-decoration:underline}
       <input id="q" type="search" placeholder="Search projects, places, details…" autocomplete="off" aria-label="Search">
     </div>
     <div class="seg" role="group" aria-label="View" id="seg"></div>
+    <button id="simplev" class="sel" type="button" style="cursor:pointer" hidden>← Simple list</button>
     <button id="openall" class="sel" type="button" style="cursor:pointer">Open all</button>
     <select id="sort" class="sel" aria-label="Order"><option value="recent">Sort: recently updated</option><option value="custom">Sort: custom order</option></select>
   </div>
@@ -530,7 +546,7 @@ var VIEWS={overview:[["log","Log"],["archive","Archive"],["history","History"]],
 // One-project pages: …/#dahab (or …/#p=<project id>) shows just that project, open, read-only, no login (her request, 12 Oct 2026).
 var ONE_PAGE={dahab:"p0302"};
 
-var S={mode:modeOf(),view:"",q:"",country:"",filter:"active",editing:null,confirmArchive:null,live:false,newId:null,canEdit:false,editor:"",isAdmin:false,
+var S={detailed:ls("dtsDetailed")==="1",sq:"",sf:"all",mode:modeOf(),view:"",q:"",country:"",filter:"active",editing:null,confirmArchive:null,live:false,newId:null,canEdit:false,editor:"",isAdmin:false,
   open:{},allOpen:false,tl:{},sort:ls("dtsSort")||"recent",history:[],histFor:null,commenting:null,
   projects:[],sections:[],minutes:[],tasks:[],meetings:[],priv:{},plog:[],topics:[],files:{},filesLoading:{},topicForm:null,
   person:ls("dtsPerson")||"",taskForm:null,showDone:{},fuDone:false,meetOpen:{},meetEdit:null,prep:null,minOpen:{},fullOpen:{},qOpen:null,sentTo:{},reviewAll:false};
@@ -733,6 +749,15 @@ function sheetSave(p,tid,td,isIss){
   // Show it straight away; the sheet's answer replaces it.
   if(S.sheet){if(cur)Object.assign(cur,f,{updatedAt:stamp()});else S.sheet.push(Object.assign({id:"new"+Date.now(),sheetId:"",kind:isIss?"issue":"status",order:999,updatedAt:stamp()},f))}
   sheetPost({action:"save",kind:isIss?"issue":"status",id:cur?cur.sheetId:"",fields:f,by:by()},p,(cur?"Changed":"Added")+" the status line: "+td.title+" – "+td.status)}
+// Action Tracker tasks that sit under a status line or issue (the sheet's group heading has the same name).
+function topicTasks(p,title){var t=norm(title);if(!t)return[];var l=sheetActsFor(p)||[];
+  return l.filter(function(a){var g=norm(a.group);return !!g&&(g===t||t.indexOf(g+" ")===0||g.indexOf(t+" ")===0)})}
+function topicTasksChip(p,t){var l=topicTasks(p,t.title);if(!l.length)return"";var op=l.filter(function(a){return !a.done}).length,on=!!(S.tOpen||{})[t.id];
+  return '<div><button class="tkchip" type="button" data-ttasks="'+esc(t.id)+'" aria-expanded="'+on+'">'+(on?"▾ ":"▸ ")+l.length+' task'+(l.length===1?"":"s")+' · '+op+' open</button></div>'}
+function topicTasksList(p,t){if(!(S.tOpen||{})[t.id])return"";var l=topicTasks(p,t.title);if(!l.length)return"";
+  var open=sortActs(l.filter(function(a){return !a.done})),done=l.filter(function(a){return a.done}),sd=!!(S.tDone||{})[t.id];
+  var row=function(a){return '<div class="tkrow'+(a.done?" done":"")+'"><span class="tkid">'+esc(a.sheetId)+'</span><span>'+esc(a.text)+'</span><span class="tkwho">'+esc(tidy(a.owner)||"TBC")+'</span><span>'+esc(a.done?"Done":dueText(a))+'</span><span><span class="tst '+statusClass(a.status)+'">'+esc(a.status||"Open")+'</span></span></div>'};
+  return '<div class="tksub">'+open.map(row).join("")+(done.length?(sd?done.map(row).join(""):"")+'<button class="tlbtn" type="button" data-tdone="'+esc(t.id)+'">'+(sd?"Hide done":"Show "+done.length+" done")+'</button>':"")+'</div>'}
 function topicsFor(p,kind){return (S.sheet||S.topics).filter(function(t){return (t.projectId===p.id||(!t.projectId&&sheetMatch(t.project,p)))&&!t.removed&&(kind==="issue"?t.kind==="issue":kind?t.kind!=="issue":true)}).sort(function(a,b){return (a.order||0)-(b.order||0)})}
 function statusClass(s){s=String(s||"");return /^open/i.test(s)?"red":/^(due|waiting|pending|overdue)/i.test(s)?"amber":/^in progress/i.test(s)?"blue":/^(done|received|closed|sent)/i.test(s)?"green":""}
 var STATUS_SUGGEST=["Open","In progress","Pending","Due ","Done"];
@@ -755,9 +780,9 @@ function topicsView(p){
   ts.forEach(function(t){
     if(tf&&tf.pid===p.id&&tf.tid===t.id){html+=topicForm(p,t);return}
     var fl=filesFor(p.id,t.id);
-    html+='<div class="trow" data-tid="'+esc(t.id)+'"><div class="tt">'+esc(t.title)+(fl.length?'<div><button class="fchip" type="button" data-fchip="'+esc(t.id)+'" aria-label="See the files for '+esc(t.title)+'">📎 '+esc(fileLabel(fl))+'</button></div>':"")+'</div>'+
+    html+='<div class="trow" data-tid="'+esc(t.id)+'"><div class="tt">'+esc(t.title)+(fl.length?'<div><button class="fchip" type="button" data-fchip="'+esc(t.id)+'" aria-label="See the files for '+esc(t.title)+'">📎 '+esc(fileLabel(fl))+'</button></div>':"")+topicTasksChip(p,t)+'</div>'+
       '<div><span class="tst '+statusClass(tidy(t.status))+'">'+esc(tidy(t.status)||"–")+'</span></div><div class="tn">'+esc(tidy(t.next))+'</div><div class="tw">'+esc(tidy(t.who))+'</div>'+
-      (me?'<div class="tact"><button class="plink" type="button" data-tedit="'+esc(t.id)+'">Edit</button></div>':"")+'</div>';
+      (me?'<div class="tact"><button class="plink" type="button" data-tedit="'+esc(t.id)+'">Edit</button></div>':"")+'</div>'+topicTasksList(p,t);
   });
   if(me)html+=tf&&tf.pid===p.id&&!tf.tid&&tf.kind!=="issue"?topicForm(p,null):'<div class="trow"><div class="tact"><button class="tlbtn" type="button" data-tadd>+ Add a status line</button></div></div>';
   // Risks & issues (the sheet's Issues & Risks tab, 13 Oct 2026 layout): Issue · Priority · Next action · Owner · Due · Status
@@ -766,11 +791,11 @@ function topicsView(p){
     is.forEach(function(t){
       if(tf&&tf.pid===p.id&&tf.tid===t.id){html+=topicForm(p,t);return}
       var fl=filesFor(p.id,t.id),due=/^\d{4}-\d{2}-\d{2}$/.test(t.due||"")?fmtDue(t.due):tidy(t.due||"TBC");
-      html+='<div class="irow" data-tid="'+esc(t.id)+'"><div class="tt">'+esc(t.title)+(t.opened?'<div class="ameta">Opened '+esc(fmtDue(t.opened)||t.opened)+'</div>':"")+
+      html+='<div class="irow" data-tid="'+esc(t.id)+'"><div class="tt">'+esc(t.title)+(t.opened?'<div class="ameta">Opened '+esc(fmtDue(t.opened)||t.opened)+'</div>':"")+topicTasksChip(p,t)+
         (fl.length?'<div><button class="fchip" type="button" data-fchip="'+esc(t.id)+'">📎 '+esc(fileLabel(fl))+'</button></div>':"")+'</div>'+
         '<div><span class="prio '+esc(prioWord(t.priority).charAt(0))+'">'+esc(prioWord(t.priority)||"–")+'</span></div><div class="tn">'+esc(tidy(t.next))+'</div><div class="tw">'+esc(tidy(t.who))+'</div>'+
         '<div class="td">'+esc(due)+'</div><div><span class="tst '+(/^closed/i.test(t.status||"")?"green":/^open/i.test(t.status||"")?"red":statusClass(t.status))+'">'+esc(tidy(t.status)||"Open")+'</span></div>'+
-        (me?'<div class="tact"><button class="plink" type="button" data-tedit="'+esc(t.id)+'">Edit</button></div>':"")+'</div>';
+        (me?'<div class="tact"><button class="plink" type="button" data-tedit="'+esc(t.id)+'">Edit</button></div>':"")+'</div>'+topicTasksList(p,t);
     });
     if(me)html+=tf&&tf.pid===p.id&&!tf.tid&&tf.kind==="issue"?topicForm(p,{kind:"issue",status:"Open",opened:today()}):'<div class="irow"><div class="tact"><button class="tlbtn" type="button" data-tadd="issue">+ Add a risk or issue</button></div></div>';
   }
@@ -1287,7 +1312,7 @@ function prepText(p){
   return out.join("\n")}
 
 // ---------- Page frame ----------
-function isSimple(){return S.mode==="overview"&&!S.canEdit}
+function isSimple(){return S.mode==="overview"&&!(S.canEdit&&S.detailed)}
 function renderFrame(){
   var me=S.mode==="me";
   document.title=me?"My Dashboard – Safir DTS":"Safir DTS Project Log";
@@ -1300,9 +1325,9 @@ function renderFrame(){
     if(v[0]==="review"){var c=preCounts();if(c.projects)badge='<span class="badge" style="background:#7E57C2" title="projects to confirm">'+c.projects+'</span>'}
     return '<button type="button" data-view="'+v[0]+'" aria-pressed="'+(S.view===v[0])+'">'+esc(v[1])+badge+'</button>'}).join("");
   var lv=S.view==="log"||S.view==="archive"||S.view==="projects";
-  document.getElementById("openall").hidden=!lv;document.getElementById("sort").hidden=!lv;
+  document.getElementById("openall").hidden=!lv;document.getElementById("simplev").hidden=!(S.mode==="overview"&&S.canEdit&&S.detailed);document.getElementById("sort").hidden=!lv;
   document.getElementById("openall").textContent=S.allOpen?"Close all":"Open all";document.getElementById("sort").value=S.sort;
-  document.getElementById("toolnote").textContent=isSimple()?(S.projects.some(function(p){return p.sheetUrl&&onOverview(p)})?"Click a project for its full status, risks and issues, meetings and files.":""):me?"Your dashboard: only your admin password opens it, and the database rules keep it private. Archived projects and removed tasks are kept, never deleted.":
+  document.getElementById("toolnote").textContent=isSimple()?(S.canEdit?"Click a project to open it and edit it. “Detailed view” shows the old cards, with Add a project.":S.projects.some(function(p){return p.sheetUrl&&onOverview(p)})?"Click a project for its full status, risks and issues, meetings and files.":""):me?"Your dashboard: only your admin password opens it, and the database rules keep it private. Archived projects and removed tasks are kept, never deleted.":
     "Anyone with the link can view and edit this log with their name; every change is signed in History. Archived projects are kept, never deleted.";
   document.getElementById("export").hidden=!S.canEdit;document.getElementById("apply-l").hidden=!S.isAdmin;
   document.getElementById("import-l").hidden=!S.canEdit||S.projects.length>0;
@@ -1317,7 +1342,7 @@ function oneProject(){var id=oneId();return S.projects.find(function(p){return p
 function renderOne(){
   var p=oneProject();
   if(!p){if(S.live||S.projects.length)main.innerHTML='<div class="empty">This project isn’t in the log.</div>';return}
-  main.innerHTML='<p class="onelink"><a href="#" class="back">← All projects</a>'+(p.sheetUrl?'<a href="'+esc(p.sheetUrl)+'" target="_blank" rel="noopener">Action tracker, issues and risks ↗</a>':"")+'</p>'+cardView(p);
+  main.innerHTML='<p class="onelink"><a href="#" class="back">← All projects</a>'+(p.sheetUrl?'<a class="sheet" href="'+esc(p.sheetUrl)+'" target="_blank" rel="noopener" title="Opens the Google Sheet: actions, status lines, issues and risks">Action tracker ↗</a>':"")+'</p>'+cardView(p);
 }
 // Live updates re-draw the page; keep whatever someone is typing in an open form (and where the cursor was).
 function formKey(f){return ["data-aform","data-mform","data-form","data-cform","data-qform"].map(function(k){return f.hasAttribute(k)?k+"="+f.getAttribute(k)+"|"+(f.getAttribute("data-pid")||"")+"|"+(f.getAttribute("data-aid")||"")+"|"+(f.getAttribute("data-mid")||""):""}).join("")+((f.closest("[data-qk]")||{getAttribute:function(){return""}}).getAttribute("data-qk")||"")}
@@ -1363,19 +1388,35 @@ function lastUpdate(p){
   var it=detailItems(p).filter(function(x){return x.d!==null&&(p.confirmed||x.d>=START_TS)}).sort(function(a,b){return b.d-a.d||tick(a)-tick(b)||b.i-a.i})[0];if(!it)return null;
   var m=it.l.match(/^(?:[^:–]{1,60}:\s*)?(\d{1,2} [A-Z][a-z]{2} \d{4})\s*–\s*(.*)$/);
   return m?{date:m[1],text:m[2]}:{date:fmtDate(it.d),text:it.l}}
-function renderSimple(){
-  var so=secOrder(),list=S.projects.filter(onOverview).sort(function(a,b){
-    var x=STATUS_RANK[a.status]!=null?STATUS_RANK[a.status]:9,y=STATUS_RANK[b.status]!=null?STATUS_RANK[b.status]:9;if(x!==y)return x-y;
-    var sx=so.indexOf(a.section),sy=so.indexOf(b.section);if(sx!==sy)return sx-sy;return (a.name||"").localeCompare(b.name||"")});
-  if(!S.live&&!S.projects.length)return;
-  if(!list.length){main.innerHTML='<div class="empty">No projects to show yet.</div>';return}
-  main.innerHTML='<div class="plist"><div class="prow head"><span>Country</span><span>Project</span><span>Status</span><span>Last update</span><span></span></div>'+list.map(function(p){
-    var b=base(p.section),pipe=/ PIPELINE$/.test(p.section),f=FLAGS[b]?'<span class="fi fi-'+FLAGS[b]+'" aria-hidden="true"></span>':"",u=lastUpdate(p);
-    var tag=p.sheetUrl?'a href="'+pageHref(p)+'"':'div';
-    return '<'+tag+' class="prow'+(p.sheetUrl?" link":"")+(p.status==="Paused"?" paused":p.status==="Done"?" done":"")+'"><span class="pc">'+f+'<span>'+esc(tc(b))+(pipe?'<small>Pipeline</small>':"")+'</span></span>'+
+function simpleRows(list){
+  if(!list.length)return '<div class="empty">No projects match.</div>';
+  return '<div class="plist"><div class="prow head"><span>Country</span><span>Project</span><span>Status</span><span>Last update</span><span></span></div>'+list.map(function(p){
+    var b=base(p.section),pipe=/ PIPELINE$/.test(p.section),f=FLAGS[b]?'<span class="fi fi-'+FLAGS[b]+'" aria-hidden="true"></span>':"",u=lastUpdate(p),go=p.sheetUrl||S.canEdit;
+    var tag=go?'a href="'+pageHref(p)+'"':'div';
+    return '<'+tag+' class="prow'+(go?" link":"")+(p.status==="Paused"?" paused":p.status==="Done"?" done":"")+'"><span class="pc">'+f+'<span>'+esc(tc(b))+(pipe?'<small>Pipeline</small>':"")+'</span></span>'+
       '<span class="pp">'+esc(p.name||"Untitled project")+'</span><span>'+pill(p.status)+'</span>'+
       '<span class="pu" title="'+esc(u?u.date+" – "+u.text:"")+'">'+(u?'<b>'+esc(u.date)+'</b><span class="pt">'+esc(u.text)+'</span>':'<span class="none">–</span>')+'</span>'+
-      (p.sheetUrl?'<span class="pd">Details →</span>':'<span></span>')+'</'+(p.sheetUrl?"a":"div")+'>'}).join("")+'</div>';
+      (go?'<span class="pd">'+(p.sheetUrl?"Details":"Open")+' →</span>':'<span></span>')+'</'+(go?"a":"div")+'>'}).join("")+'</div>'}
+function simpleList(){
+  var so=secOrder(),all=S.projects.filter(onOverview);
+  var list=all.filter(function(p){return !S.canEdit||S.sf==="all"||p.status===S.sf});
+  if(S.canEdit&&S.sq){var q=norm(S.sq);list=list.filter(function(p){var u=lastUpdate(p);return norm([p.name,p.desc,p.loc,tc(base(p.section)),u?u.text:""].join(" ")).indexOf(q)>-1})}
+  return list.sort(function(a,b){
+    var x=STATUS_RANK[a.status]!=null?STATUS_RANK[a.status]:9,y=STATUS_RANK[b.status]!=null?STATUS_RANK[b.status]:9;if(x!==y)return x-y;
+    var sx=so.indexOf(a.section),sy=so.indexOf(b.section);if(sx!==sy)return sx-sy;return (a.name||"").localeCompare(b.name||"")})}
+// Logged in, the home page is the same simple list, with small filters and search; "Detailed view" keeps the old cards (her request, 13 Oct 2026).
+function renderSimple(){
+  if(!S.live&&!S.projects.length)return;
+  if(!S.projects.filter(onOverview).length){main.innerHTML='<div class="empty">No projects to show yet.</div>';return}
+  var ctl="";
+  if(S.canEdit){var all=S.projects.filter(onOverview),n=function(st){return all.filter(function(p){return p.status===st}).length};
+    ctl='<div class="sctl">'+[["Urgent","Urgent"],["Ongoing","Ongoing"],["Paused","Paused"],["all","All"]].map(function(x){
+      return '<button type="button" class="spill'+(S.sf===x[0]?" on":"")+'" data-sf="'+x[0]+'">'+x[1]+' '+(x[0]==="all"?all.length:n(x[0]))+'</button>'}).join("")+
+      '<input id="sq" type="search" placeholder="Search" value="'+esc(S.sq)+'" aria-label="Search projects">'+
+      '<button type="button" class="plink" data-detailed>Detailed view</button></div>'}
+  var f=document.activeElement&&document.activeElement.id==="sq",pos=f?document.activeElement.selectionStart:0;
+  main.innerHTML=ctl+'<div id="slist">'+simpleRows(simpleList())+'</div>';
+  if(f){var q=document.getElementById("sq");if(q){q.focus();try{q.setSelectionRange(pos,pos)}catch(e){}}}
 }
 
 // ---------- Saving ----------
@@ -1456,6 +1497,8 @@ document.getElementById("filterbar").addEventListener("click",function(e){
 var qt;document.getElementById("q").addEventListener("input",function(e){clearTimeout(qt);qt=setTimeout(function(){S.q=e.target.value.trim().toLowerCase();render()},120)});
 document.getElementById("tip-x").addEventListener("click",function(){document.getElementById("tip").hidden=true;try{localStorage.setItem("dtsTipHidden","1")}catch(e){}});
 document.getElementById("sort").addEventListener("change",function(e){S.sort=e.target.value;ls("dtsSort",S.sort);render()});
+main.addEventListener("input",function(e){if(e.target.id==="sq"){S.sq=e.target.value;var sl=document.getElementById("slist");if(sl)sl.innerHTML=simpleRows(simpleList())}});
+document.getElementById("simplev").addEventListener("click",function(){S.detailed=false;ls("dtsDetailed","0");render();window.scrollTo(0,0)});
 document.getElementById("openall").addEventListener("click",function(){S.allOpen=!S.allOpen;S.open={};render()});
 document.getElementById("jump").addEventListener("click",function(e){
   var b=e.target.closest("[data-jump]");if(!b)return;var c=b.getAttribute("data-jump");
@@ -1506,6 +1549,10 @@ main.addEventListener("click",function(e){
   var hf=t.closest("[data-hfor]");if(hf){S.histFor=hf.getAttribute("data-hfor");if(S.view!=="mylog")S.view="history";render();window.scrollTo(0,0);return}
   if(t.closest("[data-hall]")){S.histFor=null;render();return}
   // file previews: click a 📎 tag to open the viewer
+  var sfb=t.closest("[data-sf]");if(sfb){S.sf=sfb.getAttribute("data-sf");render();return}
+  if(t.closest("[data-detailed]")){S.detailed=true;ls("dtsDetailed","1");render();window.scrollTo(0,0);return}
+  var tk0=t.closest("[data-ttasks]");if(tk0){var k0=tk0.getAttribute("data-ttasks");S.tOpen=S.tOpen||{};S.tOpen[k0]=!S.tOpen[k0];render();return}
+  var td0=t.closest("[data-tdone]");if(td0){var k1=td0.getAttribute("data-tdone");S.tDone=S.tDone||{};S.tDone[k1]=!S.tDone[k1];render();return}
   var fc=t.closest("[data-fchip]");if(fc){var fpid=fc.closest("[data-id]").getAttribute("data-id");openLb(filesFor(fpid,fc.getAttribute("data-fchip")),0);return}
   // status lines (dashboard)
   var ta=t.closest("[data-tadd]");if(ta&&S.canEdit){var tp0=projOf(ta);if(tp0){S.topicForm={pid:tp0.id,tid:"",kind:ta.getAttribute("data-tadd")||""};render();focusIn("[data-tform] [name=title]")}return}
