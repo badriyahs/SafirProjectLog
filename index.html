@@ -649,6 +649,8 @@ body:has(#savebar) .tlback,body:has(#toast:not([hidden])) .tlback{bottom:76px}
 .urow.tk .bul{position:absolute;left:20px;top:9px;color:var(--muted)}
 .urow.tk .tkid{display:inline-block;margin:0 8px 2px 0;padding:1px 7px;border:1px solid var(--chip-line);border-radius:5px;background:var(--chip-bg);color:var(--chip-ink);font-size:12.5px;font-weight:600;letter-spacing:.02em;font-variant-numeric:tabular-nums;white-space:nowrap;vertical-align:1px}
 .urow.tk .tn,.urow.tk .tw{font-size:14.5px}
+.odays{display:block;margin-top:2px;color:var(--req);font-weight:700;font-size:13px}
+.due small{display:block;font-size:12px;font-weight:700}
 .urow .tst{font-size:13px;padding:2px 8px}
 .topics{border:1px solid var(--line-strong)!important;border-radius:10px}
 @media (max-width:700px){.urow>*{border-left:0;padding:4px 12px}.urow{padding-block:6px}}
@@ -854,7 +856,7 @@ function labelled(v){var ls=lines(v);return ls.length?'<ul>'+ls.map(function(l){
 function fmtDate(ts){if(!ts)return"";var d=new Date(ts);if(isNaN(d))return"";return d.getDate()+" "+MONTHS[d.getMonth()]+" "+d.getFullYear()}
 function fmtTime(ts){var d=new Date(ts);if(isNaN(d))return"";return fmtDate(ts)+", "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
 function pad(n){return String(n).padStart(2,"0")}
-function isoOf(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+function isoOf(d){d=new Date(d);return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
 function today(){return isoOf(new Date())}
 function addDays(iso,n){var m=iso.split("-");return isoOf(new Date(+m[0],+m[1]-1,+m[2]+n))}
 function daysBetween(a,b){var x=a.split("-"),y=b.split("-");return Math.round((new Date(+y[0],+y[1]-1,+y[2])-new Date(+x[0],+x[1]-1,+x[2]))/864e5)}
@@ -974,9 +976,9 @@ function prioWord(v){v=String(v||"");return PRIO_WORD[v]||v}
 function issueStatus(v){v=String(v||"");return /^closed/i.test(v)?"Closed":/^in progress/i.test(v)?"In Progress":/^on hold/i.test(v)?"On Hold":"Open"}
 function loadSheet(){if(!SHEET_API)return Promise.resolve();return fetch(SHEET_API+"?include=actions",{cache:"no-store"}).then(function(r){return r.json()}).then(applySheet).catch(function(){})}
 // Action Tracker rows become the follow-ups of their project (her decision, 13 Oct 2026: one action list, in the sheet).
-function sheetAct(o){var due=ISO.test(o.due||"")?o.due:"",closed=/^closed/i.test(o.status||"");
+function sheetAct(o){var due=ISO.test(o.due||"")?o.due:"",closed=/^closed/i.test(o.status||""),co=closed?parseDue(o.closed_on).iso:"";
   return{id:"act:"+o.id,sheetId:o.id,sheet:true,projectName:o.project,text:o.title,owner:o.who,due:due,dueText:due?"":(o.due||""),src:o.id+(o.group?" · "+o.group:""),group:o.group||"",
-    meeting:"",pre:false,status:o.status,next:o.next,latest:o.latest,done:closed?((o.updated||"").slice(0,10)||o.opened||today()):"",doneBy:closed?(o.by||""):"",added:o.opened||"",chased:"",snooze:"",removed:"",doneLine:""}}
+    meeting:"",pre:false,status:o.status,next:o.next,latest:o.latest,done:closed?(co||(o.updated||"").slice(0,10)||o.opened||today()):"",doneBy:closed?(o.by||""):"",added:o.opened||"",chased:"",snooze:"",removed:"",doneLine:""}}
 function sheetActsFor(p){if(!S.sheetActs)return null;var l=S.sheetActs.filter(function(a){return sheetMatch(a.projectName,p)});if(!l.length)return null;
   var meta=(S.priv[p.id]||{}).sheetMeta||{};
   return l.map(function(a){var m=meta[a.sheetId]||{};return Object.assign({},a,{projectId:p.id,chased:m.chased||"",snooze:m.snooze||"",doneLine:m.doneLine||""})})}
@@ -984,9 +986,9 @@ function isSheetProj(p){return !!sheetActsFor(p)}
 function sheetActProject(p){var a=(S.sheetActs||[]).find(function(x){return sheetMatch(x.projectName,p)});return a?a.projectName:sheetProjectName(p)}
 // What to send to the sheet for a changed (or new, when a is null) follow-up.
 function sheetActFields(p,t,a){var f={},dd=function(x){return x.due||(x.dueText?tidy(x.dueText):"")};
-  if(!a){f.project=sheetActProject(p);f.title=t.text;if(t.owner)f.who=t.owner;if(dd(t))f.due=dd(t);f.status=t.done?"Closed":"Open";if(t.group)f.group=t.group;return f}
+  if(!a){f.project=sheetActProject(p);f.title=t.text;if(t.owner)f.who=t.owner;if(dd(t))f.due=dd(t);f.status=t.done?"Closed":"Open";if(t.done)f.closed_on=fmtDue(t.done);if(t.group)f.group=t.group;return f}
   if(t.text!==a.text)f.title=t.text;if((t.owner||"")!==(a.owner||""))f.who=t.owner||"";if(dd(t)!==dd(a))f.due=dd(t);
-  if(!!t.done!==!!a.done)f.status=t.done?"Closed":"Open";return f}
+  if(!!t.done!==!!a.done){f.status=t.done?"Closed":"Open";f.closed_on=t.done?fmtDue(t.done):""}return f}
 function sheetChangeTask(p,a,fn,kind,extraPatch,pubKind){
   var t=Object.assign({},a),note=fn(t)||t.text,b=fs.batch(),meta={};
   if(extraPatch&&Object.keys(extraPatch).length)projectOps(b,p,extraPatch,pubKind||"edit",by(),pubKind==="task"?t.text:"");
@@ -1026,7 +1028,10 @@ function topicTasksList(p,t){if(S.mode!=="one")return"";var l=topicTasks(p,t.tit
   return sortActs(l).map(function(a){var st=pv("act",a.sheetId,"status",a.status||"Open");
     return '<div class="urow tk"><div class="tt"><span class="bul" aria-hidden="true">•</span><span class="tkid">'+esc(a.sheetId)+'</span>'+edT("act",a.sheetId,"text",a.text,"Task")+'</div>'+
       '<div class="tn">'+edT("act",a.sheetId,"latest",a.latest||"","Latest update")+'</div><div class="tw">'+edT("act",a.sheetId,"owner",tidy(a.owner)||"TBC","Owner")+'</div>'+
-      '<div>'+edC("act",a.sheetId,"status",'<span class="tst '+statusClass(st)+'">'+esc(st)+'</span>')+'</div><div class="tn">'+edT("act",a.sheetId,"due","Due "+dueText(a),"Due")+'</div></div>'}).join("")}
+      '<div>'+edC("act",a.sheetId,"status",'<span class="tst '+statusClass(st)+'">'+esc(st)+'</span>')+'</div><div class="tn">'+edT("act",a.sheetId,"due","Due "+dueText(a),"Due")+overdueNote(a,st)+'</div></div>'}).join("")}
+// "6 days overdue" (her request, 19 Oct 2026); follows an unsaved date change too.
+function overdueNote(a,st){if(/^closed/i.test(st||""))return"";var k=pkey("act",a.sheetId,"due"),d=k in S.pend?parseDue(S.pend[k].val).iso:a.due,n=d?daysBetween(d,today()):0;
+  return n>0?'<span class="odays">'+n+" day"+(n===1?"":"s")+' overdue</span>':""}
 // Project page: the undated summary lines sit under the description; the dated updates are a Timeline section, closed until clicked.
 function introView(p){var l=detailItems(p).filter(function(x){return x.d===null}).map(function(x){return x.l.replace(/^[•\-]\s*/,"")}).filter(Boolean);
   if(isInline())return '<div class="pintro">'+edT("proj",p.id,"intro",l.join("\n"),"A short summary of the project")+'</div>';
@@ -1047,14 +1052,14 @@ function curVal(kind,id,f){var p=oneProject();if(kind==="proj")return p?(p[f]||"
   var t=(S.sheet||S.topics).find(function(x){return x.id===id});return t?(f==="description"?t.desc:t[f])||"":""}
 function setPend(kind,id,f,val,saved){if(kind==="act"&&/^new\d/.test(id))return;var k=pkey(kind,id,f),had=k in S.pend;S.undo.push({k:k,had:had,prev:had?S.pend[k]:null});
   var orig=had?S.pend[k].orig:(saved!==undefined&&saved!==null?saved:curVal(kind,id,f));
-  if(String(val).trim()===String(orig).trim())delete S.pend[k];else S.pend[k]={kind:kind,id:id,f:f,val:val,orig:orig};saveBar()}
+  if(String(val).trim()===String(orig).trim())delete S.pend[k];else S.pend[k]={kind:kind,id:id,f:f,val:val,orig:orig,pid:(had&&S.pend[k].pid)||(oneProject()||{}).id||""};saveBar()}
 function undoPend(){var u=S.undo.pop();if(!u)return false;if(u.had)S.pend[u.k]=u.prev;else delete S.pend[u.k];saveBar();render();return true}
 function saveBar(){var n=Object.keys(S.pend).length,b=document.getElementById("savebar");
   if(!n){if(b)b.remove();return}
   if(!b){b=document.createElement("div");b.id="savebar";document.body.appendChild(b);
-    b.addEventListener("click",function(e){if(e.target.closest("[data-savepend]")){var l=Object.keys(S.pend).map(function(k){return S.pend[k]});S.pend={};S.undo=[];saveBar();l.forEach(function(x){saveEd(x.kind,x.id,x.f,x.val)});render();
+    b.addEventListener("click",function(e){if(e.target.closest("[data-savepend]")){var l=Object.keys(S.pend).map(function(k){return S.pend[k]});S.pend={};S.undo=[];saveBar();l.forEach(function(x){saveEd(x.kind,x.id,x.f,x.val,x.pid)});render();
         // After saving, Undo puts the old values back (in the sheet too).
-        toast("Saved "+l.length+" change"+(l.length===1?"":"s")+".",function(){l.forEach(function(x){saveEd(x.kind,x.id,x.f,x.orig)});render();toast("Undone.")})}
+        toast("Saved "+l.length+" change"+(l.length===1?"":"s")+".",function(){l.forEach(function(x){saveEd(x.kind,x.id,x.f,x.orig,x.pid)});render();toast("Undone.")})}
       else if(e.target.closest("[data-undopend]"))undoPend();
       else if(e.target.closest("[data-droppend]")){S.pend={};S.undo=[];saveBar();render()}})}
   b.innerHTML='<span>'+n+' unsaved change'+(n===1?"":"s")+'</span><button class="btn" type="button" data-undopend title="Undo the last change (Cmd+Z)">Undo</button><button class="btn primary" type="button" data-savepend>Save</button><button class="btn" type="button" data-droppend>Discard</button>'}
@@ -1077,7 +1082,7 @@ function parseDue(v){v=String(v||"").trim().replace(/^due\s+/i,"").replace(/^(mo
   var m=/^(\d{1,2})\s+([A-Za-z]{3})[a-z]*\.?(?:\s+(\d{4}))?$/.exec(v),mi=m?MONTHS.map(function(x){return x.toLowerCase()}).indexOf(m[2].toLowerCase()):-1;
   if(m&&mi>-1){var y=m[3]?+m[3]:new Date().getFullYear(),d=new Date(y,mi,+m[1]);return{iso:d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"),words:""}}
   return{iso:"",words:/^(tbc|–|-)?$/i.test(v)?"TBC":v}}
-function saveEd(kind,id,f,val){var p=oneProject();if(!p)return;
+function saveEd(kind,id,f,val,pid){var p=(pid&&projById(pid))||oneProject();if(!p)return;
   if(kind==="proj"){
     if(f==="status"){save(p,{status:val},"status",by()).catch(fail);return}
     if(f==="intro"){var dated=lines(p.details).filter(function(l){return lineDate(l)!==null}),intro=val.split("\n").map(function(x){return x.trim()}).filter(Boolean).map(function(x){return "• "+x});
@@ -1088,8 +1093,9 @@ function saveEd(kind,id,f,val){var p=oneProject();if(!p)return;
     if(f==="due"){var d=parseDue(val);val=d.iso||d.words}
     td[f]=val;if(SHEET_API){sheetSave(p,id,td,iss);render()}return}
   if(kind==="act"){var a=(sheetActsFor(p)||[]).find(function(x){return x.sheetId===id});if(!a)return;
-    if(f==="status"){var loc=S.sheetActs.find(function(x){return x.sheetId===id});if(loc){loc.status=val;loc.done=/^closed/i.test(val)?today():""}render();
-      sheetPost({action:"save",kind:"action",id:id,fields:{status:val},by:by()},p,null);
+    if(f==="status"){var loc=S.sheetActs.find(function(x){return x.sheetId===id}),isC=/^closed/i.test(val),wasC=/^closed/i.test(a.status||""),sf={status:val};
+      if(isC!==wasC)sf.closed_on=isC?fmtDue(today()):"";if(loc){loc.status=val;loc.done=isC?today():""}render();
+      sheetPost({action:"save",kind:"action",id:id,fields:sf,by:by()},p,null);
       if(!S.isAdmin){var hb=fs.batch();hb.set(histCol.doc(),{at:stamp(),by:by(),projectId:p.id,projectName:p.name||"",kind:"taskedit",changes:[{f:"task",from:"",to:id+" – "+a.text+": "+val}]});hb.commit().catch(function(){})}
       return}
     if(f==="latest"){var lc=S.sheetActs.find(function(x){return x.sheetId===id});if(lc)lc.latest=val;render();sheetPost({action:"save",kind:"action",id:id,fields:{latest:val},by:by()},p,null);return}
@@ -1125,6 +1131,13 @@ document.addEventListener("focusout",function(e){var el=e.target.closest&&e.targ
   if(S.pendingRender){S.pendingRender=false;setTimeout(render,0)}});
 function loaderHTML(label){return '<div class="tloader" role="status" aria-label="'+esc(label)+'">'+(window.safirBurst?window.safirBurst(.55,150):"")+'<div class="tk-label">'+esc(label)+'</div></div>'}
 // The boot screen always plays the whole intro once (letters fall, whirl into the swirl, become the logo), then fades (her choice, 14 Oct 2026).
+var bootPage=modeOf()+":"+oneId();
+window.addEventListener("hashchange",function(){var k=modeOf()+":"+oneId();if(k===bootPage)return;bootPage=k;
+  var b=document.getElementById("boot");if(b&&!b.getAttribute("data-done"))return;   // the first load is still showing it
+  if(b)b.remove();if(!window.safirBurst||(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches))return;b=document.createElement("div");b.id="boot";b.className="boot";b.setAttribute("role","status");b.setAttribute("aria-label","Loading");
+  b.innerHTML=window.safirBurst(Math.min(1.3,Math.max(.85,Math.min(innerWidth,innerHeight)/600)),innerHeight*.45+40)+'<div class="boot-by">Issued by the Design and Technical Services Department</div>';
+  document.body.appendChild(b);b.setAttribute("data-done","1");window.scrollTo(0,0);
+  setTimeout(function(){b.classList.add("out");setTimeout(function(){if(b.parentNode)b.parentNode.removeChild(b)},700)},4700)});
 function bootDone(){var b=document.getElementById("boot");if(!b||b.getAttribute("data-done"))return;b.setAttribute("data-done","1");
   setTimeout(function(){b.classList.add("out");setTimeout(function(){if(b.parentNode)b.parentNode.removeChild(b)},700)},Math.max(0,4700-(Date.now()-(window.__bootT0||0))))}
 function topicsFor(p,kind){return (S.sheet||S.topics).filter(function(t){return (t.projectId===p.id||(!t.projectId&&sheetMatch(t.project,p)))&&!t.removed&&(kind==="issue"?t.kind==="issue":kind?t.kind!=="issue":true)}).sort(function(a,b){return (a.order||0)-(b.order||0)})}
@@ -1249,7 +1262,7 @@ function timelineView(p){
       stops.push({ts:ts,items:it,today:ts===t0,fut:ts>t0,earlier:ea,om:x.getMonth()!==mon})}
     var canAdd=S.isAdmin&&isInline()&&!p.archived&&actGroups(p).length>0;S.tlCanAdd=canAdd;
     var chip=function(e){var c=e.kind==="meet"?"c-meet":e.kind==="late"?"c-late":e.kind==="upd"?"c-upd":e.us?"c-us":"c-oth";
-      var tmp=/^new\d/.test(e.aid||""),at=e.aid&&!tmp?' data-tljump="'+esc(e.aid)+'" title="'+esc(e.text+(isInline()?"\nClick to open it in the table. Drag it to another day to change the due date.":"\nClick to open it in the table."))+'"'+(isInline()?' draggable="true"':""):
+      var tmp=/^new\d/.test(e.aid||""),at=e.aid&&!tmp?' data-tljump="'+esc(e.aid)+'" title="'+esc(e.text+(e.kind==="late"?"\n"+lateText(e.ts):"")+(isInline()?"\nClick to open it in the table. Drag it to another day to change the due date.":"\nClick to open it in the table."))+'"'+(isInline()?' draggable="true"':""):
         e.kind==="meet"?' data-minopen="'+esc(e.mid)+'" title="'+esc("Meeting: "+e.text+"\nClick to read the minutes.")+'"':' title="'+esc(e.text)+'"';
       return '<span class="ch '+c+(e.pend?" tlpend":"")+'"'+at+'>'+esc(e.kind==="meet"?"Meeting: "+e.text:e.short)+'</span>'};
     var cell=function(s,i){var x=new Date(s.ts),we=x.getDay()>=5,own=s.items.slice(s.earlier),ch=[];
@@ -1293,7 +1306,7 @@ function tlJump(id){var row=[].slice.call(main.querySelectorAll(".urow.tk")).fin
 // Which tasks have a row in the table; a calendar task without one isn't a jump link (it still drags in Edit mode).
 function tlRows(){var has={};main.querySelectorAll(".urow.tk .tkid").forEach(function(k){has[k.textContent]=1});S.tlRows=has;
   main.querySelectorAll(".tlcal .ch[data-tljump]").forEach(function(c){var id=c.getAttribute("data-tljump");if(has[id])return;c.removeAttribute("data-tljump");c.setAttribute("data-tlid",id);
-    c.title=c.title.split("\n")[0]+(c.hasAttribute("draggable")?"\nDrag it to another day to change the due date.":"")})}
+    c.title=c.title.split("\n").filter(function(l){return !/^Click to open it in the table/.test(l)}).join("\n")+(c.hasAttribute("draggable")?"\nDrag it to another day to change the due date.":"")})}
 // Smooth scroll, or a plain jump when the browser asks for less motion or doesn't animate (seen in some embedded browsers).
 function smoothY(y){y=Math.max(0,Math.round(y));var y0=window.scrollY,rm=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   window.scrollTo({top:y,behavior:rm?"auto":"smooth"});if(!rm)setTimeout(function(){if(window.scrollY===y0&&Math.abs(y0-y)>2)window.scrollTo(0,y)},350)}
@@ -1308,7 +1321,8 @@ window.addEventListener("scroll",function(){if(!S.tlBackOn)return;var t=main.que
 window.addEventListener("hashchange",function(){tlBack(false);tlHide(true);var a=document.getElementById("addtask");if(a)a.remove()});
 // Add a task from the calendar (her request, 18 Oct 2026; her login only, like "+ Add a task" on the dashboard): it goes into the Action Tracker under the chosen topic.
 function actGroups(p){var gs=[];(sheetActsFor(p)||[]).forEach(function(x){if(x.group&&gs.indexOf(x.group)<0)gs.push(x.group)});return gs}
-function isoOf(ts){var x=new Date(ts);return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0")}
+function d2(ts){var x=new Date(ts);return x.getDate()+" "+MONTHS[x.getMonth()]}
+function lateText(ts){var n=Math.round((todayTs()-ts)/864e5);return n+" day"+(n===1?"":"s")+" overdue"}
 function todayTs(){var n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate()).getTime()}
 function tlAdd(ts){var p=oneProject();if(!p||!S.isAdmin||!isInline())return;var gs=actGroups(p);if(!gs.length)return;tlHide(true);renderOwners();
   var opts=function(l){return (l.length>1?'<option value="">Choose a topic…</option>':"")+l.map(function(g){return '<option value="'+esc(g)+'">'+esc(g)+'</option>'}).join("")};
@@ -1359,7 +1373,7 @@ document.addEventListener("click",function(e){var t=e.target.closest&&e.target.c
 function tlShow(btn){var s=(S.tlStops||[])[+btn.getAttribute("data-tlstop")];if(!s)return;clearTimeout(S.tlT);var x=tlPop(),dd=new Date(s.ts);
   var icon={meet:"🗓",upd:"•",due:"⚑",late:"⚑"};
   x.innerHTML='<div class="tlph">'+esc(DAYS[dd.getDay()]+" "+dd.getDate()+" "+MONTHS[dd.getMonth()]+" "+dd.getFullYear())+(s.today?' · Today':"")+'</div>'+
-    (s.items.length?'<ul>'+s.items.map(function(e){return '<li class="t-'+e.kind+'"><span class="ti">'+icon[e.kind]+'</span><span>'+(e.kind==="meet"?'Meeting: '+esc(e.text)+' <button type="button" class="lnk" data-minopen="'+esc(e.mid)+'">Read the minutes →</button>':(e.kind==="late"?'Overdue: ':e.kind==="due"?'Due: ':"")+(e.aid&&(S.tlRows||{})[e.aid]?'<button type="button" class="lnk tlgo" data-tljump="'+esc(e.aid)+'">'+esc(e.text)+'</button>':esc(e.text)))+'</span></li>'}).join("")+'</ul>':'<div class="tlnone">Nothing on this day.</div>')+
+    (s.items.length?'<ul>'+s.items.map(function(e){return '<li class="t-'+e.kind+'"><span class="ti">'+icon[e.kind]+'</span><span>'+(e.kind==="meet"?'Meeting: '+esc(e.text)+' <button type="button" class="lnk" data-minopen="'+esc(e.mid)+'">Read the minutes →</button>':(e.kind==="late"?'Overdue ('+lateText(e.ts).replace(/ overdue$/,"")+(/^Was due /.test(e.text)?", due "+d2(e.ts):"")+'): ':e.kind==="due"?'Due: ':"")+(function(t){return e.aid&&(S.tlRows||{})[e.aid]?'<button type="button" class="lnk tlgo" data-tljump="'+esc(e.aid)+'">'+esc(t)+'</button>':esc(t)})(e.kind==="late"?e.text.replace(/^Was due [^:]+: /,""):e.text))+'</span></li>'}).join("")+'</ul>':'<div class="tlnone">Nothing on this day.</div>')+
     (S.tlCanAdd&&btn.classList.contains("cd")&&!(s.ts<todayTs())?'<div class="tlpadd"><button type="button" class="lnk" data-caladd="'+btn.getAttribute("data-tlstop")+'">+ Add a task due this day</button></div>':"");
   x.dataset.src=btn.classList.contains("cd")?"cal":"";x.hidden=false;var r=btn.getBoundingClientRect(),w=x.offsetWidth;
   x.style.top=(r.bottom+window.scrollY+8)+"px";x.style.left=Math.max(12,Math.min(r.left+window.scrollX+r.width/2-w/2,window.scrollX+document.documentElement.clientWidth-w-12))+"px"}
@@ -1399,7 +1413,7 @@ function dueState(a){if(a.done)return"done";if(!a.due)return"none";var t=today()
 var DUE_LABEL={over:"Overdue",today:"Due today",week:"Due in the next 7 days",later:"Due later",none:"No due date"};
 var DUE_COL={over:"#C0392B",today:"#D99A1E",week:"#1F5F99",later:"#5E6B7A",none:"#A6AAAE"};
 function dueText(a){return a.due?fmtDue(a.due,true):tidy(a.dueText||"TBC")}
-function dueChip(a){var st=dueState(a);return '<span class="due '+st+'"'+(st==="over"?' title="Overdue"':"")+'>'+esc(a.done?"Done "+fmtDue(a.done):dueText(a))+'</span>'}
+function dueChip(a){var st=dueState(a),n=st==="over"?daysBetween(a.due,today()):0;return '<span class="due '+st+'"'+(st==="over"?' title="Overdue"':"")+'>'+esc(a.done?(a.sheet?"Closed ":"Done ")+fmtDue(a.done):dueText(a))+(n>0?'<small>'+n+" day"+(n===1?"":"s")+' overdue</small>':"")+'</span>'}
 function isReq(a){return /UPDATE REQUIRED/i.test(a.text||"")}
 function newId(){return "a"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function norm(t){return String(t||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim()}
