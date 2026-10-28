@@ -1154,7 +1154,8 @@ function fileLabel(list){var im=list.filter(function(f){return f.kind!=="pdf"}).
   return [im?im+(im===1?" image":" images"):"",pd?pd+" PDF"+(pd===1?"":"s"):""].filter(Boolean).join(" · ")}
 function topicsView(p){
   if(SHEET_API&&!S.sheet&&S.mode==="one")return '<div class="topics">'+loaderHTML("Loading the tracker…")+'</div>';
-  var all=topicsFor(p),ts=topicsFor(p,"status"),is=topicsFor(p,"issue"),me=S.canEdit,inl=isInline();if(!all.length&&!me)return"";
+  // The website is an overview (her rule, 28 Oct 2026): risks & issues stay in the sheet; only her dashboard lists them.
+  var showRisks=S.mode==="me",all=topicsFor(p),ts=topicsFor(p,"status"),is=topicsFor(p,"issue"),me=S.canEdit,inl=isInline();if(!all.length&&!me)return"";
   if(all.length)loadFiles(p.id);
   var last=all.reduce(function(m,t){return t.updatedAt&&t.updatedAt>m?t.updatedAt:m},"");
   var tf=S.topicForm,editBtn=function(t){return inl?'<div class="tact x"><button class="rmx" type="button" data-tdel="'+esc(t.id)+'" title="Remove this line" aria-label="Remove this line">✕</button></div>':me?'<div class="tact"><button class="plink" type="button" data-tedit="'+esc(t.id)+'">Edit</button></div>':""};
@@ -1169,9 +1170,14 @@ function topicsView(p){
       '<div>'+edC("topic",t.id,"status",'<span class="tst '+statusClass(st)+'">'+esc(st||"–")+'</span>')+'</div><div class="tn">'+edT("topic",t.id,"next",tidy(t.next),"Next step")+'</div>'+
       editBtn(t)+'</div>'+topicTasksList(p,t);
   });
+  // Open tasks whose topic has no status line (e.g. one that matched only a risk) still show, under their topic's name.
+  if(S.mode==="one"){var tsn=ts.map(function(t){return norm(t.title)}),seenG={};
+    (sheetActsFor(p)||[]).forEach(function(a){var g=a.group,n=norm(g);if(!g||a.done||seenG[n])return;seenG[n]=1;
+      if(tsn.some(function(t){return t===n||t.indexOf(n+" ")===0||n.indexOf(t+" ")===0}))return;
+      html+='<div class="urow"><div class="tt"><b>'+esc(g)+'</b></div><div class="tn"></div><div class="tw"></div><div></div><div class="tn"></div></div>'+topicTasksList(p,{title:g})})}
   if(me)html+=tf&&tf.pid===p.id&&!tf.tid&&tf.kind!=="issue"?topicForm(p,null):'<div class="urow"><div class="tact"><button class="tlbtn" type="button" data-tadd>+ Add a status line</button></div></div>';
   // Risks & issues (the sheet's Issues & Risks tab): Issue (priority) · Next action · Owner · Status · Due
-  if(is.length||me){
+  if(showRisks&&(is.length||me)){
     html+='<div class="sub"><b>Risks &amp; issues</b><span class="msub">What could hold the project up</span></div>'+(is.length?'<div class="urow head"><span>Issue</span><span>Next action</span><span>Owner</span><span>Status</span><span>Due</span></div>':"");
     is.forEach(function(t){
       if(tf&&tf.pid===p.id&&tf.tid===t.id){html+=topicForm(p,t);return}
