@@ -426,6 +426,38 @@ a.prow:hover .pd{text-decoration:underline}
 :root{--amber-bg:#FDEBD0;--amber-fg:#7A4B00}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--amber-bg:#3D2E12;--amber-fg:#F5C77A}}
 :root[data-theme="dark"]{--amber-bg:#3D2E12;--amber-fg:#F5C77A}
+/* Project-page table (her design, 28 Oct 2026): light blue header, topic bands, status as a coloured cell. */
+:root{--ts-head:#BAD8EB;--ts-head-ink:#1F3A5A;--ts-band:#E8F1F8;--ts-alt:#F5F8FB;--s-red:#B4232C;--s-red-bg:#FBE1E3;--s-amb:#A85F0C;--s-amb-bg:#FFF0D6;--s-blue:#1F5F99;--s-blue-bg:#E2EEF8;--s-green:#1E7A4A;--s-green-bg:#DDF3E6}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ts-head:#2A4157;--ts-head-ink:#E6EBF0;--ts-band:#1F2B36;--ts-alt:#182027;--s-red:#F2A19A;--s-red-bg:#3D2224;--s-amb:#EDBE6B;--s-amb-bg:#3A2E18;--s-blue:#8DBDE6;--s-blue-bg:#1D2E3F;--s-green:#8BD3A6;--s-green-bg:#1B3325}}
+:root[data-theme="dark"]{--ts-head:#2A4157;--ts-head-ink:#E6EBF0;--ts-band:#1F2B36;--ts-alt:#182027;--s-red:#F2A19A;--s-red-bg:#3D2224;--s-amb:#EDBE6B;--s-amb-bg:#3A2E18;--s-blue:#8DBDE6;--s-blue-bg:#1D2E3F;--s-green:#8BD3A6;--s-green-bg:#1B3325}
+.ttab{width:100%;border-collapse:collapse;font-size:15.5px;color:var(--ink)}
+.ttab th{background:var(--ts-head);color:var(--ts-head-ink);text-align:left;font-weight:700;padding:12px;font-size:14.5px}
+.ttab td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:middle;background:var(--surface)}
+.ttab tr.tg td{background:var(--ts-band);font-weight:700;color:var(--ts-head-ink)}
+.ttab tr.tg td>.tgw{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ttab tr.tg .tgr{margin-left:auto;display:flex;align-items:center;gap:8px}
+.ttab tr.tr.alt td{background:var(--ts-alt)}
+.ttab tr.tr td:first-child{padding-left:38px;position:relative}
+.ttab tr.tr td:first-child::before{content:"";position:absolute;left:22px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:var(--muted);opacity:.55}
+.ttab td.ts{font-weight:700;white-space:nowrap;width:170px}
+.ttab td.td{white-space:nowrap;width:150px}
+.ttab td.tp{width:250px}
+.ttab .tkid{display:inline-block;margin:0 8px 2px 0;padding:1px 7px;border:1px solid var(--chip-line);border-radius:5px;background:var(--chip-bg);color:var(--chip-ink);font-size:12.5px;font-weight:600}
+.ttab td.sc-r{color:var(--s-red);background:var(--s-red-bg)}.ttab td.sc-a{color:var(--s-amb);background:var(--s-amb-bg)}.ttab td.sc-b{color:var(--s-blue);background:var(--s-blue-bg)}.ttab td.sc-g{color:var(--s-green);background:var(--s-green-bg)}
+.tpill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12.5px;font-weight:700}
+.tpill.sc-r{color:var(--s-red);background:var(--s-red-bg)}.tpill.sc-a{color:var(--s-amb);background:var(--s-amb-bg)}.tpill.sc-b{color:var(--s-blue);background:var(--s-blue-bg)}.tpill.sc-g{color:var(--s-green);background:var(--s-green-bg)}
+.ttab td.ts .edc{color:inherit;font-weight:inherit}
+.ttab.mtab tr.tr td:first-child{padding-left:12px}.ttab.mtab tr.tr td:first-child::before{display:none}
+.ttab tr.tlflash td{animation:tlflash 2.4s ease}
+@media (max-width:640px){
+  .ttab thead{display:none}.ttab,.ttab tbody,.ttab tr,.ttab td{display:block;width:auto!important}
+  .ttab tr.tr{border-bottom:1px solid var(--line);padding:8px 0 10px 16px;background:var(--surface)}.ttab tr.tr.alt{background:var(--ts-alt)}
+  .ttab tr.tr td{border:0;padding:2px 10px;background:none!important}.ttab tr.tr td:first-child{padding-left:26px}.ttab tr.tr td:first-child::before{left:12px;top:12px;margin-top:0}
+  .ttab tr.tr td.ts{display:inline-block;margin:6px 8px 0 26px;padding:3px 10px;border-radius:999px}
+  .ttab tr.tr td.ts.sc-r{background:var(--s-red-bg)!important}.ttab tr.tr td.ts.sc-a{background:var(--s-amb-bg)!important}.ttab tr.tr td.ts.sc-b{background:var(--s-blue-bg)!important}.ttab tr.tr td.ts.sc-g{background:var(--s-green-bg)!important}
+  .ttab tr.tr td.td{display:inline-block;padding:0;color:var(--muted)}.ttab tr.tr td.tp{color:var(--muted);font-size:14px;padding-left:26px}
+  .ttab.mtab tr.tr td{display:inline-block;padding:2px 10px}.ttab.mtab tr.tr td:first-child{padding-left:10px}
+}
 .topics{margin:2px 0 14px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
 .topics .th{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:8px 14px;background:var(--brand-tint);font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .topics .th b{color:var(--ink)}
@@ -936,7 +968,9 @@ function fullView(m){
 }
 function minutesView(p){
   var ms=minutesFor(p);if(!ms.length)return"";
-  return '<div class="msec"><b>Meetings</b><span class="msub">Click a meeting to read its minutes</span></div><div class="mcards">'+ms.map(function(m){
+  if(S.mode==="one")return '<div class="msec"><b>Meetings</b></div><table class="ttab mtab"><thead><tr><th>Date</th><th>Meeting</th><th></th></tr></thead><tbody>'+
+    ms.map(function(m,i){return '<tr class="tr'+(i%2?" alt":"")+'"><td class="td">'+esc(fmtDue(m.date))+'</td><td>'+esc(m.title||"Meeting")+'</td><td style="text-align:right"><button type="button" class="lnk" data-minopen="'+esc(m.id)+'">Minutes →</button></td></tr>'}).join("")+'</tbody></table>';
+  return '<div class="msec"><b>Meetings</b></div><div class="mcards">'+ms.map(function(m){
     var att=lines(m.attendees).length;
     return '<button type="button" class="mcardx" data-minopen="'+esc(m.id)+'"><span class="mdate">'+esc(fmtDue(m.date))+'</span><span class="mtitle">'+esc(m.title||"Meeting")+'</span>'+
       (m.place?'<span class="mplace">'+esc(m.place)+'</span>':"")+'<span class="mfoot">'+(att?att+' attendees · ':"")+'Read the minutes →</span></button>'}).join("")+'</div>';
@@ -978,7 +1012,7 @@ function loadSheet(){if(!SHEET_API)return Promise.resolve();return fetch(SHEET_A
 // Action Tracker rows become the follow-ups of their project (her decision, 13 Oct 2026: one action list, in the sheet).
 function sheetAct(o){var due=ISO.test(o.due||"")?o.due:"",closed=/^closed/i.test(o.status||""),co=closed?parseDue(o.closed_on).iso:"";
   return{id:"act:"+o.id,sheetId:o.id,sheet:true,projectName:o.project,text:o.title,owner:o.who,due:due,dueText:due?"":(o.due||""),src:o.id+(o.group?" · "+o.group:""),group:o.group||"",
-    meeting:"",pre:false,status:o.status,next:o.next,latest:o.latest,done:closed?(co||(o.updated||"").slice(0,10)||o.opened||today()):"",doneBy:closed?(o.by||""):"",added:o.opened||"",chased:"",snooze:"",removed:"",doneLine:""}}
+    meeting:"",pre:false,status:o.status,next:o.next,latest:o.latest,updated:o.updated||"",updBy:o.by||"",done:closed?(co||(o.updated||"").slice(0,10)||o.opened||today()):"",doneBy:closed?(o.by||""):"",added:o.opened||"",chased:"",snooze:"",removed:"",doneLine:""}}
 function sheetActsFor(p){if(!S.sheetActs)return null;var l=S.sheetActs.filter(function(a){return sheetMatch(a.projectName,p)});if(!l.length)return null;
   var meta=(S.priv[p.id]||{}).sheetMeta||{};
   return l.map(function(a){var m=meta[a.sheetId]||{};return Object.assign({},a,{projectId:p.id,chased:m.chased||"",snooze:m.snooze||"",doneLine:m.doneLine||""})})}
@@ -1048,7 +1082,7 @@ function edC(kind,id,f,inner){if(!isInline()||kind==="act"&&/^new\d/.test(id))re
 // Each unsaved change remembers the saved value (orig) and the step before it, so Cmd+Z / Undo can step back.
 S.undo=[];
 function curVal(kind,id,f){var p=oneProject();if(kind==="proj")return p?(p[f]||""):"";
-  if(kind==="act"){var a=(S.sheetActs||[]).find(function(x){return x.sheetId===id});return a?(f==="text"?a.text:f==="owner"?a.owner:f==="status"?a.status:f==="latest"?a.latest:f==="due"?"Due "+dueText(a):""):""}
+  if(kind==="act"){var a=(S.sheetActs||[]).find(function(x){return x.sheetId===id});return a?(f==="text"?a.text:f==="owner"?a.owner:f==="status"?a.status:f==="latest"?a.latest:f==="due"?dueShort(a):""):""}
   var t=(S.sheet||S.topics).find(function(x){return x.id===id});return t?(f==="description"?t.desc:t[f])||"":""}
 function setPend(kind,id,f,val,saved){if(kind==="act"&&/^new\d/.test(id))return;var k=pkey(kind,id,f),had=k in S.pend;S.undo.push({k:k,had:had,prev:had?S.pend[k]:null});
   var orig=had?S.pend[k].orig:(saved!==undefined&&saved!==null?saved:curVal(kind,id,f));
@@ -1154,13 +1188,14 @@ function fileLabel(list){var im=list.filter(function(f){return f.kind!=="pdf"}).
   return [im?im+(im===1?" image":" images"):"",pd?pd+" PDF"+(pd===1?"":"s"):""].filter(Boolean).join(" · ")}
 function topicsView(p){
   if(SHEET_API&&!S.sheet&&S.mode==="one")return '<div class="topics">'+loaderHTML("Loading the tracker…")+'</div>';
+  if(S.mode==="one")return topicsTable(p);
   // The website is an overview (her rule, 28 Oct 2026): risks & issues stay in the sheet; only her dashboard lists them.
   var showRisks=S.mode==="me",all=topicsFor(p),ts=topicsFor(p,"status"),is=topicsFor(p,"issue"),me=S.canEdit,inl=isInline();if(!all.length&&!me)return"";
   if(all.length)loadFiles(p.id);
   var last=all.reduce(function(m,t){return t.updatedAt&&t.updatedAt>m?t.updatedAt:m},"");
   var tf=S.topicForm,editBtn=function(t){return inl?'<div class="tact x"><button class="rmx" type="button" data-tdel="'+esc(t.id)+'" title="Remove this line" aria-label="Remove this line">✕</button></div>':me?'<div class="tact"><button class="plink" type="button" data-tedit="'+esc(t.id)+'">Edit</button></div>':""};
   var files=function(t){var fl=filesFor(p.id,t.id);return fl.length?'<div><button class="fchip" type="button" data-fchip="'+esc(t.id)+'" aria-label="See the files for '+esc(t.title)+'">📎 '+esc(fileLabel(fl))+'</button></div>':""};
-  var html='<div class="topics"><div class="th"><span><b>Status</b><span class="msub">Where each topic stands</span></span>'+(last?'<span>Updated '+esc(fmtDate(last))+'</span>':"")+'</div>'+
+  var html='<div class="topics"><div class="th"><span><b>Status</b></span>'+(last?'<span>Updated '+esc(fmtDate(last))+'</span>':"")+'</div>'+
     (ts.length?'<div class="urow head"><span>Topic</span><span>Description</span><span>Owner</span><span>Status</span><span>Next step</span></div>':"");
   ts.forEach(function(t){
     if(tf&&tf.pid===p.id&&tf.tid===t.id){html+=topicForm(p,t);return}
@@ -1170,11 +1205,6 @@ function topicsView(p){
       '<div>'+edC("topic",t.id,"status",'<span class="tst '+statusClass(st)+'">'+esc(st||"–")+'</span>')+'</div><div class="tn">'+edT("topic",t.id,"next",tidy(t.next),"Next step")+'</div>'+
       editBtn(t)+'</div>'+topicTasksList(p,t);
   });
-  // Open tasks whose topic has no status line (e.g. one that matched only a risk) still show, under their topic's name.
-  if(S.mode==="one"){var tsn=ts.map(function(t){return norm(t.title)}),seenG={};
-    (sheetActsFor(p)||[]).forEach(function(a){var g=a.group,n=norm(g);if(!g||a.done||seenG[n])return;seenG[n]=1;
-      if(tsn.some(function(t){return t===n||t.indexOf(n+" ")===0||n.indexOf(t+" ")===0}))return;
-      html+='<div class="urow"><div class="tt"><b>'+esc(g)+'</b></div><div class="tn"></div><div class="tw"></div><div></div><div class="tn"></div></div>'+topicTasksList(p,{title:g})})}
   if(me)html+=tf&&tf.pid===p.id&&!tf.tid&&tf.kind!=="issue"?topicForm(p,null):'<div class="urow"><div class="tact"><button class="tlbtn" type="button" data-tadd>+ Add a status line</button></div></div>';
   // Risks & issues (the sheet's Issues & Risks tab): Issue (priority) · Next action · Owner · Status · Due
   if(showRisks&&(is.length||me)){
@@ -1191,6 +1221,42 @@ function topicsView(p){
   }
   return html+'</div>';
 }
+// Project pages (her design, 28 Oct 2026): one plain table, Task · Responsible · Status · Due date. Each topic is a band with
+// its status; its open tasks sit indented under it. The status cell is coloured: red overdue, amber in progress or on hold,
+// blue open, green done (grey reads as finished, so it isn't used). Task codes show only while editing.
+function topicsTable(p){
+  var ts=topicsFor(p,"status"),me=S.canEdit,inl=isInline(),tf=S.topicForm,acts=(sheetActsFor(p)||[]).filter(function(a){return !a.done});
+  if(!ts.length&&!acts.length&&!me)return"";
+  if(ts.length)loadFiles(p.id);
+  var files=function(t){var fl=filesFor(p.id,t.id);return fl.length?'<button class="fchip" type="button" data-fchip="'+esc(t.id)+'" aria-label="See the files for '+esc(t.title)+'">📎 '+esc(fileLabel(fl))+'</button>':""};
+  var rows=function(l){return sortActs(l).map(taskRow).join("")},used={};
+  var html='<div class="topics"><div class="th"><span><b>Status</b></span></div>'+
+    '<table class="ttab"><thead><tr><th>Task</th><th>Responsible</th><th>Status</th><th>Due date</th></tr></thead><tbody>';
+  ts.forEach(function(t){
+    if(tf&&tf.pid===p.id&&tf.tid===t.id){html+='<tr><td colspan="4">'+topicForm(p,t)+'</td></tr>';return}
+    var st=tidy(pv("topic",t.id,"status",t.status)),l=topicTasks(p,t.title).filter(function(a){return !a.done&&!used[a.sheetId]});
+    l.forEach(function(a){used[a.sheetId]=1});
+    html+='<tr class="tg" data-tid="'+esc(t.id)+'"><td colspan="4"><div class="tgw"><span>'+edT("topic",t.id,"title",t.title,"Topic")+'</span>'+files(t)+
+      '<span class="tgr">'+(st||inl?edC("topic",t.id,"status",'<span class="tpill '+pillClass(st)+'">'+esc(st||"–")+'</span>'):"")+
+      (inl?'<button class="rmx" type="button" data-tdel="'+esc(t.id)+'" title="Remove this line" aria-label="Remove this line">✕</button>':"")+'</span></div></td></tr>'+rows(l);
+  });
+  // Open tasks whose topic has no status line (e.g. one that matched only a risk) still show, under their topic's name.
+  var other={};acts.forEach(function(a){if(used[a.sheetId])return;var g=a.group||"Other tasks";(other[g]=other[g]||[]).push(a)});
+  Object.keys(other).forEach(function(g){html+='<tr class="tg"><td colspan="4"><div class="tgw"><span>'+esc(g)+'</span></div></td></tr>'+rows(other[g])});
+  html+='</tbody></table>';
+  if(me)html+=tf&&tf.pid===p.id&&!tf.tid&&tf.kind!=="issue"?topicForm(p,null):'<div class="urow"><div class="tact"><button class="tlbtn" type="button" data-tadd>+ Add a status line</button></div></div>';
+  return html+'</div>';
+}
+function pillClass(s){s=String(s||"");return /^(done|sent|received|closed|approved)/i.test(s)?"sc-g":/^overdue/i.test(s)?"sc-r":/^(in progress|pending|due|waiting|on hold)/i.test(s)?"sc-a":"sc-b"}
+function dueShort(a){return a.due?fmtDue(a.due):tidy(a.dueText||"TBC")}
+function taskRow(a,i){
+  var st=tidy(pv("act",a.sheetId,"status",a.status||"Open")),k=pkey("act",a.sheetId,"due"),d=k in S.pend?parseDue(S.pend[k].val).iso:a.due,
+      n=d&&!/^closed/i.test(st)?daysBetween(d,today()):0,
+      lab=n>0?n+" day"+(n===1?"":"s")+" overdue":/^in progress/i.test(st)?"In progress":/^on hold/i.test(st)?"On hold":/^closed/i.test(st)?"Closed":"Open",
+      c=n>0?"sc-r":/^(in progress|on hold)/i.test(st)?"sc-a":/^closed/i.test(st)?"sc-g":"sc-b";
+  return '<tr class="tr'+(i%2?" alt":"")+'" data-aid="'+esc(a.sheetId)+'"><td>'+(isInline()&&!/^new\d/.test(a.sheetId||"")?'<span class="tkid">'+esc(a.sheetId)+'</span>':"")+edT("act",a.sheetId,"text",a.text,"Task")+'</td>'+
+    '<td class="tp">'+edT("act",a.sheetId,"owner",tidy(a.owner)||"TBC","Owner")+'</td><td class="ts '+c+'">'+edC("act",a.sheetId,"status",esc(lab))+'</td>'+
+    '<td class="td">'+edT("act",a.sheetId,"due",dueShort(a),"Due")+'</td></tr>'}
 function topicForm(p,t){
   t=t||{};var iss=t.kind==="issue";
   if(iss)return '<form class="aform" data-tform data-pid="'+esc(p.id)+'" data-tid="'+esc(t.id||"")+'" style="margin:8px 12px"><input type="hidden" name="kind" value="issue">'+
@@ -1250,7 +1316,7 @@ function timelineView(p){
   var g={};ev.forEach(function(e){(g[e.ts]=g[e.ts]||[]).push(e)});
   var d=function(ts){var x=new Date(ts);return x.getDate()+" "+MONTHS[x.getMonth()]};
   var mode=S.tlMode||(function(){try{return localStorage.getItem("dtsTlMode")||"cal"}catch(e){return "cal"}})();
-  var head='<div class="th"><span><b>Timeline</b><span class="msub">'+"Meetings, updates and what’s due"+'</span></span>'+
+  var head='<div class="th"><span><b>Timeline</b></span>'+
     '<span class="tlseg" role="group" aria-label="Timeline view"><button type="button" data-tlmode="cal" aria-pressed="'+(mode==="cal")+'">Calendar</button><button type="button" data-tlmode="line" aria-pressed="'+(mode!=="cal")+'">History</button></span></div>';
   var stops,body;
   if(mode==="cal"){
@@ -1303,14 +1369,14 @@ function tlPop(){var x=document.getElementById("tlpop");if(!x){x=document.create
   x.addEventListener("mouseenter",function(){clearTimeout(S.tlT)});x.addEventListener("mouseleave",function(){if(x.dataset.src!=="cal")tlHide()});
   x.addEventListener("click",function(e){var mo=e.target.closest("[data-minopen]");if(mo){tlHide(true);openMinutes(mo.getAttribute("data-minopen"))}})}return x}
 // Clicking a task in the calendar (or its pop-up) jumps to it in the table and highlights it; in Edit mode its text is ready to change.
-function tlJump(id){var row=[].slice.call(main.querySelectorAll(".urow.tk")).find(function(r){var k=r.querySelector(".tkid");return k&&k.textContent===id});if(!row)return false;
+function tlJump(id){var row=[].slice.call(main.querySelectorAll("[data-aid]")).find(function(r){return r.getAttribute("data-aid")===id});if(!row)return false;
   tlHide(true);smoothY(row.getBoundingClientRect().top+window.scrollY-Math.max(0,(window.innerHeight-row.offsetHeight)/2));var n=0,last=null;
   (function settle(){var t=Math.round(row.getBoundingClientRect().top),inV=t>=0&&t<window.innerHeight-24;   // wait until the row is on screen and has stopped moving
     if((t!==last||!inV)&&n++<30){last=t;setTimeout(settle,90);return}
     row.classList.remove("tlflash");void row.offsetWidth;row.classList.add("tlflash");setTimeout(function(){row.classList.remove("tlflash")},2600);
     var ed=isInline()&&ss("dtsSyncOk")&&row.querySelector('[data-f="text"][contenteditable]');if(ed)ed.focus({preventScroll:true});tlBack(true)})();return true}
 // Which tasks have a row in the table; a calendar task without one isn't a jump link (it still drags in Edit mode).
-function tlRows(){var has={};main.querySelectorAll(".urow.tk .tkid").forEach(function(k){has[k.textContent]=1});S.tlRows=has;
+function tlRows(){var has={};main.querySelectorAll("[data-aid]").forEach(function(r){has[r.getAttribute("data-aid")]=1});S.tlRows=has;
   main.querySelectorAll(".tlcal .ch[data-tljump]").forEach(function(c){var id=c.getAttribute("data-tljump");if(has[id])return;c.removeAttribute("data-tljump");c.setAttribute("data-tlid",id);
     c.title=c.title.split("\n").filter(function(l){return !/^Click to open it in the table/.test(l)}).join("\n")+(c.hasAttribute("draggable")?"\nDrag it to another day to change the due date.":"")})}
 // Smooth scroll, or a plain jump when the browser asks for less motion or doesn't animate (seen in some embedded browsers).
@@ -1369,7 +1435,7 @@ main.addEventListener("dragleave",function(e){var c=e.target.closest&&e.target.c
 main.addEventListener("drop",function(e){if(!tlOurs(e))return;e.preventDefault();var id="";try{id=e.dataTransfer.getData(TL_TYPE)}catch(x){}id=id||S.tlDrag;S.tlDrag="";
   var c=e.target.closest&&e.target.closest(".tlcal .cd");if(!id||!c)return;
   var s=(S.tlStops||[])[+c.getAttribute("data-tlstop")];if(!s)return;var x=new Date(s.ts),iso=x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0");
-  syncOk(function(){setPend("act",id,"due","Due "+fmtDue(iso,true));render();
+  syncOk(function(){setPend("act",id,"due",fmtDue(iso));render();
     if(Object.keys(S.pend).some(function(k){return k===pkey("act",id,"due")})){var ta=(S.sheetActs||[]).find(function(x){return x.sheetId===id});toast("“"+String(ta?ta.text:id).replace(/\.\s*$/,"")+"” moved to "+fmtDue(iso,true)+". Press Save to keep it.")}})});
 main.addEventListener("keydown",function(e){if(e.key!=="Enter"&&e.key!==" ")return;var a=e.target.closest&&e.target.closest("[data-caladd]");if(a){e.preventDefault();var s=(S.tlStops||[])[+a.getAttribute("data-caladd")];if(s)tlAdd(s.ts);return}
   var c=e.target.closest&&e.target.closest(".tlcal .cd[data-tlstop]");if(c&&e.target===c){e.preventDefault();tlShow(c)}});
@@ -1533,7 +1599,8 @@ function renderJump(){
 function isOpen(p){return S.mode==="one"||S.allOpen||!!S.open[p.id]||S.commenting===p.id||!!S.q}
 function cardView(p,n){
   var me=S.mode==="me",cls=p.status==="Paused"?" paused":(p.status==="Done"?" done":"");
-  var meta=isInline()&&S.mode==="one"?edT("proj",p.id,"desc",p.desc,"Description")+" · "+edT("proj",p.id,"loc",p.loc,"City, Country"):[p.desc,p.loc].filter(Boolean).map(esc).join(" · ");
+  // On a project page visitors don't see the description · location line (her choice, 28 Oct 2026: clean); editors still change it here.
+  var meta=isInline()&&S.mode==="one"?edT("proj",p.id,"desc",p.desc,"Description")+" · "+edT("proj",p.id,"loc",p.loc,"City, Country"):S.mode==="one"?"":[p.desc,p.loc].filter(Boolean).map(esc).join(" · ");
   var op=isOpen(p),lt=latest(p),arch=S.confirmArchive===p.id,pv=S.priv[p.id]||{};
   var head='<div class="ch tog" role="button" tabindex="0" aria-expanded="'+op+'" data-toggle><span class="num">'+(n||"")+'</span>'+CHEV+'<div class="nm"><div class="pn">'+esc(p.name||"Untitled project")+
       (me&&!pv.confirmed?'<span class="tag pre">Pre-system</span>':"")+'</div>'+(meta?'<div class="pm">'+meta+'</div>':"")+
@@ -1544,7 +1611,7 @@ function cardView(p,n){
   return '<article class="card open'+cls+'" data-id="'+p.id+'">'+head+
     '<div class="body">'+(one?timelineView(p)+introView(p)+topicsView(p):topicsView(p)+(dt||'<div class="none">No details yet.</div>'))+(S.commenting===p.id?commentForm(p):"")+minutesView(p)+
       (me?'<div class="tl">Tasks:</div>'+(tk||'<div class="none">No tasks.</div>'):"")+(nt?'<div class="nl">Notes (private):</div>'+nt:"")+'</div>'+
-    '<div class="foot">'+(p.updatedAt?'<span class="when">Last updated '+fmtDate(p.updatedAt)+(p.updatedBy?' by '+esc(p.updatedBy):"")+'</span>':'<span class="when"></span>')+
+    '<div class="foot">'+(p.updatedAt&&S.mode!=="one"?'<span class="when">Last updated '+fmtDate(p.updatedAt)+(p.updatedBy?' by '+esc(p.updatedBy):"")+'</span>':'<span class="when"></span>')+
       (me?'<button class="act" data-act="prep">'+ICON.list+'Meeting prep</button>':"")+
       (S.mode==="one"?"":'<button class="act" data-act="history">'+ICON.clock+'History</button>')+
       (S.canEdit&&S.mode!=="one"?'<button class="act" data-act="edit">'+ICON.edit+'Edit</button>'+
@@ -1885,7 +1952,7 @@ function renderFrame(){
   document.getElementById("export").hidden=!S.canEdit;document.getElementById("apply-l").hidden=!S.isAdmin;
   document.getElementById("import-l").hidden=!S.canEdit||S.projects.length>0;
   if(S.mode==="one"){var op=oneProject();document.title=(op?op.name:"Project")+" – Safir DTS";
-    document.getElementById("h1").innerHTML=op?nameHtml(op.name)+edC("proj",op.id,"status",pill(op.status)):'Safir <span>Project</span>';
+    document.getElementById("h1").innerHTML=op?nameHtml(op.name)+(isInline()?edC("proj",op.id,"status",pill(op.status)):""):'Safir <span>Project</span>';   // no status tag by the title for visitors (her choice, 28 Oct 2026: clean); editors still change it here
     document.getElementById("modelink").innerHTML="";tip.hidden=true;document.getElementById("toolnote").textContent="Live from the Design & Technical Services Department’s project log."}
 }
 function nameHtml(n){var m=/^(Safir)\s+(.+)$/.exec(n||"");return m?m[1]+' <span>'+esc(m[2])+'</span>':esc(n)}
@@ -1912,9 +1979,14 @@ function render(){
 }
 // The header line: "Live", plus "and synced to Google Sheet tracker" (a link to the sheet) on a project page that the sheet feeds (her wording, 13 Oct 2026).
 // Rewritten only when the page or the link changes, so messages like "Couldn't save" stay until then.
-function syncLine(){if(!S.live)return;var p=S.mode==="one"?oneProject():null,linked=!!(p&&SHEET_API&&S.sheet&&(sheetActsFor(p)||[]).length),k=S.mode+"|"+(p?p.id:"")+"|"+linked;
-  if(k===S.syncKey)return;S.syncKey=k;
-  sync.innerHTML="Live"+(linked?" and synced to "+(p.sheetUrl?'<a href="'+esc(p.sheetUrl)+'" target="_blank" rel="noopener">Google Sheet tracker</a>':"Google Sheet tracker"):"")+(S.lastChange?" · last change "+esc(fmtDate(S.lastChange)):"")}
+function syncLine(){if(!S.live)return;var p=S.mode==="one"?oneProject():null,linked=!!(p&&SHEET_API&&S.sheet&&(sheetActsFor(p)||[]).length);
+  var lc=S.lastChange||"",lb=S.lastBy||"",ms=function(v){var t=Date.parse(v||"");return isNaN(t)?0:t};
+  if(p){lc=p.updatedAt||"";lb=p.updatedBy||"";
+    (S.sheet||[]).forEach(function(t){if(t.project&&sheetMatch(t.project,p)&&ms(t.updatedAt)>ms(lc)){lc=t.updatedAt;lb=t.updatedBy||""}});
+    (sheetActsFor(p)||[]).forEach(function(a){if(ms(a.updated)>ms(lc)){lc=a.updated;lb=a.updBy||""}})}
+  var k=S.mode+"|"+(p?p.id:"")+"|"+linked+"|"+lc+"|"+lb;if(k===S.syncKey)return;S.syncKey=k;
+  var who=String(lb||"").trim(),byTxt=!who?"":/^google sheet$/i.test(who)?" in the Google Sheet":" by "+who.charAt(0).toUpperCase()+who.slice(1);
+  sync.innerHTML="Live"+(linked?" and synced to "+(p.sheetUrl?'<a href="'+esc(p.sheetUrl)+'" target="_blank" rel="noopener">Google Sheet tracker</a>':"Google Sheet tracker"):"")+(lc?" · last updated "+esc(fmtDate(lc))+esc(byTxt):"")}
 function renderNow(){
   syncLine();
   renderFrame();
@@ -2294,8 +2366,8 @@ secCol.onSnapshot(function(snap){S.sections=snap.docs.map(function(d){var x=d.da
 col.onSnapshot(function(snap){
   S.projects=snap.docs.map(function(d){var x=d.data()||{};x.id=d.id;return x});
   S.live=true;dot.classList.add("live");tools.hidden=false;
-  var last=S.projects.reduce(function(m,p){return p.updatedAt&&p.updatedAt>m?p.updatedAt:m},"");
-  S.lastChange=last;S.syncKey="";syncLine();
+  var lastP=S.projects.reduce(function(m,p){return p.updatedAt&&(!m||p.updatedAt>m.updatedAt)?p:m},null);
+  S.lastChange=lastP?lastP.updatedAt:"";S.lastBy=lastP?(lastP.updatedBy||""):"";S.syncKey="";syncLine();
   render();bootDone();
 },function(err){sync.textContent="Couldn’t sync: "+((err&&err.code)||"unavailable");bootDone()});
 // Badriyah's private data loads only with her admin password.
