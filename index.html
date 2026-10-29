@@ -2026,7 +2026,9 @@ function onOverview(p){return !p.archived}
 var SHEET_BOOK="https://docs.google.com/spreadsheets/d/1c4rOXL9gGWkWW0AN_bcttxlNFk309LsA7JPNbb488qI/edit";
 function inSheet(p){return (S.sheet||[]).some(function(t){return t.project&&sheetMatch(t.project,p)})||!!(sheetActsFor(p)||[]).length}
 function sheetLink(p){return p.sheetUrl||(inSheet(p)?SHEET_BOOK:"")}
-function hasPage(p){return !!(p.sheetUrl||inSheet(p)||minutesFor(p).length)}
+// Projects that always open their own page (her list, 29 Oct 2026: Safir Dahab Resort, Safir Mughseil Hotel, Dubaiya Safir Winter Camp, Safir Fintas Hotel Extension, FHS Cairo 2026).
+var PAGES={p0302:1,p0401:1,p0107:1,p0105:1,p0904:1};
+function hasPage(p){return !!(PAGES[p.id]||p.sheetUrl||inSheet(p)||minutesFor(p).length)}
 function lastUpdate(p){
   // On the same date, a news line beats a ticked-off task ("Name: date – Done: …").
   // The newest line; on the same date a written update beats a ticked-off task ("Name: date – Done: …"), which loses its owner in brackets (28 Oct 2026).
