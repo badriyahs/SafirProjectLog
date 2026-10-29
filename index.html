@@ -729,6 +729,30 @@ body:has(#savebar) .tlback,body:has(#toast:not([hidden])) .tlback{bottom:76px}
 .lb .lbp{left:10px}.lb .lbn{right:10px}
 .lb button{border:1px solid rgba(255,255,255,.5);background:rgba(0,0,0,.35);color:#fff;border-radius:999px;padding:8px 14px;font-size:17px;cursor:pointer}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.dcs{background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;overflow:hidden}
+.dc-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;background:var(--brand-tint);border-bottom:1px solid var(--line)}
+.dc-h b{letter-spacing:.07em;text-transform:uppercase;font-size:14px}
+.dc-h select{font:inherit;font-size:14px;padding:4px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink)}
+.dc-tl{list-style:none;margin:0;padding:6px 0}
+.dc-tl>li{position:relative;margin:0}
+.dc-tl>li::before{content:"";position:absolute;left:117px;top:0;bottom:0;width:2px;background:var(--line)}
+.dc-tl>li:first-child::before{top:22px}.dc-tl>li:last-child::before{bottom:auto;height:22px}.dc-tl>li:only-child::before{display:none}
+.dc-row{display:grid;grid-template-columns:80px 24px 1fr auto;align-items:start;gap:0 10px;width:100%;padding:10px 16px;background:none;border:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.dc-row:hover{background:var(--brand-tint)}
+.dc-d{color:var(--muted);font-size:14px;padding-top:2px;text-align:right}
+.dc-dot{width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--brand);margin:5px auto 0;position:relative;z-index:1}
+.dc-tl>li.has .dc-dot{border-color:var(--req);background:var(--req)}
+.dc-t{display:block}.dc-by{display:block;color:var(--muted);font-size:14px}.dc-ar{color:var(--accent)}
+.dc-n{font-size:13px;padding:2px 10px;border-radius:999px;white-space:nowrap;margin-top:2px;background:var(--req-tint);color:var(--req)}
+.dc-p{position:relative;z-index:1;background:var(--surface);margin:0 16px 12px 130px;padding:2px 0 6px}
+.dc-file{font-size:14px;color:var(--accent);margin-bottom:6px;overflow-wrap:anywhere}
+.dc-notes{list-style:none;margin:0;padding:0;counter-reset:dn}
+.dc-notes li{margin:0;counter-increment:dn;position:relative;padding:8px 0 8px 30px;border-top:1px solid var(--line)}
+.dc-notes li:first-child{border-top:0}
+.dc-notes li::before{content:counter(dn);position:absolute;left:0;top:9px;width:20px;height:20px;border-radius:50%;background:var(--req-tint);color:var(--req);font-size:12px;text-align:center;line-height:20px}
+.dc-loc{display:inline-block;font-size:13px;color:var(--accent);background:var(--brand-tint);border-radius:6px;padding:1px 8px;margin-bottom:3px}
+.dc-none{color:var(--muted);font-size:14px}
+@media (max-width:560px){.dc-row{grid-template-columns:56px 20px 1fr}.dc-n{grid-column:3;justify-self:start;margin-top:4px}.dc-tl>li::before{left:91px}.dc-p{margin-left:16px}}
 </style>
 </head>
 <body>
@@ -823,7 +847,7 @@ var SYSTEM_START="2026-10-08";
 var TITLES={"Lidia":"Arch. Lidia","Lidia Janakievska":"Arch. Lidia","Ruba Yousef":"Arch. Ruba","Ali Kamal":"Eng. Ali","Aly Gomaa":"Eng. Aly Gomaa","Wael Habib":"Mr. Wael","Wissam El. Injbar":"Mr. Wissam","Wissam":"Mr. Wissam"};
 var SELF=["Badriyah","Badriyah Alsalem"];
 var VIEWS={overview:[["log","Log"],["archive","Archive"],["history","History"]],
-  me:[["today","Today"],["followups","Follow-ups"],["review","Pre-system"],["meetings","Meetings"],["projects","Projects"],["mylog","Log"]],
+  me:[["today","Today"],["followups","Follow-ups"],["review","Pre-system"],["meetings","Meetings"],["projects","Projects"],["docs","Documents"],["mylog","Log"]],
   one:[["one","Project"]]};
 // One-project pages: …/#dahab (or …/#p=<project id>) shows just that project, open, read-only, no login (her request, 12 Oct 2026).
 var ONE_PAGE={dahab:"p0302"};
@@ -833,7 +857,8 @@ var S={detailed:ls("dtsDetailed")==="1",sq:"",sf:"all",mode:modeOf(),view:"",q:"
   projects:[],sections:[],minutes:[],tasks:[],meetings:[],priv:{},plog:[],topics:[],files:{},filesLoading:{},topicForm:null,
   person:ls("dtsPerson")||"",taskForm:null,showDone:{},fuDone:false,meetOpen:{},meetEdit:null,prep:null,minOpen:{},fullOpen:{},qOpen:null,sentTo:{},reviewAll:false};
 S.view=VIEWS[S.mode][0][0];S.sheet=null;
-var col=null,secCol=null,histCol=null,minCol=null,taskCol=null,meetCol=null,privCol=null,plogCol=null,topicCol=null,fileCol=null,subs=[];
+var col=null,secCol=null,histCol=null,minCol=null,taskCol=null,meetCol=null,privCol=null,plogCol=null,topicCol=null,fileCol=null,docCol=null,subs=[];
+S.docs=[];S.docOpen={};S.docPid="";
 var main=document.getElementById("main");
 function oneId(){var h=decodeURIComponent(location.hash.slice(1)).toLowerCase();return ONE_PAGE[h]||(/^p=([\w-]+)$/.exec(h)||[])[1]||""}
 function modeOf(){return location.hash==="#me"?"me":oneId()?"one":"overview"}
@@ -1858,6 +1883,29 @@ function renderReview(){
 
 // ---------- Dashboard: Meetings (full private record; "Show on the overview" publishes the shareable part) ----------
 function meetActs(m){var out=[];S.projects.forEach(function(p){tasksOf(p).forEach(function(a){if(a.meeting&&a.meeting===m.id)out.push({p:p,a:a})})});return out}
+// ---------- Dashboard: Documents (29 Oct 2026, her design) ----------
+// A timeline of a project's documents, from → to; a document with her notes shows how many, and opens to list them,
+// each with where it sits in the document (the notes themselves are on a copy of the file on her Mac).
+function docDate(iso){var s=fmtDue(iso),y=" "+new Date().getFullYear();return s.slice(-5)===y?s.slice(0,-5):s}
+function renderDocs(){
+  var all=S.docs.slice().sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(+a.order||0)-(+b.order||0)}),pids=[];
+  all.forEach(function(x){if(x.projectId&&pids.indexOf(x.projectId)<0)pids.push(x.projectId)});
+  var pid=S.docPid==="all"||pids.indexOf(S.docPid)>-1?S.docPid:(pids[0]||"all");   // first time: the project with the newest document
+  var list=all.filter(function(x){return pid==="all"||x.projectId===pid}).filter(function(x){if(!S.q)return true;
+    return [x.title,x.from,x.to,x.file,projName(x.projectId)].concat((Array.isArray(x.notes)?x.notes:[]).map(function(n){return (n.where||"")+" "+(n.text||"")})).join(" ").toLowerCase().indexOf(S.q)>-1});
+  var html='<section class="dcs"><div class="dc-h"><b>Documents</b>'+(pids.length?'<select id="dcpid" aria-label="Project">'+pids.map(function(id){return '<option value="'+esc(id)+'"'+(id===pid?" selected":"")+'>'+esc(projName(id))+'</option>'}).join("")+
+    '<option value="all"'+(pid==="all"?" selected":"")+'>All projects</option></select>':"")+'</div>';
+  if(!list.length)html+='<div class="empty">'+(S.q?"No documents match.":"No documents yet.")+'</div>';
+  else html+='<ol class="dc-tl">'+list.map(function(x){var ns=Array.isArray(x.notes)?x.notes:[],n=ns.length,op=!!S.docOpen[x.id];
+    return '<li class="'+(n?"has":"")+'"><button class="dc-row" type="button" data-dcid="'+esc(x.id)+'" aria-expanded="'+op+'"><span class="dc-d">'+esc(docDate(x.date))+'</span><span class="dc-dot" aria-hidden="true"></span>'+
+      '<span><span class="dc-t">'+esc(x.title||"Document")+'</span>'+(x.from||x.to?'<span class="dc-by">'+esc(x.from||"")+'<span class="dc-ar"> → </span>'+esc(x.to||"")+'</span>':"")+(pid==="all"?'<span class="dc-by">'+esc(projName(x.projectId))+'</span>':"")+'</span>'+
+      (n?'<span class="dc-n">'+n+' issue'+(n===1?"":"s")+'</span>':'<span></span>')+'</button>'+
+      (op?'<div class="dc-p">'+(x.file?'<div class="dc-file">'+esc(x.file)+'</div>':"")+(n?'<ol class="dc-notes">'+ns.map(function(m){return '<li>'+(m.where?'<span class="dc-loc">'+esc(m.where)+'</span>':"")+'<div>'+esc(m.text||"")+'</div></li>'}).join("")+'</ol>':'<div class="dc-none">No notes.</div>')+'</div>':"")+'</li>'}).join("")+'</ol>';
+  main.innerHTML=html+'</section>';
+}
+document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("[data-dcid]");if(!b||S.view!=="docs")return;var id=b.getAttribute("data-dcid");S.docOpen[id]=!S.docOpen[id];render();
+  var nb=[].slice.call(main.querySelectorAll("[data-dcid]")).find(function(r){return r.getAttribute("data-dcid")===id});if(nb)nb.focus({preventScroll:true})});
+document.addEventListener("change",function(e){if(e.target&&e.target.id==="dcpid"&&S.view==="docs"){S.docPid=e.target.value;S.docOpen={};render()}});
 function renderMeetings(){
   var list=S.meetings.slice().sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:0}).filter(function(m){if(!S.q)return true;
     return [m.title,m.place,m.attendees,m.summary,m.decisions,m.openPoints,m.internal,(m.projects||[]).map(projName).join(" ")].join(" ").toLowerCase().indexOf(S.q)>-1});
@@ -2014,6 +2062,7 @@ function renderNow(){
   else if(v==="followups")renderFollowups();
   else if(v==="review")renderReview();
   else if(v==="meetings")renderMeetings();
+  else if(v==="docs")renderDocs();
   else renderLog();
 }
 
@@ -2374,6 +2423,8 @@ function lock(){ss("dtsUnlocked",null);firebase.auth().signOut()}
 col=fs.collection("projects");secCol=fs.collection("sections");histCol=fs.collection("history");minCol=fs.collection("minutes");
 taskCol=fs.collection("tasks");meetCol=fs.collection("meetings");privCol=fs.collection("private");plogCol=fs.collection("privateLog");
 topicCol=fs.collection("topics");fileCol=fs.collection("files");
+// Her notes on other people's documents (29 Oct 2026): admin login only, not even the read-only brief login ("private even to AI agents").
+docCol=fs.collection("docnotes");
 loadSheet();setInterval(loadSheet,120000);document.addEventListener("visibilitychange",function(){if(!document.hidden)loadSheet()});
 topicCol.onSnapshot(function(snap){S.topics=snap.docs.map(function(d){var x=d.data()||{};x.id=d.id;return x});render()},function(){});
 histCol.orderBy("at","desc").limit(500).onSnapshot(function(snap){S.history=snap.docs.map(function(d){var x=d.data();x.id=d.id;return x});if(S.view==="history"||S.view==="mylog")render()},function(){});
@@ -2389,12 +2440,13 @@ col.onSnapshot(function(snap){
 // Badriyah's private data loads only with her admin password.
 function subPrivate(on){
   subs.forEach(function(u){u()});subs=[];
-  if(!on){S.tasks=[];S.meetings=[];S.priv={};S.plog=[];return}
+  if(!on){S.tasks=[];S.meetings=[];S.priv={};S.plog=[];S.docs=[];S.docOpen={};return}
   var onErr=function(){};
   subs.push(taskCol.onSnapshot(function(snap){S.tasks=snap.docs.map(function(d){var x=d.data()||{};x.id=d.id;return x});render()},onErr));
   subs.push(meetCol.onSnapshot(function(snap){S.meetings=snap.docs.map(function(d){var x=d.data()||{};x.id=d.id;return x});render()},onErr));
   subs.push(privCol.onSnapshot(function(snap){var m={};snap.docs.forEach(function(d){m[d.id]=d.data()||{}});S.priv=m;render()},onErr));
   subs.push(plogCol.orderBy("at","desc").limit(400).onSnapshot(function(snap){S.plog=snap.docs.map(function(d){var x=d.data();x.id=d.id;return x});if(S.view==="mylog")render()},onErr));
+  subs.push(docCol.onSnapshot(function(snap){S.docs=snap.docs.map(function(d){var x=d.data()||{};x.id=d.id;return x});if(S.view==="docs")render()},onErr));
 }
 function setEditor(on,admin){S.canEdit=on;S.isAdmin=!!(on&&admin);
   if(!on){S.editing=null;S.confirmArchive=null;S.taskForm=null;S.meetEdit=null}
@@ -2479,7 +2531,18 @@ document.getElementById("apply").addEventListener("change",function(e){
     // Status lines and file previews for the overview: saved by id, so re-applying only refreshes them.
     var tps=(Array.isArray(d.topics)?d.topics:[]).filter(function(x){return x&&x.id&&x.projectId}),fls=(Array.isArray(d.files)?d.files:[]).filter(function(x){return x&&x.id&&x.projectId&&x.preview}),
       hid=(Array.isArray(d.hideFiles)?d.hideFiles:[]).filter(Boolean).map(String);
-    if(!list.length&&!mts.length&&!tps.length&&!fls.length&&!hid.length)throw new Error("No changes in this file");
+    // Her notes on documents (private, admin only): saved whole by id, so re-applying a file only refreshes them.
+    // Her notes on documents (private, admin only), saved by id. A file without notes never wipes the notes already saved:
+    // they're replaced only when the file gives some, or says "replaceNotes":true.
+    var normNotes=function(l){return (Array.isArray(l)?l:[]).filter(Boolean).slice(0,60).map(function(n){return{where:str(n.where),text:str(n.text)}})},
+      docOf=function(x){var o={projectId:str(x.projectId),date:str(x.date),title:str(x.title),from:str(x.from),to:str(x.to),file:str(x.file),order:+x.order||0};
+        if((Array.isArray(x.notes)&&x.notes.length)||x.replaceNotes===true)o.notes=normNotes(x.notes);return o},
+      dskip=[],dcs=(Array.isArray(d.documents)?d.documents:[]).filter(function(x){
+        var why=!x||!x.id?"no id":!x.projectId?"no project":!projById(x.projectId)?"project not found ("+str(x.projectId)+")":!/^\d{4}-\d{2}-\d{2}$/.test(str(x.date))?"date not YYYY-MM-DD":"";
+        if(why){dskip.push(str(x&&(x.title||x.id))+": "+why);return false}
+        var cur=S.docs.find(function(y){return y.id===String(x.id)});if(!cur)return true;var a=docOf(x);
+        return Object.keys(a).some(function(k){return JSON.stringify(a[k])!==JSON.stringify(k==="notes"?normNotes(cur.notes):k==="order"?(+cur.order||0):str(cur[k]))})});
+    if(!list.length&&!mts.length&&!tps.length&&!fls.length&&!hid.length&&!(Array.isArray(d.documents)&&d.documents.length))throw new Error("No changes in this file");
     var nl=function(v){return Array.isArray(v)?v:[]},asText=function(v){return Array.isArray(v)?bulletText(v.map(String).join("\n")):str(v)};
     var mById={};mts.forEach(function(m){if(m&&m.id&&m.date)mById[m.id]=m});
     var plan=[],skip=[];
@@ -2518,8 +2581,11 @@ document.getElementById("apply").addEventListener("change",function(e){
       if(Object.keys(patch).length||tasks.length||pvc.length)plan.push({p:p,patch:patch,tasks:tasks,pv:pvc.length?pv:null,desc:desc.join(", ")||"no visible change"});
     });
     var mplan=Object.keys(mById).map(function(id){return mById[id]});
-    if(!plan.length&&!mplan.length&&!tps.length&&!fls.length&&!hid.length){alert((d.title||"This file")+"\n\nNothing to change: it’s already applied."+(skip.length?"\n\nNot found: "+skip.join(", "):""));return}
+    if(!plan.length&&!mplan.length&&!tps.length&&!fls.length&&!hid.length&&!dcs.length){alert((d.title||"This file")+"\n\n"+(dskip.length?"Nothing applied.\n\nSkipped documents: "+dskip.join("; "):"Nothing to change: it’s already applied.")+(skip.length?"\n\nNot found: "+skip.join(", "):""));return}
     var extra=(tps.length?["• Status lines on the overview: "+tps.length+" ("+tps.map(function(x){return projName(x.projectId)}).filter(function(v,i,a){return a.indexOf(v)===i}).join(", ")+")"]:[]).concat(fls.length?["• Files with previews: "+fls.length]:[]).concat(hid.length?["• Files hidden from the page (kept): "+hid.length]:[]);
+    if(dcs.length)extra.push("• Documents with your notes (private): "+dcs.length+"\n"+dcs.map(function(x){var cur=S.docs.find(function(y){return y.id===String(x.id)}),a=docOf(x);
+      return "   – "+str(x.title||x.id)+(cur?" (update"+("notes" in a?", notes "+normNotes(cur.notes).length+" → "+a.notes.length:"")+")":" (new"+(a.notes&&a.notes.length?", "+a.notes.length+" notes":"")+")")}).join("\n"));
+    if(dskip.length)extra.push("• Skipped documents: "+dskip.join("; "));
     if(!confirm((d.title||"Apply changes")+"\n\n"+extra.join("\n")+(extra.length?"\n":"")+mplan.map(function(m){return "• Meeting "+fmtDue(m.date)+": "+(m.title||"")+(S.meetings.some(function(x){return x.id===m.id})?" (update)":" (new)")}).concat(plan.map(function(x){return "• "+x.p.name+": "+x.desc})).join("\n")+
       (skip.length?"\n\nNot found: "+skip.join(", "):"")+"\n\nApply these changes?"))return;
     sync.textContent="Applying changes…";
@@ -2531,6 +2597,8 @@ document.getElementById("apply").addEventListener("change",function(e){
     // Hidden attachments are kept with a "removed" date, never deleted.
     if(hid.length)mp=mp.then(function(){var hb=fs.batch(),at=stamp();hid.forEach(function(id){hb.set(fileCol.doc(id),{removed:at,updatedAt:at},{merge:true})});return hb.commit()});
     if(fls.length||hid.length)mp=mp.then(function(){S.files={};S.filesLoading={}});
+    if(dcs.length)mp=mp.then(function(){var db=fs.batch(),at=stamp();dcs.forEach(function(x){db.set(docCol.doc(String(x.id)),Object.assign(docOf(x),{updatedAt:at}),{merge:true})});
+      plog(db,projById(dcs[0].projectId),"docs","Documents from "+(d.title||"a changes file")+": "+dcs.length);return db.commit()});
     if(mplan.length){var mb=fs.batch();mplan.forEach(function(m){var isNew=!S.meetings.some(function(x){return x.id===m.id}),data={};
       ["date","title","place"].forEach(function(k){if(k in m)data[k]=str(m[k])});
       ["attendees","summary","decisions","openPoints","files","internal"].forEach(function(k){if(k in m)data[k]=asText(m[k])});
@@ -2546,7 +2614,7 @@ document.getElementById("apply").addEventListener("change",function(e){
       return b.commit().then(function(){return toSheet.reduce(function(q,t){return q.then(function(){var was=String(t.id).indexOf("act:")===0?(S.sheetActs||[]).find(function(y){return "act:"+y.sheetId===t.id}):null;
         var f=sheetActFields(x.p,t,was?Object.assign({},was,{done:""}):null);if(was&&!Object.keys(f).length)return;
         return sheetPost({action:"save",kind:"action",id:was?was.sheetId:"",fields:f,by:by()})})},Promise.resolve())})})},Promise.resolve())})
-      .then(function(){sync.textContent="Applied: "+(tps.length?tps.length+" status lines, ":"")+(fls.length?fls.length+" files, ":"")+(hid.length?hid.length+" files hidden, ":"")+(mplan.length?mplan.length+" meeting"+(mplan.length===1?"":"s")+", ":"")+plan.length+" project"+(plan.length===1?"":"s");plan.forEach(function(x){S.open[x.p.id]=true});setStep(2,true)});
+      .then(function(){sync.textContent="Applied: "+(dcs.length?dcs.length+" document"+(dcs.length===1?"":"s")+", ":"")+(tps.length?tps.length+" status lines, ":"")+(fls.length?fls.length+" files, ":"")+(hid.length?hid.length+" files hidden, ":"")+(mplan.length?mplan.length+" meeting"+(mplan.length===1?"":"s")+", ":"")+plan.length+" project"+(plan.length===1?"":"s");plan.forEach(function(x){S.open[x.p.id]=true});setStep(2,true)});
   }).catch(fail);
 });
 // One-time load of project_log.json from your computer (the data is never stored in the public repo).
