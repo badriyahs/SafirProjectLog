@@ -27,10 +27,10 @@
   --paused-bg:#EEEFF1;
   --focus:#1F5F99;
   --st-urgent-bg:#C0392B; --st-urgent-fg:#FFFFFF;
-  --st-ongoing-bg:#2E9E5B; --st-ongoing-fg:#FFFFFF;
+  --st-ongoing-bg:#2F6FAE; --st-ongoing-fg:#FFFFFF;
   --st-prospective-bg:#BAD8EB; --st-prospective-fg:#2F4A5C;
-  --st-paused-bg:#737476; --st-paused-fg:#FFFFFF;
-  --st-done-bg:#E3E6EA; --st-done-fg:#5A6270;
+  --st-paused-bg:#B7791F; --st-paused-fg:#FFFFFF;
+  --st-done-bg:#2E8B57; --st-done-fg:#FFFFFF;
   --pw-dts-bg:#F5B041; --pw-dts-fg:#3D2A00;
   --pw-other-bg:#D6E6F2; --pw-other-fg:#2F4A5C;
   --ok-bg:#E6F4EC; --ok-fg:#1D6B3D;
@@ -45,14 +45,14 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#14171C;--surface:#1B1F25;--ink:#E7EAED;--muted:#9EA3A8;--faint:#6E747A;--line:#2C3339;--line-strong:#3A434B;
   --brand:#3E5F75;--brand-tint:#1F2B34;--accent:#8DBDE6;--accent-ink:#0E1A25;--req:#F08A80;--req-tint:#3A1F1D;--paused-bg:#22272C;--focus:#8DBDE6;
-  --st-prospective-bg:#3E5F75;--st-prospective-fg:#E3F0F8;--st-done-bg:#3A4047;--st-done-fg:#C9CED4;
+  --st-prospective-bg:#3E5F75;--st-prospective-fg:#E3F0F8;--st-done-bg:#2C6E48;--st-done-fg:#E6F4EA;
   --pw-other-bg:#2C3E4C;--pw-other-fg:#D6E6F2;--ok-bg:#1E3A2A;--ok-fg:#9FD8B4;
   --row-head:#20262D;--row-sub:#181C21;--row-hover:#232A31;--chip-bg:#22303B;--chip-line:#34495A;--chip-ink:#CFE2F1;--pend-bg:#3A3218;--pend-line:#8A7224;
   --doc-bg:#1B1F25;--doc-ink:#E7EAED;--doc-head:#A9CBE8;--doc-sub:#B7BDC3;--doc-meta:#9EA3A8;--doc-line:#2C3339;--doc-bar:#20262D;--doc-rule:#3E5F75;--on-brand:#E3F0F8;--pre-bg:#2E2640;--pre-fg:#CDB8F2;color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#14171C;--surface:#1B1F25;--ink:#E7EAED;--muted:#9EA3A8;--faint:#6E747A;--line:#2C3339;--line-strong:#3A434B;
   --brand:#3E5F75;--brand-tint:#1F2B34;--accent:#8DBDE6;--accent-ink:#0E1A25;--req:#F08A80;--req-tint:#3A1F1D;--paused-bg:#22272C;--focus:#8DBDE6;
-  --st-prospective-bg:#3E5F75;--st-prospective-fg:#E3F0F8;--st-done-bg:#3A4047;--st-done-fg:#C9CED4;
+  --st-prospective-bg:#3E5F75;--st-prospective-fg:#E3F0F8;--st-done-bg:#2C6E48;--st-done-fg:#E6F4EA;
   --pw-other-bg:#2C3E4C;--pw-other-fg:#D6E6F2;--ok-bg:#1E3A2A;--ok-fg:#9FD8B4;
   --row-head:#20262D;--row-sub:#181C21;--row-hover:#232A31;--chip-bg:#22303B;--chip-line:#34495A;--chip-ink:#CFE2F1;--pend-bg:#3A3218;--pend-line:#8A7224;
   --doc-bg:#1B1F25;--doc-ink:#E7EAED;--doc-head:#A9CBE8;--doc-sub:#B7BDC3;--doc-meta:#9EA3A8;--doc-line:#2C3339;--doc-bar:#20262D;--doc-rule:#3E5F75;--on-brand:#E3F0F8;--pre-bg:#2E2640;--pre-fg:#CDB8F2;color-scheme:dark}
@@ -443,7 +443,7 @@ a.prow:hover .pd{text-decoration:underline}
 .ttab td.td{white-space:nowrap;width:150px}
 .ttab td.tp{width:250px}
 .ttab .tkid{display:inline-block;margin:0 8px 2px 0;padding:1px 7px;border:1px solid var(--chip-line);border-radius:5px;background:var(--chip-bg);color:var(--chip-ink);font-size:12.5px;font-weight:600}
-.ttab td.sc-r{color:var(--s-red);background:var(--s-red-bg)}.ttab td.sc-a{color:var(--s-amb);background:var(--s-amb-bg)}.ttab td.sc-b{color:var(--s-blue);background:var(--s-blue-bg)}.ttab td.sc-g{color:var(--s-green);background:var(--s-green-bg)}
+.ttab td.sc-r,.ttab tr.tr td.ts.sc-r{color:var(--s-red);background:var(--s-red-bg)}.ttab td.sc-a,.ttab tr.tr td.ts.sc-a{color:var(--s-amb);background:var(--s-amb-bg)}.ttab td.sc-b,.ttab tr.tr td.ts.sc-b{color:var(--s-blue);background:var(--s-blue-bg)}.ttab td.sc-g,.ttab tr.tr td.ts.sc-g{color:var(--s-green);background:var(--s-green-bg)}
 .tpill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12.5px;font-weight:700}
 .tpill.sc-r{color:var(--s-red);background:var(--s-red-bg)}.tpill.sc-a{color:var(--s-amb);background:var(--s-amb-bg)}.tpill.sc-b{color:var(--s-blue);background:var(--s-blue-bg)}.tpill.sc-g{color:var(--s-green);background:var(--s-green-bg)}
 .ttab td.ts .edc{color:inherit;font-weight:inherit}
@@ -499,7 +499,7 @@ body.inedit [data-ed]:focus{outline:2px solid var(--accent);background:var(--sur
 .rmx:hover{color:var(--req)}
 /* Loading: the presentation cover (blue, white Arabic letters streaming out of the round Safir emblem). Art cut from the SHR template, loader.png. */
 /* Timeline at the top of a project page: a metro line of dates (15 Oct 2026). */
-.tline{margin:2px 0 14px;border:1px solid var(--line-strong);border-radius:10px;overflow:hidden;background:var(--surface)}
+.tline{margin:18px 0 14px;border:1px solid var(--line-strong);border-radius:10px;overflow:hidden;background:var(--surface)}
 .tline .th{display:flex;justify-content:space-between;align-items:center;gap:8px 10px;flex-wrap:wrap;padding:8px 14px;background:var(--brand-tint);font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .tline .th b{color:var(--ink)}
 .tlkey{display:flex;align-items:center;gap:4px 12px;flex-wrap:wrap;font-size:12.5px;letter-spacing:0;text-transform:none}
@@ -512,7 +512,7 @@ body.inedit [data-ed]:focus{outline:2px solid var(--accent);background:var(--sur
 .tlseg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .tline>.tlkey,.tlcal .tlkey{padding:0 14px 10px;color:var(--muted)}
 .tlcal .tlkey{padding:8px 0 0}
-.tlkey .k.t-us{background:var(--brand);border-color:var(--brand)}.tlkey .k.t-oth{background:var(--st-done-bg);border-color:var(--st-done-bg)}
+.tlkey .k.t-us{background:var(--brand);border-color:var(--brand)}.tlkey .k.t-oth{background:var(--s-blue-bg);border-color:var(--s-blue)}
 .tlcal{padding:10px 14px 12px}
 .tlcal .cmo{display:flex;align-items:center;gap:6px;margin:0 0 8px}
 .tlcal .cmt{font-size:15px;font-weight:700;color:var(--ink);flex:0 1 132px;min-width:0;text-align:center;line-height:1.2}
@@ -529,10 +529,10 @@ body.inedit [data-ed]:focus{outline:2px solid var(--accent);background:var(--sur
 .tlcal .cd:hover{background:var(--row-hover)}
 .tlcal .cdn{font-size:12px;font-weight:700;color:var(--ink);line-height:1.2}
 .tlcal .dnum{display:inline-grid;place-items:center;min-width:20px;height:20px;border-radius:999px;margin:-1px 0 0 -1px}
-.tlcal .cd.today .dnum{background:var(--req);color:var(--accent-ink);padding:0 4px}
+.tlcal .cd.today .dnum{background:var(--ts-head-ink);color:var(--surface);padding:0 4px}
 .tlcal .ch{display:block;flex:none;max-width:100%;font-size:11px;line-height:1.35;padding:1px 5px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tlcal .ch.c-us{background:var(--brand);color:var(--on-brand)}
-.tlcal .ch.c-oth{background:var(--st-done-bg);color:var(--st-done-fg)}
+.tlcal .ch.c-oth{background:var(--surface);color:var(--s-blue);box-shadow:inset 0 0 0 1px var(--s-blue)}
 .tlcal .ch.c-meet{background:var(--accent);color:var(--accent-ink)}
 .tlcal .ch.c-late{background:var(--req);color:var(--accent-ink)}
 .tlcal .ch.c-upd{background:none;color:var(--muted);padding-left:1px}
@@ -568,7 +568,8 @@ body:has(#savebar) .tlback,body:has(#toast:not([hidden])) .tlback{bottom:76px}
 @media (max-width:560px){.tlcal{padding:8px 8px 10px}.tlcal .cd{height:48px;padding:3px 2px;gap:2px}
   .tlcal .ch{display:block;font-size:0;line-height:0;height:6px;padding:0;border-radius:3px}.tlcal .ch.c-upd{height:4px;background:var(--line-strong)}.tlcal .ch.c-upd::before{content:none}
   .tlcal .ch{pointer-events:none}.tlcal .cdn{white-space:nowrap;overflow:hidden}
-  .tlcal .ch.more{font-size:0;line-height:0;height:0;padding:0;background:none;border-top:2px dotted var(--muted);border-radius:0}}
+  .tlcal .ch.more{font-size:0;line-height:0;height:0;padding:0;background:none;border-top:2px dotted var(--muted);border-radius:0}
+  .tlcal .ch.c-oth{background:var(--s-blue);box-shadow:none}}
 .tlscroll{overflow-x:auto;padding:30px 10px 14px;scrollbar-width:thin}
 .tltrack{display:flex;min-width:max-content;margin:0 auto;width:max-content}
 .tlstop{position:relative;flex:none;width:84px;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:0;padding:0 2px;cursor:pointer;font:inherit;color:inherit}
@@ -585,7 +586,7 @@ body:has(#savebar) .tlback,body:has(#toast:not([hidden])) .tlback{bottom:76px}
 .tlstop.t-none .tldot{width:13px;height:13px;margin:4px 0;background:var(--req);border:0}
 .tlstop.today .tldot::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--req);opacity:0;animation:tlpulse 2s ease-out infinite}
 @keyframes tlpulse{0%{opacity:.7;transform:scale(.6)}100%{opacity:0;transform:scale(1.4)}}
-.tlpill{position:absolute;top:-25px;padding:1px 8px;border-radius:999px;background:var(--req);color:var(--accent-ink);font-size:11.5px;font-weight:700;letter-spacing:.03em}
+.tlpill{position:absolute;top:-25px;padding:1px 8px;border-radius:999px;background:var(--ts-head-ink);color:var(--surface);font-size:11.5px;font-weight:700;letter-spacing:.03em}
 .tldate{font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap}
 .tlstop.fut .tldate{color:var(--muted)}
 .tlcap{font-size:11.5px;color:var(--muted);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
@@ -969,11 +970,11 @@ function fullView(m){
 function minutesView(p){
   var ms=minutesFor(p);if(!ms.length)return"";
   if(S.mode==="one")return '<div class="msec"><b>Meetings</b></div><table class="ttab mtab"><thead><tr><th>Date</th><th>Meeting</th><th></th></tr></thead><tbody>'+
-    ms.map(function(m,i){return '<tr class="tr'+(i%2?" alt":"")+'"><td class="td">'+esc(fmtDue(m.date))+'</td><td>'+esc(m.title||"Meeting")+'</td><td style="text-align:right"><button type="button" class="lnk" data-minopen="'+esc(m.id)+'">Minutes →</button></td></tr>'}).join("")+'</tbody></table>';
+    ms.map(function(m,i){return '<tr class="tr'+(i%2?" alt":"")+'"><td class="td">'+esc(fmtDue(m.date))+'</td><td>'+esc(m.title||"Meeting")+'</td><td style="text-align:right"><button type="button" class="lnk" data-minopen="'+esc(m.id)+'">Meeting notes →</button></td></tr>'}).join("")+'</tbody></table>';
   return '<div class="msec"><b>Meetings</b></div><div class="mcards">'+ms.map(function(m){
     var att=lines(m.attendees).length;
     return '<button type="button" class="mcardx" data-minopen="'+esc(m.id)+'"><span class="mdate">'+esc(fmtDue(m.date))+'</span><span class="mtitle">'+esc(m.title||"Meeting")+'</span>'+
-      (m.place?'<span class="mplace">'+esc(m.place)+'</span>':"")+'<span class="mfoot">'+(att?att+' attendees · ':"")+'Read the minutes →</span></button>'}).join("")+'</div>';
+      (m.place?'<span class="mplace">'+esc(m.place)+'</span>':"")+'<span class="mfoot">'+(att?att+' attendees · ':"")+'Meeting notes →</span></button>'}).join("")+'</div>';
 }
 function minutesDoc(m){
   var proj=(m.projects||[]).map(function(id){var q=projById(id);return q?q.name:""}).filter(Boolean).join(", ");
@@ -1107,7 +1108,7 @@ var ED_CHOICES={proj:{status:STATUSES},topic:{status:["Open","In progress","Pend
 // The first edit in a session asks once: the change goes straight to the live log and the Google sheet.
 function syncOk(then){if(ss("dtsSyncOk")){then();return}
   var d=document.getElementById("syncnote");if(d)d.remove();d=document.createElement("div");d.id="syncnote";
-  d.innerHTML='<div class="sncard" role="dialog" aria-modal="true" aria-labelledby="sn-h"><h3 id="sn-h">Editing</h3><p>All changes you make here will show in the Google Sheets tracker.</p><div class="row"><button class="btn primary" type="button" id="sn-ok">Continue</button><button class="btn" type="button" id="sn-no">Cancel</button></div></div>';
+  d.innerHTML='<div class="sncard" role="dialog" aria-modal="true" aria-labelledby="sn-h"><h3 id="sn-h">Editing</h3><p>All changes you make here will show in the Google Sheet tracker.</p><div class="row"><button class="btn primary" type="button" id="sn-ok">Continue</button><button class="btn" type="button" id="sn-no">Cancel</button></div></div>';
   document.body.appendChild(d);document.getElementById("sn-ok").focus();
   document.getElementById("sn-ok").addEventListener("click",function(){ss("dtsSyncOk","1");d.remove();then()});
   document.getElementById("sn-no").addEventListener("click",function(){d.remove()})}
@@ -1175,7 +1176,7 @@ window.addEventListener("hashchange",function(){var k=modeOf()+":"+oneId();if(k=
 function bootDone(){var b=document.getElementById("boot");if(!b||b.getAttribute("data-done"))return;b.setAttribute("data-done","1");
   setTimeout(function(){b.classList.add("out");setTimeout(function(){if(b.parentNode)b.parentNode.removeChild(b)},700)},Math.max(0,4700-(Date.now()-(window.__bootT0||0))))}
 function topicsFor(p,kind){return (S.sheet||S.topics).filter(function(t){return (t.projectId===p.id||(!t.projectId&&sheetMatch(t.project,p)))&&!t.removed&&(kind==="issue"?t.kind==="issue":kind?t.kind!=="issue":true)}).sort(function(a,b){return (a.order||0)-(b.order||0)})}
-function statusClass(s){s=String(s||"");return /^open/i.test(s)?"red":/^(due|waiting|pending|overdue)/i.test(s)?"amber":/^in progress/i.test(s)?"blue":/^(done|received|closed|sent)/i.test(s)?"green":""}
+function statusClass(s){s=String(s||"");return /^overdue/i.test(s)?"red":/^(in progress|on hold|due|waiting|pending)/i.test(s)?"amber":/^(done|received|closed|approved)/i.test(s)?"green":/^(open|sent)/i.test(s)?"blue":""}   // one meaning everywhere (her rule, 28 Oct 2026)
 var STATUS_SUGGEST=["Open","In progress","Pending","Due ","Done"];
 // Her wording (13 Oct 2026): "Not set" is always TBC, "Waiting" is always Pending; older data is shown that way too.
 function tidy(s){s=s==null?"":String(s);return /^\s*not set\s*$/i.test(s)?"TBC":s.replace(/^(\s*)waiting\b/i,"$1Pending")}
@@ -1225,34 +1226,40 @@ function topicsView(p){
 // its status; its open tasks sit indented under it. The status cell is coloured: red overdue, amber in progress or on hold,
 // blue open, green done (grey reads as finished, so it isn't used). Task codes show only while editing.
 function topicsTable(p){
-  var ts=topicsFor(p,"status"),me=S.canEdit,inl=isInline(),tf=S.topicForm,acts=(sheetActsFor(p)||[]).filter(function(a){return !a.done});
+  // Open tasks, plus tasks closed in the last 14 days in green (her choice, 28 Oct 2026); older closed ones stay in the sheet.
+  var cut=addDays(today(),-14),shown=function(a){return !a.done||a.done>=cut};
+  var ts=topicsFor(p,"status"),me=S.canEdit,inl=isInline(),tf=S.topicForm,acts=(sheetActsFor(p)||[]).filter(shown);
   if(!ts.length&&!acts.length&&!me)return"";
   if(ts.length)loadFiles(p.id);
   var files=function(t){var fl=filesFor(p.id,t.id);return fl.length?'<button class="fchip" type="button" data-fchip="'+esc(t.id)+'" aria-label="See the files for '+esc(t.title)+'">📎 '+esc(fileLabel(fl))+'</button>':""};
-  var rows=function(l){return sortActs(l).map(taskRow).join("")},used={};
-  var html='<div class="topics"><div class="th"><span><b>Status</b></span></div>'+
-    '<table class="ttab"><thead><tr><th>Task</th><th>Responsible</th><th>Status</th><th>Due date</th></tr></thead><tbody>';
+  var rows=function(l){return sortActs(l.filter(function(a){return !a.done})).concat(l.filter(function(a){return a.done}).sort(function(x,y){return x.done<y.done?1:x.done>y.done?-1:0})).map(taskRow).join("")},used={};
+  var html="";   // the table's rows; with none to show, the table itself isn't shown (29 Oct 2026)
   ts.forEach(function(t){
     if(tf&&tf.pid===p.id&&tf.tid===t.id){html+='<tr><td colspan="4">'+topicForm(p,t)+'</td></tr>';return}
-    var st=tidy(pv("topic",t.id,"status",t.status)),l=topicTasks(p,t.title).filter(function(a){return !a.done&&!used[a.sheetId]});
+    var st=tidy(pv("topic",t.id,"status",t.status)),l=topicTasks(p,t.title).filter(function(a){return shown(a)&&!used[a.sheetId]}),fh=files(t);
     l.forEach(function(a){used[a.sheetId]=1});
-    html+='<tr class="tg" data-tid="'+esc(t.id)+'"><td colspan="4"><div class="tgw"><span>'+edT("topic",t.id,"title",t.title,"Topic")+'</span>'+files(t)+
-      '<span class="tgr">'+(st||inl?edC("topic",t.id,"status",'<span class="tpill '+pillClass(st)+'">'+esc(st||"–")+'</span>'):"")+
+    if(!l.length&&!fh&&!inl)return;   // a title with nothing under it isn't shown
+    html+='<tr class="tg" data-tid="'+esc(t.id)+'"><td colspan="4"><div class="tgw"><span>'+edT("topic",t.id,"title",t.title,"Topic")+'</span>'+fh+
+      // The topic band shows only its name (her choice, 28 Oct 2026); its status shows while editing, where it's changed.
+      '<span class="tgr">'+(inl?edC("topic",t.id,"status",'<span class="tpill '+pillClass(st)+'">'+esc(withYear(st,t.updatedAt)||"–")+'</span>'):"")+
       (inl?'<button class="rmx" type="button" data-tdel="'+esc(t.id)+'" title="Remove this line" aria-label="Remove this line">✕</button>':"")+'</span></div></td></tr>'+rows(l);
   });
   // Open tasks whose topic has no status line (e.g. one that matched only a risk) still show, under their topic's name.
   var other={};acts.forEach(function(a){if(used[a.sheetId])return;var g=a.group||"Other tasks";(other[g]=other[g]||[]).push(a)});
   Object.keys(other).forEach(function(g){html+='<tr class="tg"><td colspan="4"><div class="tgw"><span>'+esc(g)+'</span></div></td></tr>'+rows(other[g])});
-  html+='</tbody></table>';
+  if(!html&&!me)return"";
+  html='<div class="topics"><div class="th"><span><b>Status</b></span></div>'+(html?'<table class="ttab"><thead><tr><th>Task</th><th>Responsible</th><th>Status</th><th>Due date</th></tr></thead><tbody>'+html+'</tbody></table>':"");
   if(me)html+=tf&&tf.pid===p.id&&!tf.tid&&tf.kind!=="issue"?topicForm(p,null):'<div class="urow"><div class="tact"><button class="tlbtn" type="button" data-tadd>+ Add a status line</button></div></div>';
   return html+'</div>';
 }
-function pillClass(s){s=String(s||"");return /^(done|sent|received|closed|approved)/i.test(s)?"sc-g":/^overdue/i.test(s)?"sc-r":/^(in progress|pending|due|waiting|on hold)/i.test(s)?"sc-a":"sc-b"}
+function pillClass(s){s=String(s||"");return /^(done|received|closed|approved)/i.test(s)?"sc-g":/^overdue/i.test(s)?"sc-r":/^(in progress|pending|due|waiting|on hold)/i.test(s)?"sc-a":"sc-b"}
+// Short dates in a status get the year ("Sent 12 Oct" → "Sent 12 Oct 2026").
+function withYear(st,when){var m=/\b\d{1,2} [A-Z][a-z]{2}$/.test(st||"");if(!m)return st;var y=(String(when||"").match(/^(\d{4})/)||[])[1]||String(new Date().getFullYear());return st+" "+y}
 function dueShort(a){return a.due?fmtDue(a.due):tidy(a.dueText||"TBC")}
 function taskRow(a,i){
   var st=tidy(pv("act",a.sheetId,"status",a.status||"Open")),k=pkey("act",a.sheetId,"due"),d=k in S.pend?parseDue(S.pend[k].val).iso:a.due,
       n=d&&!/^closed/i.test(st)?daysBetween(d,today()):0,
-      lab=n>0?n+" day"+(n===1?"":"s")+" overdue":/^in progress/i.test(st)?"In progress":/^on hold/i.test(st)?"On hold":/^closed/i.test(st)?"Closed":"Open",
+      lab=n>0?n+" day"+(n===1?"":"s")+" overdue":/^in progress/i.test(st)?"In progress":/^on hold/i.test(st)?"On hold":/^closed/i.test(st)?"Done"+(a.done?" "+fmtDue(a.done).replace(/ \d{4}$/,""):""):"Open",
       c=n>0?"sc-r":/^(in progress|on hold)/i.test(st)?"sc-a":/^closed/i.test(st)?"sc-g":"sc-b";
   return '<tr class="tr'+(i%2?" alt":"")+'" data-aid="'+esc(a.sheetId)+'"><td>'+(isInline()&&!/^new\d/.test(a.sheetId||"")?'<span class="tkid">'+esc(a.sheetId)+'</span>':"")+edT("act",a.sheetId,"text",a.text,"Task")+'</td>'+
     '<td class="tp">'+edT("act",a.sheetId,"owner",tidy(a.owner)||"TBC","Owner")+'</td><td class="ts '+c+'">'+edC("act",a.sheetId,"status",esc(lab))+'</td>'+
@@ -1335,7 +1342,7 @@ function timelineView(p){
     var canAdd=S.isAdmin&&isInline()&&!p.archived&&actGroups(p).length>0;S.tlCanAdd=canAdd;
     var chip=function(e){var c=e.kind==="meet"?"c-meet":e.kind==="late"?"c-late":e.kind==="upd"?"c-upd":e.us?"c-us":"c-oth";
       var tmp=/^new\d/.test(e.aid||""),at=e.aid&&!tmp?' data-tljump="'+esc(e.aid)+'" title="'+esc(e.text+(e.kind==="late"?"\n"+lateText(e.ts):"")+(isInline()?"\nClick to open it in the table. Drag it to another day to change the due date.":"\nClick to open it in the table."))+'"'+(isInline()?' draggable="true"':""):
-        e.kind==="meet"?' data-minopen="'+esc(e.mid)+'" title="'+esc("Meeting: "+e.text+"\nClick to read the minutes.")+'"':' title="'+esc(e.text)+'"';
+        e.kind==="meet"?' data-minopen="'+esc(e.mid)+'" title="'+esc("Meeting: "+e.text)+'"':' title="'+esc(e.text)+'"';
       return '<span class="ch '+c+(e.pend?" tlpend":"")+'"'+at+'>'+esc(e.kind==="meet"?"Meeting: "+e.text:e.short)+'</span>'};
     var cell=function(s,i){var x=new Date(s.ts),we=x.getDay()>=5,own=s.items.slice(s.earlier),ch=[];
       if(s.earlier)ch.push('<span class="ch c-late">'+s.earlier+' overdue</span>');
@@ -1382,14 +1389,15 @@ function tlRows(){var has={};main.querySelectorAll("[data-aid]").forEach(functio
 // Smooth scroll, or a plain jump when the browser asks for less motion or doesn't animate (seen in some embedded browsers).
 function smoothY(y){y=Math.max(0,Math.round(y));var y0=window.scrollY,rm=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   window.scrollTo({top:y,behavior:rm?"auto":"smooth"});if(!rm)setTimeout(function(){if(window.scrollY===y0&&Math.abs(y0-y)>2)window.scrollTo(0,y)},350)}
-// "↑ Calendar" after a jump (her request, 18 Oct 2026): back to the calendar without scrolling up the whole page.
+// "↓ Calendar" after a jump (her request, 18 Oct 2026): back to the calendar without scrolling the whole page. Since 29 Oct 2026 the calendar sits below the Status table, so the arrow follows where it is.
+function tlOut(t){var r=t.getBoundingClientRect();return r.bottom<=80?"↑":r.top>=window.innerHeight-40?"↓":""}
 function tlBack(show){var b=document.getElementById("tlback"),t=main.querySelector(".tline");
-  if(show&&(!t||t.getBoundingClientRect().bottom>80))show=false;   // the calendar is still in view: no button needed
+  if(show&&(!t||!tlOut(t)))show=false;   // the calendar is still in view: no button needed
   if(!show){if(b)b.hidden=true;S.tlBackOn=false;return}
-  if(!b){b=document.createElement("button");b.type="button";b.id="tlback";b.className="tlback";b.textContent="↑ Calendar";b.setAttribute("aria-label","Back to the calendar");document.body.appendChild(b);
+  if(!b){b=document.createElement("button");b.type="button";b.id="tlback";b.className="tlback";b.setAttribute("aria-label","Back to the calendar");document.body.appendChild(b);
     b.addEventListener("click",function(){var c=main.querySelector(".tline");tlBack(false);if(c)smoothY(c.getBoundingClientRect().top+window.scrollY-12)})}
-  b.hidden=false;S.tlBackOn=true}
-window.addEventListener("scroll",function(){if(!S.tlBackOn)return;var t=main.querySelector(".tline");if(!t||t.getBoundingClientRect().bottom>80)tlBack(false)},{passive:true});
+  b.textContent=tlOut(t)+" Calendar";b.hidden=false;S.tlBackOn=true}
+window.addEventListener("scroll",function(){if(!S.tlBackOn)return;var t=main.querySelector(".tline");if(!t||!tlOut(t))tlBack(false)},{passive:true});
 window.addEventListener("hashchange",function(){tlBack(false);tlHide(true);var a=document.getElementById("addtask");if(a)a.remove()});
 // Add a task from the calendar (her request, 18 Oct 2026; her login only, like "+ Add a task" on the dashboard): it goes into the Action Tracker under the chosen topic.
 function actGroups(p){var gs=[];(sheetActsFor(p)||[]).forEach(function(x){if(x.group&&gs.indexOf(x.group)<0)gs.push(x.group)});return gs}
@@ -1445,7 +1453,7 @@ document.addEventListener("click",function(e){var t=e.target.closest&&e.target.c
 function tlShow(btn){var s=(S.tlStops||[])[+btn.getAttribute("data-tlstop")];if(!s)return;clearTimeout(S.tlT);var x=tlPop(),dd=new Date(s.ts);
   var icon={meet:"🗓",upd:"•",due:"⚑",late:"⚑"};
   x.innerHTML='<div class="tlph">'+esc(DAYS[dd.getDay()]+" "+dd.getDate()+" "+MONTHS[dd.getMonth()]+" "+dd.getFullYear())+(s.today?' · Today':"")+'</div>'+
-    (s.items.length?'<ul>'+s.items.map(function(e){return '<li class="t-'+e.kind+'"><span class="ti">'+icon[e.kind]+'</span><span>'+(e.kind==="meet"?'Meeting: '+esc(e.text)+' <button type="button" class="lnk" data-minopen="'+esc(e.mid)+'">Read the minutes →</button>':(e.kind==="late"?'Overdue ('+lateText(e.ts).replace(/ overdue$/,"")+(/^Was due /.test(e.text)?", due "+d2(e.ts):"")+'): ':e.kind==="due"?'Due: ':"")+(function(t){return e.aid&&(S.tlRows||{})[e.aid]?'<button type="button" class="lnk tlgo" data-tljump="'+esc(e.aid)+'">'+esc(t)+'</button>':esc(t)})(e.kind==="late"?e.text.replace(/^Was due [^:]+: /,""):e.text))+'</span></li>'}).join("")+'</ul>':'<div class="tlnone">Nothing on this day.</div>')+
+    (s.items.length?'<ul>'+s.items.map(function(e){return '<li class="t-'+e.kind+'"><span class="ti">'+icon[e.kind]+'</span><span>'+(e.kind==="meet"?'Meeting: '+esc(e.text)+' <button type="button" class="lnk" data-minopen="'+esc(e.mid)+'">Meeting notes →</button>':(e.kind==="late"?'Overdue ('+lateText(e.ts).replace(/ overdue$/,"")+(/^Was due /.test(e.text)?", due "+d2(e.ts):"")+'): ':e.kind==="due"?'Due: ':"")+(function(t){return e.aid&&(S.tlRows||{})[e.aid]?'<button type="button" class="lnk tlgo" data-tljump="'+esc(e.aid)+'">'+esc(t)+'</button>':esc(t)})(e.kind==="late"?e.text.replace(/^Was due [^:]+: /,""):e.text))+'</span></li>'}).join("")+'</ul>':'<div class="tlnone">Nothing on this day.</div>')+
     (S.tlCanAdd&&btn.classList.contains("cd")&&!(s.ts<todayTs())?'<div class="tlpadd"><button type="button" class="lnk" data-caladd="'+btn.getAttribute("data-tlstop")+'">+ Add a task due this day</button></div>':"");
   x.dataset.src=btn.classList.contains("cd")?"cal":"";x.hidden=false;var r=btn.getBoundingClientRect(),w=x.offsetWidth;
   x.style.top=(r.bottom+window.scrollY+8)+"px";x.style.left=Math.max(12,Math.min(r.left+window.scrollX+r.width/2-w/2,window.scrollX+document.documentElement.clientWidth-w-12))+"px"}
@@ -1605,11 +1613,11 @@ function cardView(p,n){
   var head='<div class="ch tog" role="button" tabindex="0" aria-expanded="'+op+'" data-toggle><span class="num">'+(n||"")+'</span>'+CHEV+'<div class="nm"><div class="pn">'+esc(p.name||"Untitled project")+
       (me&&!pv.confirmed?'<span class="tag pre">Pre-system</span>':"")+'</div>'+(meta?'<div class="pm">'+meta+'</div>':"")+
       (!op&&lt?'<div class="prev">'+bullets(lt).replace(/^<ul><li[^>]*>|<\/li><\/ul>$/g,"")+'</div>':"")+'</div>'+
-    '<div class="tags">'+(S.mode==="one"?(p.sheetUrl?'<a class="atbtn" href="'+esc(p.sheetUrl)+'" target="_blank" rel="noopener" title="Opens the Google Sheet: actions, status lines, issues and risks">Action tracker ↗</a>':""):S.canEdit&&!p.archived?stSel(p):pill(p.status))+'</div></div>';
+    '<div class="tags">'+(S.mode==="one"?(sheetLink(p)?'<a class="atbtn" href="'+esc(sheetLink(p))+'" target="_blank" rel="noopener" title="Opens the Google Sheet: actions, status lines, issues and risks">Action tracker ↗</a>':""):S.canEdit&&!p.archived?stSel(p):pill(p.status))+'</div></div>';
   if(!op)return '<article class="card closed'+cls+'" data-id="'+p.id+'">'+head+'</article>';
   var dt=detailsView(p),tk=me?taskList(p):"",nt=me?bullets(pv.notes):"",one=S.mode==="one";
   return '<article class="card open'+cls+'" data-id="'+p.id+'">'+head+
-    '<div class="body">'+(one?timelineView(p)+introView(p)+topicsView(p):topicsView(p)+(dt||'<div class="none">No details yet.</div>'))+(S.commenting===p.id?commentForm(p):"")+minutesView(p)+
+    '<div class="body">'+(one?introView(p)+topicsView(p)+timelineView(p):topicsView(p)+(dt||'<div class="none">No details yet.</div>'))+(S.commenting===p.id?commentForm(p):"")+minutesView(p)+
       (me?'<div class="tl">Tasks:</div>'+(tk||'<div class="none">No tasks.</div>'):"")+(nt?'<div class="nl">Notes (private):</div>'+nt:"")+'</div>'+
     '<div class="foot">'+(p.updatedAt&&S.mode!=="one"?'<span class="when">Last updated '+fmtDate(p.updatedAt)+(p.updatedBy?' by '+esc(p.updatedBy):"")+'</span>':'<span class="when"></span>')+
       (me?'<button class="act" data-act="prep">'+ICON.list+'Meeting prep</button>':"")+
@@ -1947,7 +1955,7 @@ function renderFrame(){
   var lv=S.view==="log"||S.view==="archive"||S.view==="projects";
   document.getElementById("openall").hidden=!lv;document.getElementById("simplev").hidden=!(S.mode==="overview"&&S.canEdit&&S.detailed);document.getElementById("sort").hidden=!lv;
   document.getElementById("openall").textContent=S.allOpen?"Close all":"Open all";document.getElementById("sort").value=S.sort;
-  document.getElementById("toolnote").textContent=isSimple()?(S.canEdit?"Click a project to open it and edit it. “Detailed view” shows the old cards, with Add a project.":S.projects.some(function(p){return p.sheetUrl&&onOverview(p)})?"Click a project for its full status, risks and issues, meetings and files.":""):me?"Your dashboard: only your admin password opens it, and the database rules keep it private. Archived projects and removed tasks are kept, never deleted.":
+  document.getElementById("toolnote").textContent=isSimple()?"Live from the Design & Technical Services Department’s project log.":me?"Your dashboard: only your admin password opens it, and the database rules keep it private. Archived projects and removed tasks are kept, never deleted.":
     "Anyone with the link can view and edit this log with their name; every change is signed in History. Archived projects are kept, never deleted.";
   document.getElementById("export").hidden=!S.canEdit;document.getElementById("apply-l").hidden=!S.isAdmin;
   document.getElementById("import-l").hidden=!S.canEdit||S.projects.length>0;
@@ -1986,7 +1994,7 @@ function syncLine(){if(!S.live)return;var p=S.mode==="one"?oneProject():null,lin
     (sheetActsFor(p)||[]).forEach(function(a){if(ms(a.updated)>ms(lc)){lc=a.updated;lb=a.updBy||""}})}
   var k=S.mode+"|"+(p?p.id:"")+"|"+linked+"|"+lc+"|"+lb;if(k===S.syncKey)return;S.syncKey=k;
   var who=String(lb||"").trim(),byTxt=!who?"":/^google sheet$/i.test(who)?" in the Google Sheet":" by "+who.charAt(0).toUpperCase()+who.slice(1);
-  sync.innerHTML="Live"+(linked?" and synced to "+(p.sheetUrl?'<a href="'+esc(p.sheetUrl)+'" target="_blank" rel="noopener">Google Sheet tracker</a>':"Google Sheet tracker"):"")+(lc?" · last updated "+esc(fmtDate(lc))+esc(byTxt):"")}
+  sync.innerHTML="Live"+(linked?" and synced to "+'<a href="'+esc(sheetLink(p))+'" target="_blank" rel="noopener">Google Sheet tracker</a>':"")+(lc?" · last updated "+esc(fmtDate(lc))+esc(byTxt):"")}
 function renderNow(){
   syncLine();
   renderFrame();
@@ -2015,21 +2023,27 @@ function renderNow(){
 var STATUS_RANK={Urgent:0,Ongoing:1,Prospective:2,Paused:3,Done:4};
 function hasNews(p){return detailItems(p).some(function(x){return x.d!==null&&x.d>=START_TS})}
 function onOverview(p){return !p.archived}
+var SHEET_BOOK="https://docs.google.com/spreadsheets/d/1c4rOXL9gGWkWW0AN_bcttxlNFk309LsA7JPNbb488qI/edit";
+function inSheet(p){return (S.sheet||[]).some(function(t){return t.project&&sheetMatch(t.project,p)})||!!(sheetActsFor(p)||[]).length}
+function sheetLink(p){return p.sheetUrl||(inSheet(p)?SHEET_BOOK:"")}
+function hasPage(p){return !!(p.sheetUrl||inSheet(p)||minutesFor(p).length)}
 function lastUpdate(p){
   // On the same date, a news line beats a ticked-off task ("Name: date – Done: …").
+  // The newest line; on the same date a written update beats a ticked-off task ("Name: date – Done: …"), which loses its owner in brackets (28 Oct 2026).
   var tick=function(x){return /–\s*Done:/.test(x.l)?1:0};
   var it=detailItems(p).filter(function(x){return x.d!==null&&(p.confirmed||x.d>=START_TS)}).sort(function(a,b){return b.d-a.d||tick(a)-tick(b)||b.i-a.i})[0];if(!it)return null;
-  var m=it.l.match(/^(?:[^:–]{1,60}:\s*)?(\d{1,2} [A-Z][a-z]{2} \d{4})\s*–\s*(.*)$/);
-  return m?{date:m[1],text:m[2]}:{date:fmtDate(it.d),text:it.l}}
+  var m=it.l.match(/^(?:[^:–]{1,60}:\s*)?(\d{1,2} [A-Z][a-z]{2} \d{4})\s*–\s*(.*)$/),txt=m?m[2]:it.l;
+  if(tick(it))txt=txt.replace(/\s*\([^()]*\)\.?\s*$/,".");
+  return m?{date:m[1],text:txt}:{date:fmtDate(it.d),text:txt}}
 function simpleRows(list){
   if(!list.length)return '<div class="empty">No projects match.</div>';
   return '<div class="plist"><div class="prow head"><span>Country</span><span>Project</span><span>Status</span><span>Last update</span><span></span></div>'+list.map(function(p){
-    var b=base(p.section),pipe=/ PIPELINE$/.test(p.section),f=FLAGS[b]?'<span class="fi fi-'+FLAGS[b]+'" aria-hidden="true"></span>':"",u=lastUpdate(p),go=p.sheetUrl||S.canEdit;
+    var b=base(p.section),pipe=/ PIPELINE$/.test(p.section),f=FLAGS[b]?'<span class="fi fi-'+FLAGS[b]+'" aria-hidden="true"></span>':"",u=lastUpdate(p),go=hasPage(p)||S.canEdit;
     var tag=go?'a href="'+pageHref(p)+'"':'div';
     return '<'+tag+' class="prow'+(go?" link":"")+(p.status==="Paused"?" paused":p.status==="Done"?" done":"")+'"><span class="pc">'+f+'<span>'+esc(tc(b))+(pipe?'<small>Pipeline</small>':"")+'</span></span>'+
       '<span class="pp">'+esc(p.name||"Untitled project")+'</span><span>'+pill(p.status)+'</span>'+
       '<span class="pu" title="'+esc(u?u.date+" – "+u.text:"")+'">'+(u?'<b>'+esc(u.date)+'</b><span class="pt">'+esc(u.text)+'</span>':'<span class="none">–</span>')+'</span>'+
-      (go?'<span class="pd">'+(p.sheetUrl?"Details":"Open")+' →</span>':'<span></span>')+'</'+(go?"a":"div")+'>'}).join("")+'</div>'}
+      (go?'<span class="pd">Details →</span>':'<span></span>')+'</'+(go?"a":"div")+'>'}).join("")+'</div>'}
 function simpleList(){
   var so=secOrder(),all=S.projects.filter(onOverview);
   var list=all.filter(function(p){return !S.canEdit||S.sf==="all"||p.status===S.sf});
