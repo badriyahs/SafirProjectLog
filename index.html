@@ -1029,7 +1029,10 @@ document.addEventListener("keydown",function(e){if(e.key==="Escape")closeMinutes
 // topics: {projectId, order, title, status, next, who, updatedAt, removed}
 // files:  {projectId, topicId, code, title, kind:"image"|"pdf", preview:"data:image/jpeg;base64,…", driveUrl, item} – previews are made on her Mac
 // Sheet rows name the project ("Safir Dahab"); match it to the log's project ("Safir Dahab Resort").
-function sheetMatch(name,p){var a=norm(name),b=norm(p&&p.name);return !!a&&!!b&&(a===b||b.indexOf(a+" ")===0||a.indexOf(b+" ")===0)}
+// A sheet name that is exactly another project's name belongs to that project only ("Safir Fintas Hotel Extension" isn't "Safir Fintas Hotel").
+function sheetMatch(name,p){var a=norm(name),b=norm(p&&p.name);if(!a||!b)return false;if(a===b)return true;
+  if((S.projects||[]).some(function(q){return q!==p&&norm(q.name)===a}))return false;
+  return b.indexOf(a+" ")===0||a.indexOf(b+" ")===0}
 function sheetProjectName(p){var r=(S.sheet||[]).find(function(t){return t.project&&sheetMatch(t.project,p)});return r?r.project:p.name}
 var PRIO_WORD={C:"Critical",H:"High",M:"Medium",L:"Low"};
 function prioWord(v){v=String(v||"");return PRIO_WORD[v]||v}
