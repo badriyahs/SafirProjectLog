@@ -427,9 +427,9 @@ a.prow:hover .pd{text-decoration:underline}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--amber-bg:#3D2E12;--amber-fg:#F5C77A}}
 :root[data-theme="dark"]{--amber-bg:#3D2E12;--amber-fg:#F5C77A}
 /* Project-page table (her design, 28 Oct 2026): light blue header, topic bands, status as a coloured cell. */
-:root{--ts-head:#BAD8EB;--ts-head-ink:#1F3A5A;--ts-band:#E8F1F8;--ts-alt:#F5F8FB;--s-red:#B4232C;--s-red-bg:#FBE1E3;--s-amb:#A85F0C;--s-amb-bg:#FFF0D6;--s-blue:#1F5F99;--s-blue-bg:#E2EEF8;--s-green:#1E7A4A;--s-green-bg:#DDF3E6}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ts-head:#2A4157;--ts-head-ink:#E6EBF0;--ts-band:#1F2B36;--ts-alt:#182027;--s-red:#F2A19A;--s-red-bg:#3D2224;--s-amb:#EDBE6B;--s-amb-bg:#3A2E18;--s-blue:#8DBDE6;--s-blue-bg:#1D2E3F;--s-green:#8BD3A6;--s-green-bg:#1B3325}}
-:root[data-theme="dark"]{--ts-head:#2A4157;--ts-head-ink:#E6EBF0;--ts-band:#1F2B36;--ts-alt:#182027;--s-red:#F2A19A;--s-red-bg:#3D2224;--s-amb:#EDBE6B;--s-amb-bg:#3A2E18;--s-blue:#8DBDE6;--s-blue-bg:#1D2E3F;--s-green:#8BD3A6;--s-green-bg:#1B3325}
+:root{--ev:#5B4B8A;--ev-ink:#FFFFFF;--ts-head:#BAD8EB;--ts-head-ink:#1F3A5A;--ts-band:#E8F1F8;--ts-alt:#F5F8FB;--s-red:#B4232C;--s-red-bg:#FBE1E3;--s-amb:#A85F0C;--s-amb-bg:#FFF0D6;--s-blue:#1F5F99;--s-blue-bg:#E2EEF8;--s-green:#1E7A4A;--s-green-bg:#DDF3E6}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ev:#B9A8E8;--ev-ink:#1B1530;--ts-head:#2A4157;--ts-head-ink:#E6EBF0;--ts-band:#1F2B36;--ts-alt:#182027;--s-red:#F2A19A;--s-red-bg:#3D2224;--s-amb:#EDBE6B;--s-amb-bg:#3A2E18;--s-blue:#8DBDE6;--s-blue-bg:#1D2E3F;--s-green:#8BD3A6;--s-green-bg:#1B3325}}
+:root[data-theme="dark"]{--ev:#B9A8E8;--ev-ink:#1B1530;--ts-head:#2A4157;--ts-head-ink:#E6EBF0;--ts-band:#1F2B36;--ts-alt:#182027;--s-red:#F2A19A;--s-red-bg:#3D2224;--s-amb:#EDBE6B;--s-amb-bg:#3A2E18;--s-blue:#8DBDE6;--s-blue-bg:#1D2E3F;--s-green:#8BD3A6;--s-green-bg:#1B3325}
 .ttab{width:100%;border-collapse:collapse;font-size:15.5px;color:var(--ink)}
 .ttab th{background:var(--ts-head);color:var(--ts-head-ink);text-align:left;font-weight:700;padding:12px;font-size:14.5px}
 .ttab td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:middle;background:var(--surface)}
@@ -534,6 +534,7 @@ body.inedit [data-ed]:focus{outline:2px solid var(--accent);background:var(--sur
 .tlcal .ch.c-us{background:var(--brand);color:var(--on-brand)}
 .tlcal .ch.c-oth{background:var(--surface);color:var(--s-blue);box-shadow:inset 0 0 0 1px var(--s-blue)}
 .tlcal .ch.c-meet{background:var(--accent);color:var(--accent-ink)}
+.tlcal .ch.c-ev{background:var(--ev);color:var(--ev-ink)}.tlkey .k.t-ev{background:var(--ev)}.tlstop.t-ev .tldot{background:var(--ev);color:var(--ev-ink)}
 .tlcal .ch.c-late{background:var(--req);color:var(--accent-ink)}
 .tlcal .ch.c-upd{background:none;color:var(--muted);padding-left:1px}
 .tlcal .ch.c-upd::before{content:"• "}
@@ -1334,6 +1335,12 @@ main.addEventListener("mouseover",function(e){var c=e.target.closest&&e.target.c
 // already shows; nothing is stored. Hover or tap a stop to see what happened (meetings link to their minutes).
 var TL_PAST=75,TL_AHEAD=90;
 var MONTHS_LONG=["January","February","March","April","May","June","July","August","September","October","November","December"];
+// A project's fixed dates for the calendar (her request, 1 Nov 2026), e.g. "• 10–11 Nov 2026 – Exhibition (Booth 15)": not tasks, never overdue.
+function projEvents(p){var out=[];lines(p.events).forEach(function(l){
+  var m=/^(\d{1,2})(?:\s*[–-]\s*(\d{1,2}))?\s+([A-Za-z]{3})[a-z]*\.?\s+(\d{4})\s*[–-]\s*(.+)$/.exec(l.replace(/^[•\-]\s*/,"").trim());if(!m)return;
+  var mo=MONTHS.map(function(x){return x.toLowerCase()}).indexOf(m[3].toLowerCase());if(mo<0)return;
+  var text=m[5].trim(),short=text.replace(/\s*\(.*$/,"");
+  for(var dd=+m[1];dd<=+(m[2]||m[1]);dd++)out.push({ts:new Date(+m[4],mo,dd).getTime(),text:text,short:short})});return out}
 function timelineView(p){
   var DAY=864e5,n=new Date(),t0=new Date(n.getFullYear(),n.getMonth(),n.getDate()).getTime(),ev=[];
   var isoTs=function(s){var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||"");return m?new Date(+m[1],+m[2]-1,+m[3]).getTime():null};
@@ -1341,10 +1348,11 @@ function timelineView(p){
   var add=function(ts,kind,text,mid,us,short,aid,pend){if(ts===null)return;ev.push({ts:ts,kind:kind,text:text,mid:mid||"",us:!!us,short:short||text,aid:aid||"",pend:!!pend})};
   detailItems(p).forEach(function(x){if(x.d!==null)add(x.d,"upd",x.l.replace(/(\d{1,2} )?[A-Z][a-z]{2} \d{4}\s*[–-]\s*/,""))});
   minutesFor(p).forEach(function(m){add(isoTs(m.date),"meet",m.title||"Meeting",m.id)});
+  projEvents(p).forEach(function(x){add(x.ts,"ev",x.text,"",false,x.short)});   // fixed dates, not tasks (her request, 1 Nov 2026)
   (S.mode==="one"&&sheetActsFor(p)||[]).forEach(function(a){if(a.done)return;var k=pkey("act",a.sheetId,"due"),pd=k in S.pend,due=pd?parseDue(S.pend[k].val).iso:a.due;if(!due)return;
     var ts=isoTs(due);add(ts,ts<t0?"late":"due",a.text+(a.owner?" ("+tidy(a.owner)+")":""),"",ours(a.owner),String(a.text||"").replace(/\.\s*$/,""),a.sheetId,pd)});
   if(!ev.length)return"";
-  var rank={meet:0,late:1,due:2,upd:3},sortIt=function(l){return l.sort(function(a,b){return rank[a.kind]-rank[b.kind]})};
+  var hasEv=ev.some(function(e){return e.kind==="ev"}),rank={ev:0,meet:1,late:2,due:3,upd:4},sortIt=function(l){return l.sort(function(a,b){return rank[a.kind]-rank[b.kind]})};
   var g={};ev.forEach(function(e){(g[e.ts]=g[e.ts]||[]).push(e)});
   var d=function(ts){var x=new Date(ts);return x.getDate()+" "+MONTHS[x.getMonth()]};
   var mode=S.tlMode||(function(){try{return localStorage.getItem("dtsTlMode")||"cal"}catch(e){return "cal"}})();
@@ -1365,7 +1373,7 @@ function timelineView(p){
       if(ea)it=earlier.map(function(e){return{ts:e.ts,kind:"late",text:"Was due "+d(e.ts)+": "+e.text,mid:"",us:e.us,short:e.short,aid:e.aid,pend:e.pend}}).concat(it);
       stops.push({ts:ts,items:it,today:ts===t0,fut:ts>t0,earlier:ea,om:x.getMonth()!==mon})}
     var canAdd=S.isAdmin&&isInline()&&!p.archived&&actGroups(p).length>0;S.tlCanAdd=canAdd;
-    var chip=function(e){var c=e.kind==="meet"?"c-meet":e.kind==="late"?"c-late":e.kind==="upd"?"c-upd":e.us?"c-us":"c-oth";
+    var chip=function(e){var c=e.kind==="ev"?"c-ev":e.kind==="meet"?"c-meet":e.kind==="late"?"c-late":e.kind==="upd"?"c-upd":e.us?"c-us":"c-oth";
       var tmp=/^new\d/.test(e.aid||""),at=e.aid&&!tmp?' data-tljump="'+esc(e.aid)+'" title="'+esc(e.text+(e.kind==="late"?"\n"+lateText(e.ts):"")+(isInline()?"\nClick to open it in the table. Drag it to another day to change the due date.":"\nClick to open it in the table."))+'"'+(isInline()?' draggable="true"':""):
         e.kind==="meet"?' data-minopen="'+esc(e.mid)+'" title="'+esc("Meeting: "+e.text)+'"':' title="'+esc(e.text)+'"';
       return '<span class="ch '+c+(e.pend?" tlpend":"")+'"'+at+'>'+esc(e.kind==="meet"?"Meeting: "+e.text:e.short)+'</span>'};
@@ -1379,18 +1387,18 @@ function timelineView(p){
       '<span class="cmt">'+MONTHS_LONG[mon]+" "+first.getFullYear()+'</span><button type="button" class="cnav" data-calnav="1" aria-label="Next month">›</button>'+
       (off?'<button type="button" class="ctoday" data-calnav="0">Today</button>':"")+'</div>'+
       '<div class="cg"><div class="dn">'+["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(function(x){return '<span>'+x+'</span>'}).join("")+'</div>'+stops.map(cell).join("")+'</div>'+
-      '<div class="tlkey"><span><i class="k t-us"></i>Design &amp; Technical Services Department</span><span><i class="k t-oth"></i>Others</span><span><i class="k t-meet"></i>Meeting</span><span><i class="k t-late"></i>Overdue</span></div></div>';
+      '<div class="tlkey"><span><i class="k t-us"></i>Design &amp; Technical Services Department</span><span><i class="k t-oth"></i>Others</span><span><i class="k t-meet"></i>Meeting</span><span><i class="k t-late"></i>Overdue</span>'+(hasEv?'<span><i class="k t-ev"></i>Event</span>':"")+'</div></div>';
   }else{
     S.tlCanAdd=false;if(!g[t0])g[t0]=[];
     stops=Object.keys(g).map(Number).filter(function(ts){return ts>=t0-TL_PAST*DAY&&ts<=t0+TL_AHEAD*DAY}).sort(function(a,b){return a-b}).map(function(ts){var it=sortIt(g[ts]);return{ts:ts,items:it,kind:it.length?it[0].kind:"",today:ts===t0,fut:ts>t0}});
     var cap=function(s){var c={};s.items.forEach(function(e){c[e.kind]=(c[e.kind]||0)+1});var o=[];
-      if(c.meet)o.push(c.meet>1?c.meet+" meetings":"Meeting");if(c.late)o.push(c.late+" overdue");if(c.due)o.push(c.due+" due");if(c.upd)o.push(c.upd>1?c.upd+" updates":"Update");return o.join(" · ")};
+      if(c.ev)o.push(c.ev>1?c.ev+" events":"Event");if(c.meet)o.push(c.meet>1?c.meet+" meetings":"Meeting");if(c.late)o.push(c.late+" overdue");if(c.due)o.push(c.due+" due");if(c.upd)o.push(c.upd>1?c.upd+" updates":"Update");return o.join(" · ")};
     body='<div class="tlscroll"><div class="tltrack">'+stops.map(function(s,i){
       var cls="tlstop t-"+(s.kind||"none")+(s.today?" today":"")+(s.fut?" fut":"");
       return '<button type="button" class="'+cls+'" data-tlstop="'+i+'" aria-label="'+esc(d(s.ts)+": "+(s.items.map(function(e){return e.text}).join("; ")||"Today"))+'">'+
         (s.today?'<span class="tlpill">Today</span>':"")+'<span class="tldot">'+(s.items.length>1?s.items.length:"")+'</span>'+
         '<span class="tldate">'+esc(d(s.ts))+'</span><span class="tlcap">'+esc(cap(s))+'</span></button>'}).join("")+'</div></div>'+
-      '<div class="tlkey tlkey-line"><span><i class="k t-meet"></i>Meeting</span><span><i class="k t-upd"></i>Update</span><span><i class="k t-due"></i>Due</span><span><i class="k t-late"></i>Overdue</span></div>';
+      '<div class="tlkey tlkey-line"><span><i class="k t-meet"></i>Meeting</span><span><i class="k t-upd"></i>Update</span><span><i class="k t-due"></i>Due</span><span><i class="k t-late"></i>Overdue</span>'+(hasEv?'<span><i class="k t-ev"></i>Event</span>':"")+'</div>';
   }
   S.tlStops=stops;
   return '<div class="tline">'+head+body+'</div>'}
@@ -1476,7 +1484,7 @@ document.addEventListener("click",function(e){var t=e.target.closest&&e.target.c
   e.preventDefault();e.stopPropagation();if(t.hasAttribute("data-minopen")){tlHide(true);openMinutes(t.getAttribute("data-minopen"));return}
   if(!tlJump(t.getAttribute("data-tljump"))){var c=t.closest("[data-tlstop]");if(c)tlShow(c);else{tlHide(true);toast("That task isn’t listed in the table on this page.")}}},true);
 function tlShow(btn){var s=(S.tlStops||[])[+btn.getAttribute("data-tlstop")];if(!s)return;clearTimeout(S.tlT);var x=tlPop(),dd=new Date(s.ts);
-  var icon={meet:"🗓",upd:"•",due:"⚑",late:"⚑"};
+  var icon={ev:"◆",meet:"🗓",upd:"•",due:"⚑",late:"⚑"};
   x.innerHTML='<div class="tlph">'+esc(DAYS[dd.getDay()]+" "+dd.getDate()+" "+MONTHS[dd.getMonth()]+" "+dd.getFullYear())+(s.today?' · Today':"")+'</div>'+
     (s.items.length?'<ul>'+s.items.map(function(e){return '<li class="t-'+e.kind+'"><span class="ti">'+icon[e.kind]+'</span><span>'+(e.kind==="meet"?'Meeting: '+esc(e.text)+' <button type="button" class="lnk" data-minopen="'+esc(e.mid)+'">Meeting notes →</button>':(e.kind==="late"?'Overdue ('+lateText(e.ts).replace(/ overdue$/,"")+(/^Was due /.test(e.text)?", due "+d2(e.ts):"")+'): ':e.kind==="due"?'Due: ':"")+(function(t){return e.aid&&(S.tlRows||{})[e.aid]?'<button type="button" class="lnk tlgo" data-tljump="'+esc(e.aid)+'">'+esc(t)+'</button>':esc(t)})(e.kind==="late"?e.text.replace(/^Was due [^:]+: /,""):e.text))+'</span></li>'}).join("")+'</ul>':'<div class="tlnone">Nothing on this day.</div>')+
     (S.tlCanAdd&&btn.classList.contains("cd")&&!(s.ts<todayTs())?'<div class="tlpadd"><button type="button" class="lnk" data-caladd="'+btn.getAttribute("data-tlstop")+'">+ Add a task due this day</button></div>':"");
@@ -2123,7 +2131,7 @@ function renderSimple(){
 // Project fields are public: every change gets a History entry. Old Tasks text and Notes are moved off the public record without copying them into History.
 function projectOps(b,p,patch,kind,name,note){
   var ch=[];Object.keys(FIELDS).forEach(function(k){if(k in patch&&str(patch[k])!==str(p[k]))ch.push({f:k,from:str(p[k]).slice(0,4000),to:str(patch[k]).slice(0,4000)})});
-  var quiet=["tasks","notes","pins","confirmed","sheetUrl"].some(function(k){return k in patch&&str(patch[k])!==str(p[k])});
+  var quiet=["tasks","notes","pins","confirmed","sheetUrl","events"].some(function(k){return k in patch&&str(patch[k])!==str(p[k])});
   if(!ch.length&&!quiet&&kind!=="task")return false;
   patch.updatedAt=stamp();patch.updatedBy=name;
   b.update(col.doc(p.id),patch);
@@ -2551,7 +2559,7 @@ document.getElementById("apply").addEventListener("change",function(e){
     list.forEach(function(c){
       var p=projById(c.id);if(!p){skip.push(c.id);return}
       var set=c.set||{},patch={},desc=[],tasks=[],pv=Object.assign({},c.private||{});
-      Object.keys(FIELDS).concat(["sheetUrl","confirmed"]).forEach(function(k){if(k in set&&str(set[k])!==str(p[k]))patch[k]=k==="archived"?!!set[k]:set[k]});
+      Object.keys(FIELDS).concat(["sheetUrl","confirmed","events"]).forEach(function(k){if(k in set&&str(set[k])!==str(p[k]))patch[k]=k==="archived"?!!set[k]:set[k]});
       if("notes" in set&&!("notes" in pv))pv.notes=set.notes;
       if("notes" in pv&&str(p.notes))patch.notes="";
       var dl=null,addD=nl(c.addDetails);
@@ -2573,7 +2581,7 @@ document.getElementById("apply").addEventListener("change",function(e){
       if((legacy.length&&tasks.length)||(replaceOld&&str(p.tasks)))patch.tasks="";
       if(dl)patch.details=bulletText(dl.join("\n"));
       if(nA)desc.push("+"+nA+" task"+(nA===1?"":"s"));if(nD)desc.push(nD+" task"+(nD===1?"":"s")+" ticked off");
-      if("sheetUrl" in patch)desc.push("Details link set");if("confirmed" in patch)desc.push("confirmed");
+      if("sheetUrl" in patch)desc.push("Details link set");if("events" in patch)desc.push("calendar dates set");if("confirmed" in patch)desc.push("confirmed");
       Object.keys(set).forEach(function(k){if(!(k in patch)||!FIELDS[k]||k==="details"&&addD.length)return;
         if(k==="archived")desc.push(patch[k]?"archive":"restore to log");
         else if(LONG[k])desc.push((FIELDS[k]||k)+" rewritten ("+lines(patch[k]).length+" lines)");
