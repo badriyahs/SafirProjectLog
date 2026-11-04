@@ -983,7 +983,7 @@ function detailsView(p,markPre){
 }
 
 // ---------- Meeting notes, as issued (public): summary and decisions, the full notes for the curious ----------
-function minutesFor(p){return S.minutes.filter(function(m){return (m.projects||[]).indexOf(p.id)>-1}).sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:0})}
+function minutesFor(p){return S.minutes.filter(function(m){return (m.projects||[]).indexOf(p.id)>-1}).concat((S.sheetMeets||[]).filter(function(m){return sheetMatch(m.project,p)})).sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:0})}
 function fullView(m){
   var html=lines(m.attendees).length?'<h4>Attendees</h4>'+bullets(m.attendees):"";
   (Array.isArray(m.full)?m.full:[]).forEach(function(b){
@@ -1021,7 +1021,9 @@ function minutesDoc(m){
       (b.table.rows||[]).map(function(r){return '<tr>'+(Array.isArray(r)?r:r.c||[]).map(function(c){return '<td>'+esc(tidy(c))+'</td>'}).join("")+'</tr>'}).join("")+'</tbody></table>'});
   if((!Array.isArray(m.full)||!m.full.length)&&lines(m.openPoints).length)h+='<h4>Open points</h4>'+labelled(m.openPoints);
   return h}
-function openMinutes(id){var m=S.minutes.find(function(x){return x.id===id});if(!m)return;closeMinutes();
+// Meetings added as a row in the sheet's Meetings tab open their notes link in a new tab (her request, 5 Nov 2026).
+function openMinutes(id){var sm=(S.sheetMeets||[]).find(function(x){return x.id===id});if(sm){if(sm.link)window.open(sm.link,"_blank","noopener");else toast("These meeting notes have no link yet.");return}
+  var m=S.minutes.find(function(x){return x.id===id});if(!m)return;closeMinutes();
   var d=document.createElement("div");d.id="minmodal";
   d.innerHTML='<div class="mmcard" role="dialog" aria-modal="true" aria-label="Meeting notes"><div class="mmbar"><span>'+esc(fmtDue(m.date))+' · '+esc(m.title||"Meeting")+'</span><button type="button" class="mmx" data-minclose aria-label="Close">✕ Close</button></div><div class="mmdoc">'+minutesDoc(m)+'</div></div>';
   document.body.appendChild(d);document.body.style.overflow="hidden";d.querySelector(".mmx").focus();
@@ -1073,6 +1075,8 @@ function sheetAddTask(p,t){var f=sheetActFields(p,t,null);
   S.sheetActs.push(sheetAct({id:"new"+Date.now(),project:f.project,title:t.text,who:t.owner,due:f.due||"",status:"Open",opened:today(),group:t.group||""}));render();
   return sheetPost({action:"save",kind:"action",id:"",fields:f,by:by()})}
 function applySheet(d){if(!d||!Array.isArray(d.rows))return;
+  // The sheet can be edited by anyone with its link, so only http(s) links are ever opened.
+  S.sheetMeets=d.rows.filter(function(o){return o.kind==="meeting"}).map(function(o){return{id:"sheet-"+o.row,project:o.project,date:parseDue(o.date).iso||"",title:o.title,link:/^https?:\/\//i.test(o.link||"")?o.link:""}});
   var acts=d.rows.filter(function(o){return o.kind==="action"});if(acts.length)S.sheetActs=acts.map(sheetAct);
   S.sheet=d.rows.filter(function(o){return o.kind==="status"||o.kind==="issue"}).map(function(o){return{id:o.webId||o.id,sheetId:o.id,kind:o.kind==="issue"?"issue":"status",project:o.project,title:o.title,status:o.status,next:o.next,who:o.who,
     priority:o.priority||"",type:o.type||"",desc:o.description||"",due:o.due||"",opened:o.opened||"",order:o.order,updatedAt:o.updated||"",updatedBy:o.by||""}});render()}
